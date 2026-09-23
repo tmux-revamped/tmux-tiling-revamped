@@ -48,6 +48,7 @@
 PLUGIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 source "${PLUGIN_DIR}/src/lib/utils/constants.sh"
+export PLUGIN_LOG_NS="tiling-revamped"
 source "${PLUGIN_DIR}/src/lib/utils/error-logger.sh"
 source "${PLUGIN_DIR}/src/lib/utils/has-command.sh"
 source "${PLUGIN_DIR}/src/lib/tmux/tmux-ops.sh"

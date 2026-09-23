@@ -21,9 +21,9 @@ setup_test_environment() {
   # Reset source guards so each test starts fresh
   # Reset ALL source guards so each test file starts fresh
   unset _TILING_REVAMPED_CONSTANTS_LOADED
-  unset _TILING_REVAMPED_ERROR_LOGGER_LOADED
-  unset _TILING_REVAMPED_HAS_COMMAND_LOADED
-  unset _TILING_REVAMPED_TMUX_OPS_LOADED
+  unset _TMUX_PLUGIN_ERROR_LOGGER_LOADED
+  unset _TMUX_PLUGIN_HAS_COMMAND_LOADED
+  unset _TMUX_PLUGIN_TMUX_OPS_LOADED
   unset _TILING_REVAMPED_TMUX_CONFIG_LOADED
   unset _TILING_REVAMPED_DWINDLE_LOADED
   unset _TILING_REVAMPED_SPIRAL_LOADED

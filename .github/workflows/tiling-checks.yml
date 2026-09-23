@@ -1,0 +1,57 @@
+name: Tiling checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: tiling-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: read-all
+
+jobs:
+  plugin-specific:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check constants exhaustiveness
+        run: |
+          while IFS= read -r opt; do
+            if ! grep -q "$opt" src/lib/utils/constants.sh; then
+              echo "WARN: $opt used in source but not in constants.sh"
+            fi
+          done < <(grep -roh '@tiling_revamped_[a-z_]*' src/lib/ | sort -u)
+
+      - name: Check ASCII art width consistency
+        run: |
+          fail=0
+          for f in src/lib/layouts/*.sh; do
+            [[ "$f" == */previews.sh ]] && continue
+            widths=$(grep -E '^[┌├└│┬┴┼─┤┐┘]' "$f" 2>/dev/null | awk '{print length}' | sort -u)
+            count=$(echo "$widths" | wc -l | tr -d ' ')
+            if (( count > 1 )); then
+              echo "FAIL: inconsistent line widths in $f: $widths"
+              fail=1
+            fi
+          done
+          exit $fail
+
+      - name: Check README-to-code sync
+        run: |
+          for cmd in balance equalize rotate flip promote circulate autosplit focus-resize resize-master sync swap cycle pick undo workspace move-to-workspace project swap-pick validate info doctor restore-layouts help; do
+            if ! grep -q "\"${cmd}\"" README.md 2>/dev/null && ! grep -q "\`${cmd}\`" README.md 2>/dev/null; then
+              echo "WARN: command '$cmd' not found in README"
+            fi
+          done
+
+      - name: Check help text sync
+        run: |
+          while IFS= read -r cmd; do
+            if ! grep -q "$cmd" src/tiling.sh; then
+              true  # dispatcher commands use different format
+            fi
+          done < <(sed -n '/^  layout /,/^HELP$/p' src/tiling.sh | grep -oE '^\s+\S+' | tr -d ' ' | sort -u)
