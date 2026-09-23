@@ -1,0 +1,162 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../lib/common.sh
+. "${SCRIPT_DIR}/../lib/common.sh"
+
+ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+REPO="$(family_repo_name "${ROOT}")"
+REMOTE_BASE_DEFAULT="git@github.com:tmux-revamped"
+
+findings=0
+WORK=""
+
+usage() {
+  cat <<'USAGE'
+usage: family/bin/sync [--check] [--members-dir DIR] [--remote-base URL] [--keep]
+
+Compares this member against every other member of the family.
+
+  --check            report only, exit non-zero on any divergence
+  --members-dir DIR  compare against checkouts already on disk under DIR
+                     instead of cloning
+  --remote-base URL  clone prefix, default git@github.com:tmux-revamped
+  --keep             leave the temporary clones in place and print the path
+
+Reports:
+
+  - an owned file whose content differs from this member's copy
+  - an owned file missing from a member
+  - a member whose family/VERSION differs from this member's
+
+A difference recorded in family/EXCEPTIONS.md is not a finding.
+
+Exits 0 when every member agrees, 1 otherwise.
+USAGE
+}
+
+cleanup() {
+  [[ -n "${WORK}" && -d "${WORK}" && "${KEEP:-0}" -eq 0 ]] && rm -rf "${WORK}"
+  return 0
+}
+trap cleanup EXIT
+
+report() {
+  printf '%s\n' "${1}" >&2
+  findings=$((findings + 1))
+}
+
+fetch_member() {
+  local member="${1}"
+  local base="${2}"
+  local dest="${WORK}/${member}"
+
+  git clone --quiet --depth 1 "${base}/${member}.git" "${dest}" 2>/dev/null || {
+    report "${member}: could not be cloned from ${base}"
+    return 1
+  }
+  printf '%s\n' "${dest}"
+}
+
+compare_member() {
+  local member="${1}"
+  local other="${2}"
+  local recorded path theirs
+
+  local their_version our_version
+  our_version="$(family_version "${ROOT}")"
+  their_version="$(family_version "${other}" 2>/dev/null || printf 'absent\n')"
+
+  if [[ "${their_version}" != "${our_version}" ]]; then
+    report "${member}: contract version ${their_version}, this member is at ${our_version}"
+  fi
+
+  while read -r recorded path; do
+    [[ -n "${path}" ]] || continue
+    theirs="${other}/${path}"
+
+    if [[ ! -f "${theirs}" ]]; then
+      family_exception_exists "${ROOT}" "${member}" "${path}" && continue
+      report "${member}: missing ${path}"
+      continue
+    fi
+
+    [[ "$(family_hash_file "${theirs}")" == "${recorded}" ]] && continue
+    family_exception_exists "${ROOT}" "${member}" "${path}" && continue
+    report "${member}: ${path} differs from this member's copy"
+  done < "${ROOT}/family/CHECKSUMS"
+}
+
+main() {
+  local check=0
+  local dir=""
+  local base="${REMOTE_BASE_DEFAULT}"
+  KEEP=0
+
+  while [[ $# -gt 0 ]]; do
+    case "${1}" in
+      --check)
+        check=1
+        shift
+        ;;
+      --members-dir)
+        dir="${2:-}"
+        shift 2
+        ;;
+      --remote-base)
+        base="${2:-}"
+        shift 2
+        ;;
+      --keep)
+        KEEP=1
+        shift
+        ;;
+      -h | --help)
+        usage
+        return 0
+        ;;
+      *)
+        usage >&2
+        return 2
+        ;;
+    esac
+  done
+
+  [[ -f "${ROOT}/family/CHECKSUMS" ]] ||
+    family_die "family/CHECKSUMS is missing, run family/bin/checksums first"
+
+  WORK="$(mktemp -d "${TMPDIR:-/tmp}/family-sync-XXXXXX")"
+
+  local member other compared=0
+  while IFS= read -r member; do
+    [[ "${member}" == "${REPO}" ]] && continue
+
+    if [[ -n "${dir}" ]]; then
+      other="${dir}/${member}"
+      [[ -d "${other}" ]] || {
+        report "${member}: not found under ${dir}"
+        continue
+      }
+    else
+      other="$(fetch_member "${member}" "${base}")" || continue
+      family_unshallow_if_needed "${other}" || true
+    fi
+
+    compare_member "${member}" "${other}"
+    compared=$((compared + 1))
+  done < <(family_members "${ROOT}")
+
+  printf 'compared %s against %s other member(s)\n' "${REPO}" "${compared}"
+  [[ "${KEEP}" -eq 1 ]] && printf 'clones kept at %s\n' "${WORK}"
+
+  if [[ "${findings}" -gt 0 ]]; then
+    printf '\n%s divergence finding(s)\n' "${findings}" >&2
+    [[ "${check}" -eq 1 ]] && return 1
+    return 1
+  fi
+
+  printf 'every member agrees at contract version %s\n' "$(family_version "${ROOT}")"
+}
+
+main "$@"

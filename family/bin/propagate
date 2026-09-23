@@ -1,0 +1,240 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../lib/common.sh
+. "${SCRIPT_DIR}/../lib/common.sh"
+
+ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+REPO="$(family_repo_name "${ROOT}")"
+
+usage() {
+  cat <<'USAGE'
+usage: family/bin/propagate --message SUBJECT [options]
+
+Copies every owned file from this member into every other member, bumps the
+contract version, regenerates family/CHECKSUMS, and opens one pull request per
+repository under a shared branch name.
+
+  --message SUBJECT   conventional-commit subject for all 24 commits, required
+  --members-dir DIR   operate on checkouts under DIR instead of cloning
+  --branch NAME       branch name, defaults to family/v<new contract version>
+  --no-bump           do not increment family/VERSION
+  --dry-run           print what would change and write nothing
+  --no-push           commit locally, do not push and do not open pull requests
+
+Re-running against an already-propagated change reports no work and writes
+nothing, so it is safe to repeat after a partial run.
+USAGE
+}
+
+MEMBERS_DIR=""
+BRANCH=""
+MESSAGE=""
+DRY_RUN=0
+NO_PUSH=0
+BUMP=1
+WORK=""
+changed_members=0
+skipped_members=0
+
+cleanup() {
+  [[ -n "${WORK}" && -d "${WORK}" ]] && rm -rf "${WORK}"
+  return 0
+}
+trap cleanup EXIT
+
+owned_files() {
+  awk '{print $2}' "${ROOT}/family/CHECKSUMS"
+}
+
+member_is_current() {
+  local other="${1}"
+  local recorded path
+
+  while read -r recorded path; do
+    [[ -n "${path}" ]] || continue
+    [[ -f "${other}/${path}" ]] || return 1
+    [[ "$(family_hash_file "${other}/${path}")" == "${recorded}" ]] || return 1
+  done < "${ROOT}/family/CHECKSUMS"
+
+  [[ "$(family_version "${other}" 2>/dev/null || true)" == "$(family_version "${ROOT}")" ]]
+}
+
+copy_owned_into() {
+  local other="${1}"
+  local path
+
+  while IFS= read -r path; do
+    [[ -n "${path}" ]] || continue
+    mkdir -p "${other}/$(dirname "${path}")"
+    cp -f "${ROOT}/${path}" "${other}/${path}"
+    if [[ -x "${ROOT}/${path}" ]]; then
+      chmod +x "${other}/${path}"
+    fi
+  done < <(owned_files)
+
+  cp -f "${ROOT}/family/CHECKSUMS" "${other}/family/CHECKSUMS"
+}
+
+describe_pending() {
+  local member="${1}"
+  local other="${2}"
+  local recorded path
+
+  printf '%-32s would update:\n' "${member}"
+  while read -r recorded path; do
+    [[ -n "${path}" ]] || continue
+    if [[ ! -f "${other}/${path}" ]]; then
+      printf '    add     %s\n' "${path}"
+    elif [[ "$(family_hash_file "${other}/${path}")" != "${recorded}" ]]; then
+      printf '    replace %s\n' "${path}"
+    fi
+  done < "${ROOT}/family/CHECKSUMS"
+}
+
+commit_and_open() {
+  local member="${1}"
+  local other="${2}"
+
+  git -C "${other}" add --all
+  if git -C "${other}" diff --cached --quiet; then
+    skipped_members=$((skipped_members + 1))
+    printf '%-32s already current\n' "${member}"
+    return 0
+  fi
+
+  changed_members=$((changed_members + 1))
+  printf '%-32s updating\n' "${member}"
+
+  git -C "${other}" checkout -b "${BRANCH}" --quiet 2>/dev/null ||
+    git -C "${other}" checkout "${BRANCH}" --quiet
+  git -C "${other}" commit --quiet --message "${MESSAGE}"
+
+  if [[ "${NO_PUSH}" -eq 1 ]]; then
+    return 0
+  fi
+
+  git -C "${other}" push --quiet --set-upstream origin "${BRANCH}"
+  gh pr create --repo "tmux-revamped/${member}" \
+    --head "${BRANCH}" \
+    --title "${MESSAGE}" \
+    --body-file "${WORK}/body.md" >/dev/null
+}
+
+write_pr_body() {
+  cat > "${WORK}/body.md" <<BODY
+${MESSAGE}
+
+Propagated from ${REPO} at family contract version $(family_version "${ROOT}").
+
+Every file in this change is owned by the family contract and is byte-identical
+in all members. See FAMILY.md for the ownership classes and the exception
+process.
+
+Verify with:
+
+    family/bin/audit
+    family/bin/sync --check
+BODY
+}
+
+bump_version() {
+  local current next
+  current="$(family_version "${ROOT}")"
+  next=$((current + 1))
+  printf '%s\n' "${next}" > "${ROOT}/family/VERSION"
+  printf 'contract version %s -> %s\n' "${current}" "${next}"
+}
+
+main() {
+  while [[ $# -gt 0 ]]; do
+    case "${1}" in
+      --message)
+        MESSAGE="${2:-}"
+        shift 2
+        ;;
+      --members-dir)
+        MEMBERS_DIR="${2:-}"
+        shift 2
+        ;;
+      --branch)
+        BRANCH="${2:-}"
+        shift 2
+        ;;
+      --dry-run)
+        DRY_RUN=1
+        shift
+        ;;
+      --no-push)
+        NO_PUSH=1
+        shift
+        ;;
+      --no-bump)
+        BUMP=0
+        shift
+        ;;
+      -h | --help)
+        usage
+        return 0
+        ;;
+      *)
+        usage >&2
+        return 2
+        ;;
+    esac
+  done
+
+  [[ -n "${MESSAGE}" ]] || {
+    usage >&2
+    family_die "--message is required"
+  }
+
+  if [[ "${BUMP}" -eq 1 && "${DRY_RUN}" -eq 0 ]]; then
+    bump_version
+  fi
+  "${SCRIPT_DIR}/checksums" >/dev/null
+
+  [[ -n "${BRANCH}" ]] || BRANCH="family/v$(family_version "${ROOT}")"
+
+  WORK="$(mktemp -d "${TMPDIR:-/tmp}/family-propagate-XXXXXX")"
+  write_pr_body
+
+  local member other
+  while IFS= read -r member; do
+    [[ "${member}" == "${REPO}" ]] && continue
+
+    if [[ -n "${MEMBERS_DIR}" ]]; then
+      other="${MEMBERS_DIR}/${member}"
+      [[ -d "${other}" ]] || {
+        family_warn "${member}: not found under ${MEMBERS_DIR}, skipped"
+        continue
+      }
+    else
+      other="${WORK}/${member}"
+      git clone --quiet "git@github.com:tmux-revamped/${member}.git" "${other}" || {
+        family_warn "${member}: clone failed, skipped"
+        continue
+      }
+    fi
+
+    if member_is_current "${other}"; then
+      skipped_members=$((skipped_members + 1))
+      printf '%-32s already current\n' "${member}"
+      continue
+    fi
+
+    if [[ "${DRY_RUN}" -eq 1 ]]; then
+      changed_members=$((changed_members + 1))
+      describe_pending "${member}" "${other}"
+      continue
+    fi
+
+    copy_owned_into "${other}"
+    commit_and_open "${member}" "${other}"
+  done < <(family_members "${ROOT}")
+
+  printf '\n%s updated, %s already current\n' "${changed_members}" "${skipped_members}"
+}
+
+main "$@"

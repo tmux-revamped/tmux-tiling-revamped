@@ -1,0 +1,157 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../lib/common.sh
+. "${SCRIPT_DIR}/../lib/common.sh"
+
+ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+BEGIN_MARK='<!-- family:begin -->'
+END_MARK='<!-- family:end -->'
+
+usage() {
+  cat <<'USAGE'
+usage: family/bin/gen-readme [--check] [--members-dir DIR] [PATH]
+
+Regenerates the family section of a member's README from family/MEMBERS, in
+place, between the markers:
+
+    <!-- family:begin -->
+    <!-- family:end -->
+
+A README with no markers gets the section appended once, with the markers.
+
+  --check            write nothing, exit non-zero when the README is stale
+  --members-dir DIR  read each member's repository description from DIR
+  PATH               the member to operate on, defaults to this repository
+
+Exits 0 when the README is current, 1 when it is stale under --check.
+USAGE
+}
+
+member_summary() {
+  local dir="${1}"
+  local member="${2}"
+  local readme="${dir}/${member}/README.md"
+
+  if [[ -f "${readme}" ]]; then
+    awk 'NR > 1 && NF && $0 !~ /^[#!<[]/ && $0 !~ /^\[!\[/ { print; exit }' "${readme}" |
+      sed -E 's/\*\*//g; s/\|/\\|/g; s/\.$//' | cut -c1-110
+    return 0
+  fi
+  printf 'see the repository\n'
+}
+
+render_section() {
+  local dir="${1}"
+  local self
+  self="$(family_repo_name "${ROOT}")"
+
+  printf '%s\n' "${BEGIN_MARK}"
+  printf '\n## The tmux-revamped family\n\n'
+  printf 'This plugin is one member of the tmux-revamped family. Every member carries the\n'
+  printf 'same contract in [`FAMILY.md`](FAMILY.md), the same tooling under `family/`, and\n'
+  printf 'the same shared library, all held byte-identical by a checksum manifest. They are\n'
+  printf 'built to be installed together: no member claims a key or a tmux option that\n'
+  printf 'another member claims.\n\n'
+  printf 'A defect found in one member is hunted across all of them before the fix is\n'
+  printf 'called done. That obligation is written into the contract rather than left to\n'
+  printf 'memory, and `family/bin/sweep` is how it is discharged.\n\n'
+  printf '| Member | What it does |\n|---|---|\n'
+
+  local member summary marker
+  while IFS= read -r member; do
+    summary="$(member_summary "${dir}" "${member}")"
+    if [[ "${member}" == "${self}" ]]; then
+      marker='**this plugin**'
+      printf '| [`%s`](https://github.com/tmux-revamped/%s) | %s, %s |\n' \
+        "${member}" "${member}" "${marker}" "${summary}"
+    else
+      printf '| [`%s`](https://github.com/tmux-revamped/%s) | %s |\n' \
+        "${member}" "${member}" "${summary}"
+    fi
+  done < <(family_members "${ROOT}")
+
+  printf '\n### Checking an installation\n\n'
+  printf 'With every member on disk, one command reports any conflict between them:\n\n'
+  printf '```sh\nfamily/bin/doctor --live\n```\n\n'
+  printf 'It reads each member and the running tmux server, and reports duplicate keys,\n'
+  printf 'duplicate status placeholders, options outside the naming grammar, and any\n'
+  printf 'member whose contract version has fallen behind.\n\n'
+  printf '%s\n' "${END_MARK}"
+}
+
+main() {
+  local check=0
+  local dir=""
+  local target=""
+
+  while [[ $# -gt 0 ]]; do
+    case "${1}" in
+      --check)
+        check=1
+        shift
+        ;;
+      --members-dir)
+        dir="${2:-}"
+        shift 2
+        ;;
+      -h | --help)
+        usage
+        return 0
+        ;;
+      *)
+        target="${1}"
+        shift
+        ;;
+    esac
+  done
+
+  [[ -n "${target}" ]] || target="${ROOT}"
+  target="$(cd "${target}" && pwd)"
+  [[ -n "${dir}" ]] || dir="$(dirname "${ROOT}")"
+
+  local readme="${target}/README.md"
+  [[ -f "${readme}" ]] || family_die "no README.md in ${target}"
+
+  local section current
+  section="$(render_section "${dir}")"
+
+  if grep -qF "${BEGIN_MARK}" "${readme}"; then
+    current="$(awk -v b="${BEGIN_MARK}" -v e="${END_MARK}" \
+      'index($0, b) { inside = 1 } inside { print } index($0, e) { inside = 0 }' "${readme}")"
+  else
+    current=""
+  fi
+
+  if [[ "${current}" == "${section}" ]]; then
+    printf '%s: README family section is current\n' "$(family_repo_name "${target}")"
+    return 0
+  fi
+
+  if [[ "${check}" -eq 1 ]]; then
+    printf '%s: README family section is stale, run family/bin/gen-readme\n' \
+      "$(family_repo_name "${target}")" >&2
+    return 1
+  fi
+
+  local tmp
+  tmp="$(mktemp "${TMPDIR:-/tmp}/family-readme-XXXXXX")"
+
+  if [[ -n "${current}" ]]; then
+    awk -v b="${BEGIN_MARK}" -v e="${END_MARK}" -v repl="${section}" '
+      index($0, b) { print repl; inside = 1; next }
+      index($0, e) { inside = 0; next }
+      !inside { print }
+    ' "${readme}" > "${tmp}"
+  else
+    cat "${readme}" > "${tmp}"
+    printf '\n%s\n' "${section}" >> "${tmp}"
+  fi
+
+  cat "${tmp}" > "${readme}"
+  rm -f "${tmp}"
+  printf '%s: README family section written\n' "$(family_repo_name "${target}")"
+}
+
+main "$@"

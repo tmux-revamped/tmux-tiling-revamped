@@ -1,0 +1,182 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../lib/common.sh
+. "${SCRIPT_DIR}/../lib/common.sh"
+
+usage() {
+  cat <<'USAGE'
+usage: family/bin/inventory [PATH]
+
+Emits a line-oriented record of one member. PATH defaults to this repository.
+
+Record format, tab separated:
+
+  repo         <name>
+  contract     <family/VERSION>
+  version      <plugin version constant>
+  source       manifest | scan
+  option       <@option_name>
+  key          <table>  <default>  <@option_name>
+  placeholder  <#{name}>
+  command      <external command>
+
+The scan source is a best-effort read of the shell sources and is replaced by
+the manifest as soon as one exists. A scanned record is an upper bound: it
+reports every option the source names, including ones left unbound by default.
+USAGE
+}
+
+emit() {
+  printf '%s\n' "$*"
+}
+
+scan_options() {
+  local root="${1}"
+  { grep -rhoE '@[a-zA-Z][a-zA-Z0-9_-]*' "${root}/src" "${root}"/*.tmux 2>/dev/null || true; } |
+    LC_ALL=C sort -u
+}
+
+scan_key_options() {
+  local root="${1}"
+  { grep -rhoE '@[a-zA-Z][a-zA-Z0-9_-]*key[a-zA-Z0-9_-]*' "${root}/src" "${root}"/*.tmux 2>/dev/null || true; } |
+    LC_ALL=C sort -u
+}
+
+scan_key_default() {
+  local root="${1}"
+  local option="${2}"
+  { grep -rhoE "${option}\"?[[:space:]]+\"[^\"]*\"" "${root}/src" "${root}"/*.tmux 2>/dev/null || true; } |
+    head -1 | sed -E 's/.*"([^"]*)"$/\1/'
+}
+
+scan_key_table() {
+  local root="${1}"
+  local option="${2}"
+  local context
+  context="$({ grep -rhE -A4 "${option}" "${root}/src" "${root}"/*.tmux 2>/dev/null || true; } | head -20)"
+
+  case "${context}" in
+    *'bind-key -n'* | *'bind -n'*) emit root ;;
+    *'-T copy-mode'*) emit copy-mode ;;
+    *) emit prefix ;;
+  esac
+}
+
+scan_placeholders() {
+  local root="${1}"
+  { grep -ohE '\\#\{[a-zA-Z][a-zA-Z0-9_]*\}' "${root}"/*.tmux 2>/dev/null || true; } |
+    sed -E 's/^\\#\{(.*)\}$/\1/' | LC_ALL=C sort -u
+}
+
+placeholder_scan_is_reliable() {
+  local root="${1}"
+  { grep -ohE '#\{[a-zA-Z0-9_]*\$\{' "${root}"/*.tmux 2>/dev/null || true; } | grep -q . && return 1
+  return 0
+}
+
+scan_commands() {
+  local root="${1}"
+  { grep -rhoE 'has_command[[:space:]]+"?[a-zA-Z][a-zA-Z0-9_.+-]*' "${root}/src" 2>/dev/null || true; } |
+    sed -E 's/^has_command[[:space:]]+"?//' | LC_ALL=C sort -u
+}
+
+plugin_version() {
+  local root="${1}"
+  local file
+  for file in "${root}"/src/lib/core/constants.sh "${root}"/src/lib/utils/constants.sh; do
+    [[ -f "${file}" ]] || continue
+    { grep -hoE '[0-9]+\.[0-9]+\.[0-9]+' "${file}" || true; } | head -1
+    return 0
+  done
+  printf 'unknown\n'
+}
+
+report_from_scan() {
+  local root="${1}"
+  local option default table name
+
+  emit "source"$'\t'"scan"
+
+  while IFS= read -r option; do
+    [[ -n "${option}" ]] || continue
+    emit "option"$'\t'"${option}"
+  done < <(scan_options "${root}")
+
+  while IFS= read -r option; do
+    [[ -n "${option}" ]] || continue
+    default="$(scan_key_default "${root}" "${option}")"
+    table="$(scan_key_table "${root}" "${option}")"
+    emit "key"$'\t'"${table}"$'\t'"${default:-unset}"$'\t'"${option}"
+  done < <(scan_key_options "${root}")
+
+  if placeholder_scan_is_reliable "${root}"; then
+    while IFS= read -r name; do
+      [[ -n "${name}" ]] || continue
+      emit "placeholder"$'\t'"${name}"
+    done < <(scan_placeholders "${root}")
+  else
+    emit "placeholder-unscannable"$'\t'"names are built at run time, a manifest is required"
+  fi
+
+  while IFS= read -r name; do
+    [[ -n "${name}" ]] || continue
+    emit "command"$'\t'"${name}"
+  done < <(scan_commands "${root}")
+}
+
+report_from_manifest() {
+  local manifest="${1}"
+
+  emit "source"$'\t'"manifest"
+  python3 - "${manifest}" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as handle:
+    data = json.load(handle)
+
+for option in sorted(data.get("options", {})):
+    print("option\t" + option)
+
+for binding in data.get("keys", []):
+    print("\t".join((
+        "key",
+        binding.get("table", "prefix"),
+        str(binding.get("default", "unset")),
+        binding.get("option", ""),
+    )))
+
+for name in sorted(data.get("placeholders", [])):
+    print("placeholder\t" + name)
+
+for name in sorted(data.get("commands", [])):
+    print("command\t" + name)
+PY
+}
+
+main() {
+  local root
+
+  case "${1:-}" in
+    -h | --help)
+      usage
+      return 0
+      ;;
+    '') root="$(cd "${SCRIPT_DIR}/../.." && pwd)" ;;
+    *) root="$(cd "${1}" && pwd)" ;;
+  esac
+
+  emit "repo"$'\t'"$(family_repo_name "${root}")"
+  emit "contract"$'\t'"$(family_version "${root}" || printf 'unknown\n')"
+  emit "version"$'\t'"$(plugin_version "${root}")"
+
+  if [[ -f "${root}/manifest.json" ]] && command -v python3 >/dev/null 2>&1; then
+    report_from_manifest "${root}/manifest.json"
+  else
+    report_from_scan "${root}"
+  fi
+}
+
+main "$@"

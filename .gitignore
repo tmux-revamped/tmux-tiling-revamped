@@ -1,5 +1,11 @@
 *.log
 *.tmp
 /tmp/
+/coverage/
 .DS_Store
-specs/
+
+# The global ignore file excludes .claude/, but the family ships a project
+# agent that must reach every clone.
+!.claude/
+!.claude/agents/
+!.claude/agents/*.md

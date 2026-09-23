@@ -1,0 +1,183 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../lib/common.sh
+. "${SCRIPT_DIR}/../lib/common.sh"
+
+ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+REPO="$(family_repo_name "${ROOT}")"
+
+WORK=""
+affected=0
+clean=0
+unreachable=0
+
+usage() {
+  cat <<'USAGE'
+usage: family/bin/sweep --pattern REGEX [options]
+       family/bin/sweep --script FILE [options]
+
+Searches every member of the family for a defect found in one of them.
+
+  --pattern REGEX    extended regular expression. A member matching it is
+                     reported as affected
+  --script FILE      a probe run once per member with the member checkout as
+                     its only argument. Exit 0 means affected, 1 means clean,
+                     any other status means the probe could not decide
+  --paths GLOB       restrict the pattern search, repeatable.
+                     Defaults to the whole checkout
+  --members-dir DIR  search checkouts under DIR instead of cloning
+  --label TEXT       name of the defect, used in the report heading
+
+Exactly one of --pattern or --script is required.
+
+A sweep is mandatory after fixing any defect that is not unique to one
+member's own feature code. FAMILY.md states the obligation; this command is
+how it is discharged.
+
+Exits 0 when no other member is affected, 1 when at least one is, and 2 when
+the sweep itself could not run.
+USAGE
+}
+
+cleanup() {
+  [[ -n "${WORK}" && -d "${WORK}" ]] && rm -rf "${WORK}"
+  return 0
+}
+trap cleanup EXIT
+
+search_with_pattern() {
+  local dir="${1}"
+  local pattern="${2}"
+  shift 2
+  local paths=("$@")
+
+  if [[ "${#paths[@]}" -eq 0 ]]; then
+    grep -rlE "${pattern}" "${dir}" --exclude-dir=.git --exclude-dir=coverage 2>/dev/null || true
+    return 0
+  fi
+
+  local glob
+  for glob in "${paths[@]}"; do
+    # shellcheck disable=SC2086
+    grep -rlE "${pattern}" ${dir}/${glob} 2>/dev/null || true
+  done
+}
+
+main() {
+  local pattern=""
+  local script=""
+  local dir=""
+  local label="unnamed defect"
+  local paths=()
+
+  while [[ $# -gt 0 ]]; do
+    case "${1}" in
+      --pattern)
+        pattern="${2:-}"
+        shift 2
+        ;;
+      --script)
+        script="${2:-}"
+        shift 2
+        ;;
+      --paths)
+        paths+=("${2:-}")
+        shift 2
+        ;;
+      --members-dir)
+        dir="${2:-}"
+        shift 2
+        ;;
+      --label)
+        label="${2:-}"
+        shift 2
+        ;;
+      -h | --help)
+        usage
+        return 0
+        ;;
+      *)
+        usage >&2
+        return 2
+        ;;
+    esac
+  done
+
+  if [[ -n "${pattern}" && -n "${script}" ]]; then
+    usage >&2
+    family_die "pass either --pattern or --script, not both"
+  fi
+  if [[ -z "${pattern}" && -z "${script}" ]]; then
+    usage >&2
+    family_die "one of --pattern or --script is required"
+  fi
+  if [[ -n "${script}" && ! -x "${script}" ]]; then
+    family_die "probe is not executable: ${script}"
+  fi
+
+  WORK="$(mktemp -d "${TMPDIR:-/tmp}/family-sweep-XXXXXX")"
+  [[ -n "${dir}" ]] || dir="$(dirname "${ROOT}")"
+
+  printf 'sweeping the family for: %s\n' "${label}"
+  printf 'found first in: %s\n\n' "${REPO}"
+
+  local member other status
+  while IFS= read -r member; do
+    other="${dir}/${member}"
+    if [[ ! -d "${other}" ]]; then
+      printf '%-32s NOT CHECKED, no checkout under %s\n' "${member}" "${dir}"
+      unreachable=$((unreachable + 1))
+      continue
+    fi
+
+    if [[ -n "${script}" ]]; then
+      set +e
+      "${script}" "${other}" >"${WORK}/probe.out" 2>&1
+      status=$?
+      set -e
+      case "${status}" in
+        0)
+          affected=$((affected + 1))
+          printf '%-32s AFFECTED\n' "${member}"
+          sed 's/^/    /' "${WORK}/probe.out"
+          ;;
+        1)
+          clean=$((clean + 1))
+          printf '%-32s clean\n' "${member}"
+          ;;
+        *)
+          unreachable=$((unreachable + 1))
+          printf '%-32s NOT CHECKED, probe exited %s\n' "${member}" "${status}"
+          sed 's/^/    /' "${WORK}/probe.out"
+          ;;
+      esac
+      continue
+    fi
+
+    local hits
+    hits="$(search_with_pattern "${other}" "${pattern}" "${paths[@]+"${paths[@]}"}")"
+    if [[ -n "${hits}" ]]; then
+      affected=$((affected + 1))
+      printf '%-32s AFFECTED\n' "${member}"
+      printf '%s\n' "${hits}" | sed "s|${other}/|    |"
+    else
+      clean=$((clean + 1))
+      printf '%-32s clean\n' "${member}"
+    fi
+  done < <(family_members "${ROOT}")
+
+  printf '\n%s affected, %s clean, %s not checked\n' "${affected}" "${clean}" "${unreachable}"
+
+  if [[ "${unreachable}" -gt 0 ]]; then
+    printf 'a member that could not be checked is not a member that is clean\n' >&2
+    return 2
+  fi
+  if [[ "${affected}" -gt 0 ]]; then
+    printf 'fix every affected member before closing the original defect\n' >&2
+    return 1
+  fi
+}
+
+main "$@"

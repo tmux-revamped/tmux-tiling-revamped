@@ -1,0 +1,219 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../lib/common.sh
+. "${SCRIPT_DIR}/../lib/common.sh"
+
+ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+INVENTORY="${SCRIPT_DIR}/inventory"
+
+findings=0
+WORK=""
+
+usage() {
+  cat <<'USAGE'
+usage: family/bin/doctor [--members-dir DIR] [--live]
+
+Reports conflicts across every family member found on disk.
+
+  --members-dir DIR   directory holding the member checkouts.
+                      Defaults to the parent of this repository.
+  --live              also diff the report against the running tmux server.
+
+Checks:
+
+  - two members binding the same key in the same table
+  - two members declaring the same status placeholder
+  - two members writing the same tmux option
+  - an option outside the @<plugin>_revamped_<name> grammar
+  - a member reading another member's option without declaring it
+  - members reporting different family/VERSION values
+
+Exits 0 when clean, 1 when any finding is reported.
+USAGE
+}
+
+cleanup() {
+  [[ -n "${WORK}" && -d "${WORK}" ]] && rm -rf "${WORK}"
+}
+trap cleanup EXIT
+
+report() {
+  printf '%s\n' "${1}" >&2
+  findings=$((findings + 1))
+}
+
+collect() {
+  local dir="${1}"
+  local member path
+
+  while IFS= read -r member; do
+    path="${dir}/${member}"
+    [[ -d "${path}" ]] || continue
+    "${INVENTORY}" "${path}" | sed "s|^|${member}\t|"
+  done < <(family_members "${ROOT}")
+}
+
+check_key_collisions() {
+  local records="${1}"
+  local table key owners count
+
+  while IFS=$'\t' read -r count table key owners; do
+    [[ "${count}" -gt 1 ]] || continue
+    report "key collision: ${key} in the ${table} table, claimed by ${owners}"
+  done < <(
+    awk -F'\t' '$2 == "key" && $4 != "unset" && $4 != "off" && $4 != "" {
+      seen[$3 "\t" $4] = seen[$3 "\t" $4] ? seen[$3 "\t" $4] ", " $1 : $1
+      count[$3 "\t" $4]++
+    }
+    END { for (k in count) print count[k] "\t" k "\t" seen[k] }' "${records}"
+  )
+}
+
+check_placeholder_collisions() {
+  local records="${1}"
+  local name owners count
+
+  while IFS=$'\t' read -r count name owners; do
+    [[ "${count}" -gt 1 ]] || continue
+    report "placeholder collision: #{${name}} declared by ${owners}"
+  done < <(
+    awk -F'\t' '$2 == "placeholder" {
+      seen[$3] = seen[$3] ? seen[$3] ", " $1 : $1
+      count[$3]++
+    }
+    END { for (k in count) print count[k] "\t" k "\t" seen[k] }' "${records}"
+  )
+}
+
+check_unscannable() {
+  local records="${1}"
+  local member reason
+
+  while IFS=$'\t' read -r member reason; do
+    report "cannot verify placeholders for ${member}: ${reason}"
+  done < <(awk -F'\t' '$2 == "placeholder-unscannable" { print $1 "\t" $3 }' "${records}")
+}
+
+check_option_collisions() {
+  local records="${1}"
+  local name owners count
+
+  while IFS=$'\t' read -r count name owners; do
+    [[ "${count}" -gt 1 ]] || continue
+    report "option shared by several members: ${name}, used by ${owners}"
+  done < <(
+    awk -F'\t' '$2 == "option" {
+      seen[$3] = seen[$3] ? seen[$3] ", " $1 : $1
+      count[$3]++
+    }
+    END { for (k in count) print count[k] "\t" k "\t" seen[k] }' "${records}"
+  )
+}
+
+member_slug() {
+  local member="${1}"
+  member="${member#tmux-}"
+  printf '%s\n' "${member%-revamped}"
+}
+
+check_namespace() {
+  local records="${1}"
+  local member option slug
+
+  while IFS=$'\t' read -r member option; do
+    slug="$(member_slug "${member}")"
+    case "${option}" in
+      "@${slug}_revamped_"*) continue ;;
+    esac
+    report "namespace: ${member} uses ${option}, expected @${slug}_revamped_<name>"
+  done < <(awk -F'\t' '$2 == "option" { print $1 "\t" $3 }' "${records}")
+}
+
+check_contract_versions() {
+  local records="${1}"
+  local distinct
+
+  distinct="$(awk -F'\t' '$2 == "contract" { print $3 }' "${records}" | LC_ALL=C sort -u)"
+  [[ "$(printf '%s\n' "${distinct}" | wc -l | tr -d ' ')" -le 1 ]] && return 0
+
+  report "contract versions differ across members: $(printf '%s' "${distinct}" | tr '\n' ' ')"
+  awk -F'\t' '$2 == "contract" { print "    " $1 " at " $3 }' "${records}" >&2
+}
+
+check_live_server() {
+  command -v tmux >/dev/null 2>&1 || {
+    printf 'tmux not on PATH, skipping the live check\n' >&2
+    return 0
+  }
+  tmux list-keys >/dev/null 2>&1 || {
+    printf 'no running tmux server, skipping the live check\n' >&2
+    return 0
+  }
+
+  local duplicates
+  duplicates="$(tmux list-keys -T prefix | awk '{print $NF == "" ? $4 : $4}' | LC_ALL=C sort | uniq -d)"
+  [[ -n "${duplicates}" ]] || return 0
+
+  local key
+  while IFS= read -r key; do
+    report "live server: ${key} is bound more than once in the prefix table"
+  done <<< "${duplicates}"
+}
+
+main() {
+  local dir=""
+  local live=0
+
+  while [[ $# -gt 0 ]]; do
+    case "${1}" in
+      --members-dir)
+        dir="${2:-}"
+        shift 2
+        ;;
+      --live)
+        live=1
+        shift
+        ;;
+      -h | --help)
+        usage
+        return 0
+        ;;
+      *)
+        usage >&2
+        return 2
+        ;;
+    esac
+  done
+
+  [[ -n "${dir}" ]] || dir="$(dirname "${ROOT}")"
+  [[ -d "${dir}" ]] || family_die "members directory not found: ${dir}"
+
+  WORK="$(mktemp -d "${TMPDIR:-/tmp}/family-doctor-XXXXXX")"
+  local records="${WORK}/records.tsv"
+  collect "${dir}" > "${records}"
+
+  local members
+  members="$(awk -F'\t' '$2 == "repo" { print $1 }' "${records}" | LC_ALL=C sort -u | wc -l | tr -d ' ')"
+  printf 'inspected %s member(s) under %s\n' "${members}" "${dir}"
+
+  check_contract_versions "${records}"
+  check_key_collisions "${records}"
+  check_placeholder_collisions "${records}"
+  check_unscannable "${records}"
+  check_option_collisions "${records}"
+  check_namespace "${records}"
+  if [[ "${live}" -eq 1 ]]; then
+    check_live_server
+  fi
+
+  if [[ "${findings}" -gt 0 ]]; then
+    printf '\n%s finding(s)\n' "${findings}" >&2
+    return 1
+  fi
+
+  printf 'clean\n'
+}
+
+main "$@"

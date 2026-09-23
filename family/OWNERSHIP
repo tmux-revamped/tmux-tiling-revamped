@@ -1,0 +1,33 @@
+# class<TAB>path
+#
+# class is one of: owned, shaped
+# path is a repository-relative file path or a glob matching files.
+# A path listed nowhere here is free and carries no family constraint.
+#
+# owned  files must be byte-identical in every member.
+# shaped files must satisfy the structural rules named in family/bin/audit.
+#
+# This list names what is enforced today. FAMILY.md names the full target.
+# An entry is added only once the file is genuinely identical in every member,
+# because an entry added early fails the audit everywhere on the first run.
+
+owned	FAMILY.md
+owned	family/OWNERSHIP
+owned	family/MEMBERS
+owned	family/VERSION
+owned	family/EXCEPTIONS.md
+owned	family/bin/audit
+owned	family/bin/checksums
+owned	family/bin/doctor
+owned	family/bin/inventory
+owned	family/bin/propagate
+owned	family/bin/sync
+owned	family/lib/common.sh
+owned	family/docs/baseline.md
+owned	family/docs/collisions.md
+owned	AGENTS.md
+owned	CLAUDE.md
+owned	family/bin/sweep
+owned	.claude/agents/family-bug-sweep.md
+owned	family/bin/gen-readme
+owned	.gitignore

@@ -1,0 +1,149 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../lib/common.sh
+. "${SCRIPT_DIR}/../lib/common.sh"
+
+ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+REPO="$(family_repo_name "${ROOT}")"
+CHECKSUM_FILE="${ROOT}/family/CHECKSUMS"
+
+findings=0
+
+usage() {
+  cat <<'USAGE'
+usage: family/bin/audit
+
+Verifies this member against the family contract, offline.
+
+  - every owned file matches its recorded hash in family/CHECKSUMS
+  - family/CHECKSUMS lists every owned file and nothing else
+  - every shaped file satisfies its structural rules
+  - family/VERSION is a positive integer
+  - this repository appears in family/MEMBERS
+
+Exits 0 when clean, 1 when any finding is reported.
+USAGE
+}
+
+report() {
+  printf '%s: %s\n' "${1}" "${2}" >&2
+  findings=$((findings + 1))
+}
+
+check_membership() {
+  if ! family_members "${ROOT}" | grep -qxF "${REPO}"; then
+    report "${REPO}" "not listed in family/MEMBERS"
+  fi
+}
+
+check_version() {
+  local version
+  version="$(family_version "${ROOT}")" || {
+    report "family/VERSION" "missing"
+    return
+  }
+  case "${version}" in
+    '' | *[!0-9]*) report "family/VERSION" "not a positive integer: ${version}" ;;
+  esac
+}
+
+check_ownership_resolves() {
+  local path
+  while IFS= read -r path; do
+    case "${path}" in
+      MISSING:*) report "${path#MISSING:}" "named in family/OWNERSHIP but absent from this member" ;;
+    esac
+  done < <(family_paths_of_class "${ROOT}" owned; family_paths_of_class "${ROOT}" shaped)
+}
+
+check_owned_hashes() {
+  [[ -f "${CHECKSUM_FILE}" ]] || {
+    report "family/CHECKSUMS" "missing, run family/bin/checksums"
+    return
+  }
+
+  local recorded computed path
+  while read -r recorded path; do
+    [[ -n "${path}" ]] || continue
+    if [[ ! -f "${ROOT}/${path}" ]]; then
+      family_exception_exists "${ROOT}" "${REPO}" "${path}" && continue
+      report "${path}" "recorded in family/CHECKSUMS but absent"
+      continue
+    fi
+    computed="$(family_hash_file "${ROOT}/${path}")"
+    [[ "${computed}" == "${recorded}" ]] && continue
+    family_exception_exists "${ROOT}" "${REPO}" "${path}" && continue
+    report "${path}" "content differs from the family copy, recorded ${recorded:0:12} computed ${computed:0:12}"
+  done < "${CHECKSUM_FILE}"
+}
+
+check_manifest_complete() {
+  local expected actual
+  expected="$(family_owned_paths "${ROOT}" | grep -v '^MISSING:' | grep -vxF 'family/CHECKSUMS' | LC_ALL=C sort)"
+  actual="$(awk '{print $2}' "${CHECKSUM_FILE}" | LC_ALL=C sort)"
+
+  local path
+  while IFS= read -r path; do
+    [[ -n "${path}" ]] || continue
+    report "${path}" "owned but absent from family/CHECKSUMS, run family/bin/checksums"
+  done < <(LC_ALL=C comm -23 <(printf '%s\n' "${expected}") <(printf '%s\n' "${actual}"))
+
+  while IFS= read -r path; do
+    [[ -n "${path}" ]] || continue
+    report "${path}" "listed in family/CHECKSUMS but no longer owned"
+  done < <(LC_ALL=C comm -13 <(printf '%s\n' "${expected}") <(printf '%s\n' "${actual}"))
+}
+
+check_shaped_readme() {
+  local path="${ROOT}/README.md"
+  [[ -f "${path}" ]] || {
+    report "README.md" "missing"
+    return
+  }
+  grep -qE '^#[^#]' "${path}" || report "README.md" "no level-one heading"
+}
+
+check_shaped_changelog() {
+  local path="${ROOT}/CHANGELOG.md"
+  [[ -f "${path}" ]] || {
+    report "CHANGELOG.md" "missing"
+    return
+  }
+  grep -qE '^## \[' "${path}" || report "CHANGELOG.md" "no versioned section heading"
+}
+
+check_shaped_files() {
+  local path
+  while IFS= read -r path; do
+    case "${path}" in
+      README.md) check_shaped_readme ;;
+      CHANGELOG.md) check_shaped_changelog ;;
+    esac
+  done < <(family_shaped_paths "${ROOT}" | grep -v '^MISSING:')
+}
+
+main() {
+  if [[ $# -gt 0 ]]; then
+    usage
+    [[ "${1}" == "-h" || "${1}" == "--help" ]] && return 0
+    return 2
+  fi
+
+  check_membership
+  check_version
+  check_ownership_resolves
+  check_owned_hashes
+  [[ -f "${CHECKSUM_FILE}" ]] && check_manifest_complete
+  check_shaped_files
+
+  if [[ "${findings}" -gt 0 ]]; then
+    printf '\n%s: %s finding(s)\n' "${REPO}" "${findings}" >&2
+    return 1
+  fi
+
+  printf '%s: clean, contract version %s\n' "${REPO}" "$(family_version "${ROOT}")"
+}
+
+main "$@"
