@@ -1,4 +1,4 @@
-name: CI
+name: Tests
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: tests-${{ github.ref }}
   cancel-in-progress: true
 
 permissions: read-all
