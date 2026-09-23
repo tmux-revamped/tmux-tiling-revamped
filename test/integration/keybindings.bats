@@ -13,7 +13,7 @@ setup() {
   export TILING_SOCKET="/tmp/tiling-kb-${BASHPID}-${RANDOM}"
 
   # Route every tmux call (including those inside the plugin subshell) to the
-  # isolated test socket.  Exported so the `bash "${PLUGIN}"` child inherits it.
+  # isolated test socket.  Exported so the `"${BASH}" "${PLUGIN}"` child inherits it.
   tmux() { command tmux -S "${TILING_SOCKET}" "$@"; }
   export -f tmux
   export TILING_SOCKET
@@ -44,7 +44,7 @@ count_tiling_binds() {
 }
 
 @test "entry point - default keybindings are registered when no options are set" {
-  bash "${PLUGIN}"
+  "${BASH}" "${PLUGIN}"
 
   [[ "$(key_for 'layout dwindle')" == "d" ]]
   [[ "$(key_for 'layout spiral')" == "D" ]]
@@ -58,14 +58,14 @@ count_tiling_binds() {
 
 @test "entry point - a custom key overrides the default" {
   command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_key_dwindle "x"
-  bash "${PLUGIN}"
+  "${BASH}" "${PLUGIN}"
 
   [[ "$(key_for 'layout dwindle')" == "x" ]]
 }
 
 @test "entry point - blank key disables a standard binding only" {
   command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_key_dwindle ""
-  bash "${PLUGIN}"
+  "${BASH}" "${PLUGIN}"
 
   [[ -z "$(key_for 'layout dwindle')" ]]
   [[ "$(key_for 'layout spiral')" == "D" ]]
@@ -73,14 +73,14 @@ count_tiling_binds() {
 
 @test "entry point - blank pick_layout key disables the layout picker" {
   command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_key_pick_layout ""
-  bash "${PLUGIN}"
+  "${BASH}" "${PLUGIN}"
 
   [[ -z "$(key_for 'pick')" ]]
 }
 
 @test "entry point - blank undo key disables the undo binding" {
   command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_key_undo ""
-  bash "${PLUGIN}"
+  "${BASH}" "${PLUGIN}"
 
   [[ -z "$(key_for 'undo')" ]]
 }
@@ -89,14 +89,14 @@ count_tiling_binds() {
   command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_key_dwindle ""
   command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_key_mark ""
 
-  run bash "${PLUGIN}"
+  run "${BASH}" "${PLUGIN}"
 
   [[ "${status}" -eq 0 ]]
   [[ "${output}" != *"unknown key"* ]]
 }
 
 @test "entry point - auto_apply hooks register by default" {
-  bash "${PLUGIN}"
+  "${BASH}" "${PLUGIN}"
 
   run command tmux -S "${TILING_SOCKET}" show-hooks -g
   [[ "${output}" == *"tiling.sh hook split"* ]]
@@ -104,7 +104,7 @@ count_tiling_binds() {
 
 @test "entry point - auto_apply=0 registers no reapply hooks" {
   command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_auto_apply "0"
-  bash "${PLUGIN}"
+  "${BASH}" "${PLUGIN}"
 
   run command tmux -S "${TILING_SOCKET}" show-hooks -g
   [[ "${output}" != *"tiling.sh hook"* ]]
@@ -112,7 +112,7 @@ count_tiling_binds() {
 
 @test "entry point - a set key wins over another feature's default on the same key" {
   command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_key_pick_layout "P"
-  bash "${PLUGIN}"
+  "${BASH}" "${PLUGIN}"
 
   [[ "$(key_for 'pick')" == "P" ]]
   [[ -z "$(key_for 'pane-jump')" ]]
@@ -120,7 +120,7 @@ count_tiling_binds() {
 
 @test "entry point - a resolved conflict names both features" {
   command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_key_pick_layout "P"
-  bash "${PLUGIN}"
+  "${BASH}" "${PLUGIN}"
 
   local reported
   reported=$(command tmux -S "${TILING_SOCKET}" show-option -gqv "@tiling_revamped_conflicts")
@@ -129,7 +129,7 @@ count_tiling_binds() {
 }
 
 @test "entry point - a clean config reports no conflict" {
-  bash "${PLUGIN}"
+  "${BASH}" "${PLUGIN}"
 
   local reported
   reported=$(command tmux -S "${TILING_SOCKET}" show-option -gqv "@tiling_revamped_conflicts")
@@ -138,7 +138,7 @@ count_tiling_binds() {
 
 @test "entry point - a key conflict binds the slot exactly once" {
   command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_key_pick_layout "P"
-  bash "${PLUGIN}"
+  "${BASH}" "${PLUGIN}"
 
   local bound
   bound=$(command tmux -S "${TILING_SOCKET}" list-keys -T prefix 2>/dev/null \
@@ -149,7 +149,7 @@ count_tiling_binds() {
 @test "entry point - two set keys on one slot keep the first and drop the second" {
   command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_key_dwindle "z"
   command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_key_spiral "z"
-  bash "${PLUGIN}"
+  "${BASH}" "${PLUGIN}"
 
   [[ "$(key_for 'layout dwindle')" == "z" ]]
   [[ -z "$(key_for 'layout spiral')" ]]
@@ -158,7 +158,7 @@ count_tiling_binds() {
 @test "entry point - conflict warnings are suppressible" {
   command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_key_pick_layout "P"
   command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_warn_conflicts "0"
-  run bash "${PLUGIN}"
+  run "${BASH}" "${PLUGIN}"
 
   [[ "${status}" -eq 0 ]]
   [[ "$(key_for 'pick')" == "P" ]]
@@ -178,4 +178,5 @@ count_tiling_binds() {
 
   [[ "${output}" != *"invalid option"* ]]
   [[ "${output}" != *"declare:"* ]]
+  [[ "${output}" != *"can only \`return'"* ]]
 }
