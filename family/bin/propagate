@@ -52,8 +52,12 @@ member_is_current() {
   local other="${1}"
   local recorded path
 
+  local member
+  member="$(family_repo_name "${other}")"
+
   while read -r recorded path; do
     [[ -n "${path}" ]] || continue
+    family_exception_exists "${ROOT}" "${member}" "${path}" && continue
     [[ -f "${other}/${path}" ]] || return 1
     [[ "$(family_hash_file "${other}/${path}")" == "${recorded}" ]] || return 1
   done < "${ROOT}/family/CHECKSUMS"
@@ -63,10 +67,16 @@ member_is_current() {
 
 copy_owned_into() {
   local other="${1}"
+  local member
+  member="$(family_repo_name "${other}")"
   local path
 
   while IFS= read -r path; do
     [[ -n "${path}" ]] || continue
+    if family_exception_exists "${ROOT}" "${member}" "${path}"; then
+      printf '%-32s keeping its own %s, per family/EXCEPTIONS.md\n' "${member}" "${path}"
+      continue
+    fi
     mkdir -p "${other}/$(dirname "${path}")"
     cp -f "${ROOT}/${path}" "${other}/${path}"
     if [[ -x "${ROOT}/${path}" ]]; then
