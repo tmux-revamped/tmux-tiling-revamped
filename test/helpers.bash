@@ -77,6 +77,38 @@ cleanup_test_environment() {
 }
 
 # Mock tmux function for unit tests.
+
+_mock_opt_dir() {
+  printf '%s' "${MOCK_OPTS_DIR:-${TEST_TMPDIR:-/tmp}/mock-opts}"
+}
+
+_mock_opt_path() {
+  local dir
+  dir="$(_mock_opt_dir)"
+  mkdir -p "${dir}" 2>/dev/null || true
+  printf '%s/%s' "${dir}" "$(printf '%s' "${1}" | tr -c 'A-Za-z0-9_.-' '_')"
+}
+
+_mock_opt_read() {
+  local file
+  file="$(_mock_opt_path "${1}")"
+  if [[ -f "${file}" ]]; then
+    cat "${file}"
+  else
+    printf '%s' "${MOCK_TMUX_OPTION_VALUE:-}"
+  fi
+}
+
+_mock_opt_write() {
+  local file
+  file="$(_mock_opt_path "${1}")"
+  if [[ "${3}" -eq 1 ]]; then
+    rm -f "${file}"
+  else
+    printf '%s' "${2}" > "${file}"
+  fi
+}
+
 # Controlled via MOCK_* environment variables.
 tmux() {
   case "$1" in
@@ -153,11 +185,28 @@ tmux() {
         @tiling_revamped_pick_preview_width)
           echo "${MOCK_TILING_PICK_PREVIEW_WIDTH:-60%}" ;;
         *)
-          echo "${MOCK_TMUX_OPTION_VALUE:-}" ;;
+          _mock_opt_read "${option_name}" ;;
       esac
       return 0
       ;;
     set-option)
+      local opt_name="" opt_value="" opt_unset=0
+      shift
+      while [[ $# -gt 0 ]]; do
+        case "$1" in
+          -gqu|-wqu|-pqu|-u) opt_unset=1 ;;
+          -gqv|-gq|-g|-wqv|-wq|-w|-pqv|-pq|-p|-q) ;;
+          -t) shift ;;
+          @*)
+            opt_name="$1"
+            shift
+            [[ $# -gt 0 ]] && opt_value="$1"
+            continue
+            ;;
+        esac
+        shift
+      done
+      _mock_opt_write "${opt_name}" "${opt_value}" "${opt_unset}"
       return 0
       ;;
     set-hook)
