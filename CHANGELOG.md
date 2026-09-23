@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.3.0] - 2026-09-23
 
 ### Fixed
 
@@ -21,6 +21,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - With `@tiling_revamped_alt_keys` and `@tiling_revamped_navigator` both on, the
   navigator's `M-j` took the jump-to-mark key and nothing said so. The navigator
   still wins, and the collision is now reported.
+- The entry point loads on the bash 3.2 that macOS ships as `/bin/bash`
+  instead of printing a raw `declare: -A: invalid option` and binding nothing.
+  Associative arrays were declared at file scope, above the version guard meant
+  to prevent exactly that, and the guard used `return` outside a function, which
+  is invalid when TPM runs the file through `run-shell` rather than sourcing it,
+  so it never stopped anything.
+- The test helper no longer exports its `tmux` override and socket path to every
+  child process. A real tmux server could pick them up and run your installed
+  plugins against a test socket that is deleted when the run ends, leaving those
+  plugins blocked on it indefinitely.
 
 ### Added
 

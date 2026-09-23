@@ -4,7 +4,7 @@
 [[ -n "${_TILING_REVAMPED_CONSTANTS_LOADED:-}" ]] && return 0
 _TILING_REVAMPED_CONSTANTS_LOADED=1
 
-readonly TILING_REVAMPED_VERSION="2.2.0"
+readonly TILING_REVAMPED_VERSION="2.3.0"
 
 # Default orientation flags for BSP layouts
 # Format: [t|b][l|r][h|v][c|s]
