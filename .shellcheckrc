@@ -1,7 +1,1 @@
 shell=bash
-
-# SC1091: Not following sourced files (dynamic paths resolved at runtime)
-disable=SC1091
-
-# SC2034: Unused variables (constants are sourced by other modules)
-disable=SC2034

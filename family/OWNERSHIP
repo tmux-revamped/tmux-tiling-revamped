@@ -31,3 +31,13 @@ owned	family/bin/sweep
 owned	.claude/agents/family-bug-sweep.md
 owned	family/bin/gen-readme
 owned	.gitignore
+owned	src/lib/utils/platform.sh
+owned	src/lib/utils/cache.sh
+owned	src/lib/utils/has-command.sh
+owned	src/lib/utils/error-logger.sh
+owned	src/lib/tmux/tmux-ops.sh
+owned	.github/workflows/tests.yml
+owned	.github/workflows/pr.yml
+owned	.github/workflows/stale.yml
+owned	.github/dependabot.yml
+owned	.shellcheckrc

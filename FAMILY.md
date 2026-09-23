@@ -78,6 +78,20 @@ When work on one plugin produces something the others would benefit from, the wo
 
 This is the point of the whole arrangement. A member that gets better alone leaves the others behind, and the family is only worth having if that cannot happen quietly.
 
+## Key bindings
+
+**No two members may ship colliding default keys.** Every default is allocated once, by hand, across the whole family, so that a user who installs all 24 gets no conflict without configuring anything. A user who wants a different layout sets the per-action option themselves.
+
+That rule decides defaults. It does not decide what happens when a user's own remap lands on a key another action already holds, and the two mechanisms must not be confused:
+
+| Question | Answered by |
+|---|---|
+| Do two shipped defaults collide? | The allocation in `family/KEYS.md`. They must not, and `family/bin/lint-keys` fails the build if they do |
+| A user remapped one action onto another's key. Now what? | The binding registry: collect every binding, write them in one pass, let the key the user set outrank the one the plugin defaulted, leave the loser unbound, and report the clash |
+| A user already bound the key outside the family | The plugin leaves the user binding alone, skips its own, and records the skip |
+
+An earlier design used the registry's precedence as the answer to the first row. It is not: precedence resolves a collision after the fact, and the rule is that the collision must not exist. The registry stays, because the second and third rows are real and nothing else answers them, but it is a safety net rather than the allocation policy.
+
 ## A bug found in one member is a bug hunted in all of them
 
 This is a requirement, not a habit. Fixing a defect in one member and stopping there is an incomplete fix, and the pull request is not ready.
