@@ -11,9 +11,17 @@ teardown() {
   cleanup_test_environment
 }
 
-@test "constants.sh - TILING_REVAMPED_VERSION is set" {
+@test "constants.sh - TILING_REVAMPED_VERSION is a semantic version" {
   [[ -n "${TILING_REVAMPED_VERSION}" ]]
-  [[ "${TILING_REVAMPED_VERSION}" == "2.2.0" ]]
+  [[ "${TILING_REVAMPED_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+}
+
+@test "constants.sh - TILING_REVAMPED_VERSION matches the changelog" {
+  local changelog
+  changelog="$(grep -m1 -E '^## \[[0-9]' "${BATS_TEST_DIRNAME}/../../../CHANGELOG.md" \
+    | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')"
+
+  [[ "${TILING_REVAMPED_VERSION}" == "${changelog}" ]]
 }
 
 @test "constants.sh - TILING_DEFAULT_ORIENTATION is set" {
