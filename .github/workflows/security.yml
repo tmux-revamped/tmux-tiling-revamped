@@ -1,0 +1,67 @@
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '41 5 * * 1'
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: read-all
+
+jobs:
+  workflows:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Audit the workflows
+        uses: docker://ghcr.io/zizmorcore/zizmor:latest
+        with:
+          args: --persona=regular --format=plain .github/workflows
+
+  pinning:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Every action must be pinned to a commit
+        run: |
+          fail=0
+          while IFS= read -r ref; do
+            case "${ref}" in
+              docker://*) continue ;;
+              *@[0-9a-f]*) [[ "${#ref}" -ge 47 ]] || { echo "FAIL: not a full commit sha: ${ref}"; fail=1; } ;;
+              *) echo "FAIL: floating ref: ${ref}"; fail=1 ;;
+            esac
+          done < <(grep -rhE '^[[:space:]]*-?[[:space:]]*uses:' .github/workflows/ \
+            | sed -E 's/^.*uses:[[:space:]]*//; s/[[:space:]].*$//' | sort -u)
+          exit $fail
+
+  scorecard:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
+    permissions:
+      security-events: write
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Run the OpenSSF Scorecard
+        uses: ossf/scorecard-action@2d1146689b8cda280b9bc96326124645441f03bc # v2.4.4
+        with:
+          results_file: scorecard.sarif
+          results_format: sarif
+
+      - name: Upload the result
+        uses: github/codeql-action/upload-sarif@416ff0dea110f80f0f56f0046500dbf7420e4bb0 # codeql-bundle-v2.27.1
+        with:
+          sarif_file: scorecard.sarif
