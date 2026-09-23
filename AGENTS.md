@@ -46,6 +46,6 @@ All four gate on their exit code. Read the output rather than the exit code alon
 |---|---|
 | [`FAMILY.md`](FAMILY.md) | The contract. Ownership classes, the sweep obligation, the exception process |
 | `family/OWNERSHIP` | Which files are shared and how strictly |
-| `family/KEYS.md` | The authoritative key allocation across all members. Not written yet: until it exists, `family/docs/collisions.md` is the record of which keys clash |
+| `family/KEYS.md` | The key allocation policy and the tiers. The table itself is still being filled in, member by member |
 | `family/docs/collisions.md` | The conflicts that exist today |
 | `family/bin/` | The tooling the contract is enforced with |
