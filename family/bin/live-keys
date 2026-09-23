@@ -1,0 +1,153 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../lib/common.sh
+. "${SCRIPT_DIR}/../lib/common.sh"
+
+ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+SOCKET=""
+WORK=""
+STOCK=""
+
+usage() {
+  cat <<'USAGE'
+usage: family/bin/live-keys [--members-dir DIR] [--order declared|reverse|shuffled]
+
+Starts a tmux server on a private socket, sources every member's entry point
+into it, and reports what the family actually binds.
+
+  --members-dir DIR  member checkouts. Defaults to the parent of this repository
+  --order ORDER      the order the entry points are sourced in. Default declared
+
+Output, tab separated:
+
+  stock    <key>                      bound by tmux itself before any plugin
+  bound    <key>  <member>            claimed by exactly one member
+  clash    <key>  <member>,<member>   claimed by more than one
+  steals   <key>  <member>            claimed by a member over a stock binding
+
+A key is attributed by diffing the binding table after each entry point runs,
+so it reports what tmux ended up with rather than what the source appears to
+say. Options that default to empty bind nothing and never appear here.
+
+Exits 0 when no clash and no steal is reported, 1 otherwise.
+USAGE
+}
+
+cleanup() {
+  [[ -n "${SOCKET}" ]] && tmux -S "${SOCKET}" kill-server 2>/dev/null
+  [[ -n "${SOCKET}" ]] && rm -f "${SOCKET}" 2>/dev/null
+  [[ -n "${WORK}" && -d "${WORK}" ]] && rm -rf "${WORK}"
+  return 0
+}
+trap cleanup EXIT
+
+keys_now() {
+  tmux -S "${SOCKET}" list-keys -T prefix 2>/dev/null |
+    sed -E 's/^bind-key[[:space:]]+(-r[[:space:]]+)?(-T[[:space:]]+[^[:space:]]+[[:space:]]+)?//' |
+    awk '{ key = $1; $1 = ""; sub(/^ +/, ""); print key "\t" $0 }' | LC_ALL=C sort -u
+}
+
+stock_keys() {
+  printf '%s\n' "${STOCK}" | cut -f1 | LC_ALL=C sort -u
+}
+
+main() {
+  local dir=""
+  local order="declared"
+
+  while [[ $# -gt 0 ]]; do
+    case "${1}" in
+      --members-dir)
+        dir="${2:-}"
+        shift 2
+        ;;
+      --order)
+        order="${2:-declared}"
+        shift 2
+        ;;
+      -h | --help)
+        usage
+        return 0
+        ;;
+      *)
+        usage >&2
+        return 2
+        ;;
+    esac
+  done
+
+  command -v tmux >/dev/null 2>&1 || family_die "tmux is not on PATH"
+  [[ -n "${dir}" ]] || dir="$(dirname "${ROOT}")"
+  dir="$(cd "${dir}" && pwd)"
+
+  WORK="$(mktemp -d "${TMPDIR:-/tmp}/family-live-XXXXXX")"
+  SOCKET="${WORK}/sock"
+
+  tmux -S "${SOCKET}" -f /dev/null new-session -d -s probe -x 200 -y 50
+  sleep 0.2
+
+  local before after claimed
+  STOCK="$(keys_now)"
+  printf '%s\n' "${STOCK}" | cut -f1 | sed 's/^/stock\t/'
+
+  local members
+  case "${order}" in
+    declared) members="$(family_members "${ROOT}")" ;;
+    reverse) members="$(family_members "${ROOT}" | tail -r 2>/dev/null || family_members "${ROOT}" | tac)" ;;
+    shuffled) members="$(family_members "${ROOT}" | awk 'BEGIN{srow=7}{print (NR*srow)%97"\t"$0}' | sort -n | cut -f2)" ;;
+    *) family_die "unknown order: ${order}" ;;
+  esac
+
+  local owner_file="${WORK}/owners.tsv"
+  : > "${owner_file}"
+
+  local member entry
+  while IFS= read -r member; do
+    entry="$({ ls "${dir}/${member}"/*.tmux 2>/dev/null || true; } | head -1)"
+    [[ -n "${entry}" ]] || continue
+
+    before="$(keys_now)"
+    local quoted
+    printf -v quoted '%q' "${entry}"
+    tmux -S "${SOCKET}" run-shell "${BASH} ${quoted}" 2>/dev/null || true
+    sleep 0.1
+    after="$(keys_now)"
+
+    claimed="$(LC_ALL=C comm -13 <(printf '%s\n' "${before}") <(printf '%s\n' "${after}"))"
+    while IFS= read -r k; do
+      [[ -n "${k}" ]] || continue
+      printf '%s\t%s\n' "${k%%$'\t'*}" "${member}" >> "${owner_file}"
+    done <<< "${claimed}"
+  done <<< "${members}"
+
+  local findings=0
+
+  while IFS=$'\t' read -r count key owners; do
+    if [[ "${count}" -gt 1 ]]; then
+      printf 'clash\t%s\t%s\n' "${key}" "${owners}"
+      findings=$((findings + 1))
+    else
+      printf 'bound\t%s\t%s\n' "${key}" "${owners}"
+    fi
+  done < <(
+    awk -F'\t' '{ o[$1] = o[$1] ? o[$1] "," $2 : $2; c[$1]++ }
+      END { for (k in c) print c[k] "\t" k "\t" o[k] }' "${owner_file}" | LC_ALL=C sort -k2
+  )
+
+  local key member
+  while IFS=$'\t' read -r key member; do
+    if stock_keys | grep -qxF "${key}"; then
+      printf 'steals\t%s\t%s\n' "${key}" "${member}"
+      findings=$((findings + 1))
+    fi
+  done < <(LC_ALL=C sort -u "${owner_file}")
+
+  if [[ "${findings}" -gt 0 ]]; then
+    printf '\n%s finding(s) with every member loaded\n' "${findings}" >&2
+    return 1
+  fi
+}
+
+main "$@"
