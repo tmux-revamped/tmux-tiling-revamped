@@ -22,18 +22,19 @@ Every entry carries all five fields.
 
 ## Active exceptions
 
+None.
+
+## Retired exceptions
+
 ### tmux-tiling-revamped: test/lib/tmux/tmux-ops.bats
 
-- **Class:** owned
-- **Reason:** the shared test drives a file-backed mock tmux that stores and
-  reads options back. This member's harness mocks tmux as a case statement over
-  MOCK_ variables with no option store, so the four round-trip cases cannot
-  pass against it. The member already covers the same functions through its own
-  test, which is written for its harness.
-- **Alternative:** teaching the case-statement mock to store options was
-  rejected for now because 775 tests depend on its current behaviour and the
-  change is larger than the coverage it would buy.
-- **Risk:** the two tests can drift, so a change to the shared tmux-ops could be
-  covered in 23 members and not here.
-- **Retire when:** this member adopts the file-backed mock, which is the same
-  work as unifying the test harnesses across the family.
+Taken and retired on 2026-09-23. The member's mock tmux had no option store, so
+the shared test's round-trip cases could not pass against it. The exception's
+own retirement condition was to give that harness a store, which was done the
+same day: unknown options now read and write through a file-backed store while
+every existing case keeps its current behaviour. The member runs the shared
+test unmodified.
+
+The exception also taught the rule now in FAMILY.md that an exception is
+recorded before a file becomes owned, never after. Recording it afterwards did
+not bring back the copy propagate had already replaced.

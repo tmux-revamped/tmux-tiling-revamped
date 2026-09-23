@@ -72,6 +72,10 @@ Record it in [`family/EXCEPTIONS.md`](family/EXCEPTIONS.md), naming the reposito
 
 An undeclared difference is a build failure. An exception with no retirement condition is a permanent change to the contract made by one person in one afternoon, so it is refused.
 
+**Record the exception before the file becomes owned, never after.** An exception stops `propagate` from overwriting a member's copy from that point on. It cannot bring back a copy already replaced, because propagate writes files rather than merging them, and the member's own version is then only in its history. Taking a file into the ownership table and recording its exceptions are one change, not two.
+
+**Prefer retiring the exception to keeping it.** Every exception is a member drifting on purpose, and a shared file that a member cannot use is usually a sign that the shared thing needs to be more general rather than that the member needs to be excused. The first exception this family took was retired the same day by making the member's test harness support what the shared test needed.
+
 ## Improving one member improves the family
 
 When work on one plugin produces something the others would benefit from, the work is not finished when that plugin is better. Decide whether the improvement is family-wide. If it is, move it into an `owned` file and propagate it in the same session. If it is not, say why in the pull request.
