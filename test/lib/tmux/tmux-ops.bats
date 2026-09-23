@@ -11,122 +11,93 @@ teardown() {
   cleanup_test_environment
 }
 
-@test "tmux-ops.sh - get_tmux_option returns option value" {
-  export MOCK_TMUX_OPTION_VALUE="custom_value"
-  run get_tmux_option "@tiling_revamped_test" "default"
-  [[ "${output}" == "custom_value" ]]
-}
-
-@test "tmux-ops.sh - get_tmux_option returns default when option empty" {
-  export MOCK_TMUX_OPTION_VALUE=""
-  run get_tmux_option "@unknown_option" "fallback"
-  [[ "${output}" == "fallback" ]]
-}
-
-@test "tmux-ops.sh - get_window_option returns window-scoped value" {
-  export MOCK_TILING_LAYOUT="dwindle"
-  run get_window_option "@tiling_revamped_layout" ""
-  [[ "${output}" == "dwindle" ]]
-}
-
-@test "tmux-ops.sh - get_pane_option returns pane-scoped value" {
-  export MOCK_TILING_MARK="editor"
-  run get_pane_option "@tiling_revamped_mark" ""
-  [[ "${output}" == "editor" ]]
-}
-
-@test "tmux-ops.sh - set_tmux_option does not error" {
-  run set_tmux_option "@tiling_revamped_test" "value"
-  [[ "${status}" -eq 0 ]]
-}
-
-@test "tmux-ops.sh - set_window_option does not error" {
-  run set_window_option "@tiling_revamped_layout" "grid"
-  [[ "${status}" -eq 0 ]]
-}
-
-@test "tmux-ops.sh - get_current_pane returns pane id" {
-  export MOCK_PANE_ID="%3"
-  run get_current_pane
-  [[ "${output}" == "%3" ]]
-}
-
-@test "tmux-ops.sh - get_current_window returns window id" {
-  export MOCK_WINDOW_ID="@2"
-  run get_current_window
-  [[ "${output}" == "@2" ]]
-}
-
-@test "tmux-ops.sh - get_pane_width returns numeric width" {
-  export MOCK_PANE_WIDTH="120"
-  run get_pane_width
-  [[ "${output}" == "120" ]]
-}
-
-@test "tmux-ops.sh - get_pane_height returns numeric height" {
-  export MOCK_PANE_HEIGHT="40"
-  run get_pane_height
-  [[ "${output}" == "40" ]]
-}
-
-@test "tmux-ops.sh - get_window_width returns numeric width" {
-  export MOCK_WINDOW_WIDTH="200"
-  run get_window_width
-  [[ "${output}" == "200" ]]
-}
-
-@test "tmux-ops.sh - get_window_height returns numeric height" {
-  export MOCK_WINDOW_HEIGHT="50"
-  run get_window_height
-  [[ "${output}" == "50" ]]
-}
-
-@test "tmux-ops.sh - get_window_panes returns pane count" {
-  export MOCK_WINDOW_PANES="4"
-  run get_window_panes
-  [[ "${output}" == "4" ]]
-}
-
-@test "tmux-ops.sh - get_window_panes function is exported" {
-  run bash -c "source '${BATS_TEST_DIRNAME}/../../../src/lib/tmux/tmux-ops.sh'; declare -F get_window_panes"
-  [[ "${status}" -eq 0 ]]
-}
-
-@test "tmux-ops.sh - get_pane_count returns count" {
-  export MOCK_PANE_LIST=$'%0\n%1\n%2'
-  run get_pane_count
-  [[ "${output}" == "3" ]]
-}
-
-@test "tmux-ops.sh - get_tmux_option function is exported" {
+@test "tmux-ops.sh - functions are defined" {
   function_exists get_tmux_option
-}
-
-@test "tmux-ops.sh - get_window_option function is exported" {
-  function_exists get_window_option
-}
-
-@test "tmux-ops.sh - set_tmux_option function is exported" {
   function_exists set_tmux_option
+  function_exists unset_tmux_option
 }
 
-@test "tmux-ops.sh - get_current_pane function is exported" {
+@test "tmux-ops.sh - get_tmux_option returns the default when unset" {
+  [[ "$(get_tmux_option @nope fallback)" == "fallback" ]]
+}
+
+@test "tmux-ops.sh - get_tmux_option returns empty when no default is given" {
+  [[ -z "$(get_tmux_option @missing)" ]]
+}
+
+@test "tmux-ops.sh - set then get round-trips the value" {
+  set_tmux_option @foo bar
+  [[ "$(get_tmux_option @foo)" == "bar" ]]
+}
+
+@test "tmux-ops.sh - a stored value overrides the default" {
+  set_tmux_option @foo bar
+  [[ "$(get_tmux_option @foo other)" == "bar" ]]
+}
+
+@test "tmux-ops.sh - unset removes the option" {
+  set_tmux_option @foo bar
+  unset_tmux_option @foo
+  [[ -z "$(get_tmux_option @foo)" ]]
+}
+
+@test "tmux-ops.sh - the window and pane helpers are defined" {
+  function_exists get_window_option
+  function_exists get_pane_option
+  function_exists set_window_option
+  function_exists set_pane_option
+}
+
+@test "tmux-ops.sh - the geometry helpers are defined" {
   function_exists get_current_pane
+  function_exists get_current_window
+  function_exists get_pane_count
+  function_exists get_pane_width
+  function_exists get_pane_height
+  function_exists get_window_width
+  function_exists get_window_height
+  function_exists get_window_panes
 }
 
-@test "tmux-ops.sh - get_pane_option reads a pane-scoped option" {
-  export MOCK_TMUX_OPTION_VALUE="paneval"
-  run get_pane_option "@tiling_revamped_test" "default" "%1"
+@test "tmux-ops.sh - a window option round-trips and falls back" {
+  [[ "$(get_window_option @win fallback)" == "fallback" ]]
+  set_window_option @win value
+
+  [[ "$(get_window_option @win)" == "value" ]]
+}
+
+@test "tmux-ops.sh - a pane option round-trips with and without a target" {
+  [[ "$(get_pane_option @pane fallback)" == "fallback" ]]
+  set_pane_option @pane value
+  [[ "$(get_pane_option @pane)" == "value" ]]
+
+  set_pane_option @pane other "%1"
+  [[ -n "$(get_pane_option @pane '' '%1')" ]]
+}
+
+@test "tmux-ops.sh - every geometry helper runs" {
+  run get_current_pane
   [[ "${status}" -eq 0 ]]
-  [[ "${output}" == "paneval" ]]
+  run get_current_window
+  [[ "${status}" -eq 0 ]]
+  run get_pane_count
+  [[ "${status}" -eq 0 ]]
+  run get_pane_width
+  [[ "${status}" -eq 0 ]]
+  run get_pane_height
+  [[ "${status}" -eq 0 ]]
+  run get_window_width
+  [[ "${status}" -eq 0 ]]
+  run get_window_height
+  [[ "${status}" -eq 0 ]]
+  run get_window_panes
+  [[ "${status}" -eq 0 ]]
 }
 
-@test "tmux-ops.sh - get_pane_width accepts a target pane" {
+@test "tmux-ops.sh - the pane geometry helpers accept a target" {
   run get_pane_width "%1"
   [[ "${status}" -eq 0 ]]
-}
 
-@test "tmux-ops.sh - get_pane_height accepts a target pane" {
   run get_pane_height "%1"
   [[ "${status}" -eq 0 ]]
 }

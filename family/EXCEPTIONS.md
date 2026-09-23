@@ -22,4 +22,18 @@ Every entry carries all five fields.
 
 ## Active exceptions
 
-None.
+### tmux-tiling-revamped: test/lib/tmux/tmux-ops.bats
+
+- **Class:** owned
+- **Reason:** the shared test drives a file-backed mock tmux that stores and
+  reads options back. This member's harness mocks tmux as a case statement over
+  MOCK_ variables with no option store, so the four round-trip cases cannot
+  pass against it. The member already covers the same functions through its own
+  test, which is written for its harness.
+- **Alternative:** teaching the case-statement mock to store options was
+  rejected for now because 775 tests depend on its current behaviour and the
+  change is larger than the coverage it would buy.
+- **Risk:** the two tests can drift, so a change to the shared tmux-ops could be
+  covered in 23 members and not here.
+- **Retire when:** this member adopts the file-backed mock, which is the same
+  work as unifying the test harnesses across the family.

@@ -43,3 +43,5 @@ owned	.github/dependabot.yml
 owned	.shellcheckrc
 owned	.github/workflows/family.yml
 owned	.github/workflows/security.yml
+owned	test/lib/tmux/tmux-ops.bats
+owned	Makefile
