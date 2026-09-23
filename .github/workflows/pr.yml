@@ -12,15 +12,15 @@ jobs:
   label:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/labeler@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/labeler@bf12e9b00b37c5c0ca2b87b79b2daf7891dbda13 # v7
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
   size:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
 
@@ -43,17 +43,41 @@ jobs:
 
           gh pr edit "$pr_number" --add-label "$label" || true
 
-  title-check:
+  commit-grammar:
     runs-on: ubuntu-latest
     steps:
-      - name: Validate PR title format
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - name: Validate the pull request title
         env:
           TITLE: ${{ github.event.pull_request.title }}
         run: |
-          if echo "$TITLE" | grep -qE '^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?: .{1,50}$'; then
-            echo "PR title follows conventional commit format"
-          else
-            echo "WARN: PR title does not follow conventional commit format"
-            echo "Expected: type(scope): description (max 50 chars)"
+          pattern='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9-]+\))?!?: .{1,}$'
+          if ! echo "$TITLE" | grep -qE "$pattern"; then
+            echo "FAIL: the title is not a conventional commit"
             echo "Got: $TITLE"
+            exit 1
           fi
+          if (( ${#TITLE} > 50 )); then
+            echo "FAIL: the title is ${#TITLE} characters, the limit is 50"
+            echo "Got: $TITLE"
+            exit 1
+          fi
+
+      - name: Validate every commit in the branch
+        run: |
+          pattern='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9-]+\))?!?: .{1,}$'
+          fail=0
+          while IFS= read -r subject; do
+            [[ -z "$subject" ]] && continue
+            if ! echo "$subject" | grep -qE "$pattern"; then
+              echo "FAIL: not a conventional commit: $subject"
+              fail=1
+            elif (( ${#subject} > 50 )); then
+              echo "FAIL: ${#subject} characters, the limit is 50: $subject"
+              fail=1
+            fi
+          done < <(git log --format=%s "origin/${{ github.base_ref }}..HEAD")
+          exit $fail

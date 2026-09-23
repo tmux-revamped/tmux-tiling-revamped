@@ -13,32 +13,60 @@ concurrency:
 permissions: read-all
 
 jobs:
-  test:
+  resolve-ubuntu-lts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.lts.outputs.version }}
+    steps:
+      - name: Query the current Ubuntu LTS
+        id: lts
+        run: |
+          version=$(curl -fsSL https://changelogs.ubuntu.com/meta-release \
+            | grep -B1 'LTS' | grep -oP '^Version: \K[\d.]+' | tail -1 | cut -d. -f1,2)
+          echo "Latest Ubuntu LTS: ${version:-unresolved}"
+          echo "version=${version:-24.04}" >> "$GITHUB_OUTPUT"
+
+  test-linux:
+    needs: [resolve-ubuntu-lts]
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, macos-15-intel]
+        host: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.host }}
+    container:
+      image: ubuntu:${{ needs.resolve-ubuntu-lts.outputs.version }}
+    steps:
+      - name: Bootstrap the container
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq git make bats tmux ca-certificates
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Run tests
+        run: make test
+
+  test-macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-26, macos-26-intel]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Install dependencies (Ubuntu)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq bats tmux
-
-      - name: Install dependencies (macOS)
-        if: runner.os == 'macOS'
+      - name: Install dependencies
         run: brew install bats-core tmux
 
       - name: Run tests
         run: make test
 
   test-macos-gnu:
-    runs-on: macos-latest
+    runs-on: macos-26
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Install tmux, bats, and GNU tools
         run: brew install bats-core tmux coreutils gawk gnu-sed grep
@@ -57,7 +85,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Install shellcheck
         run: sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
@@ -118,7 +146,7 @@ jobs:
   coverage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Install test dependencies
         run: |
@@ -140,7 +168,7 @@ jobs:
   version:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Check version consistency
         run: |
@@ -157,13 +185,13 @@ jobs:
           fi
 
   release:
-    needs: [test, test-macos-gnu, lint, coverage, version]
+    needs: [test-linux, test-macos, test-macos-gnu, lint, coverage, version]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}

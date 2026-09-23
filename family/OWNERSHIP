@@ -41,3 +41,4 @@ owned	.github/workflows/pr.yml
 owned	.github/workflows/stale.yml
 owned	.github/dependabot.yml
 owned	.shellcheckrc
+owned	.github/workflows/family.yml

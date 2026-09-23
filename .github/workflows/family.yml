@@ -1,0 +1,51 @@
+name: Family
+
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'FAMILY.md'
+      - 'family/**'
+      - 'src/lib/**'
+      - '.github/workflows/**'
+
+concurrency:
+  group: family-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: read-all
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Verify this member against the contract
+        run: family/bin/audit
+
+      - name: Verify the README family section is current
+        run: family/bin/gen-readme --check
+
+  siblings:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Compare every owned file against the other members
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: family/bin/sync --check --remote-base https://github.com/tmux-revamped
+
+  runner-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Fail when a newer runner image exists than the one pinned
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: family/bin/check-runner-drift
