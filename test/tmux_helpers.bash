@@ -40,13 +40,13 @@ tmux() {
 create_panes() {
   local count="${1:-3}"
   local i
-  for (( i=1; i<count; i++ )); do
+  for ((i = 1; i < count; i++)); do
     command tmux -S "${TMUX_SOCKET}" split-window -d 2>/dev/null || {
       # Vertical split ran out of space; try horizontal
       command tmux -S "${TMUX_SOCKET}" split-window -dh 2>/dev/null || return 1
     }
     # Redistribute space every 3 splits to allow more panes
-    if (( i % 3 == 0 )); then
+    if ((i % 3 == 0)); then
       command tmux -S "${TMUX_SOCKET}" select-layout tiled 2>/dev/null || true
     fi
   done
@@ -81,7 +81,7 @@ assert_pane_wider_than() {
     '#{pane_width}' 2>/dev/null || echo "0")
   width_b=$(command tmux -S "${TMUX_SOCKET}" display-message -p -t "${pane_b}" \
     '#{pane_width}' 2>/dev/null || echo "0")
-  if (( width_a <= width_b )); then
+  if ((width_a <= width_b)); then
     echo "Pane ${pane_a} (width=${width_a}) not wider than pane ${pane_b} (width=${width_b})" >&2
     return 1
   fi
@@ -95,7 +95,7 @@ assert_pane_taller_than() {
     '#{pane_height}' 2>/dev/null || echo "0")
   height_b=$(command tmux -S "${TMUX_SOCKET}" display-message -p -t "${pane_b}" \
     '#{pane_height}' 2>/dev/null || echo "0")
-  if (( height_a <= height_b )); then
+  if ((height_a <= height_b)); then
     echo "Pane ${pane_a} (height=${height_a}) not taller than pane ${pane_b} (height=${height_b})" >&2
     return 1
   fi
@@ -120,7 +120,7 @@ assert_balanced_columns() {
 
   # Layouts where column balance is not applicable
   case "${layout}" in
-    monocle|grid|deck) return 0 ;;
+  monocle | grid | deck) return 0 ;;
   esac
 
   local -a pane_data=()
@@ -129,7 +129,7 @@ assert_balanced_columns() {
   done < <(command tmux -S "${TMUX_SOCKET}" list-panes -F '#{pane_left} #{pane_width}' 2>/dev/null)
 
   local pane_count="${#pane_data[@]}"
-  (( pane_count <= 2 )) && return 0
+  ((pane_count <= 2)) && return 0
 
   # Find the widest pane (master/center)
   local max_width=0 center_left=0
@@ -137,7 +137,7 @@ assert_balanced_columns() {
   for entry in "${pane_data[@]}"; do
     pl="${entry%% *}"
     pw="${entry##* }"
-    if (( pw > max_width )); then
+    if ((pw > max_width)); then
       max_width="${pw}"
       center_left="${pl}"
     fi
@@ -146,7 +146,7 @@ assert_balanced_columns() {
   # For main-vertical, master is leftmost, stack is right. No left column.
   # For main-horizontal, master is top. Column balance is N/A.
   case "${layout}" in
-    main-vertical|main-horizontal|dwindle|spiral) return 0 ;;
+  main-vertical | main-horizontal | dwindle | spiral) return 0 ;;
   esac
 
   # Count panes on each side of the center (main-center)
@@ -154,19 +154,19 @@ assert_balanced_columns() {
   for entry in "${pane_data[@]}"; do
     pl="${entry%% *}"
     pw="${entry##* }"
-    if (( pw == max_width )); then
+    if ((pw == max_width)); then
       continue
-    elif (( pl < center_left )); then
-      left_count=$(( left_count + 1 ))
+    elif ((pl < center_left)); then
+      left_count=$((left_count + 1))
     else
-      right_count=$(( right_count + 1 ))
+      right_count=$((right_count + 1))
     fi
   done
 
-  local diff=$(( left_count - right_count ))
-  (( diff < 0 )) && diff=$(( -diff ))
+  local diff=$((left_count - right_count))
+  ((diff < 0)) && diff=$((-diff))
 
-  if (( diff > 1 )); then
+  if ((diff > 1)); then
     echo "Unbalanced columns: left=${left_count} right=${right_count} (diff=${diff})" >&2
     return 1
   fi
@@ -179,7 +179,7 @@ assert_balanced_rows() {
   local layout="${1}"
 
   case "${layout}" in
-    monocle|grid|deck) return 0 ;;
+  monocle | grid | deck) return 0 ;;
   esac
 
   local -a pane_data=()
@@ -188,7 +188,7 @@ assert_balanced_rows() {
   done < <(command tmux -S "${TMUX_SOCKET}" list-panes -F '#{pane_top} #{pane_height} #{pane_left} #{pane_width}' 2>/dev/null)
 
   local pane_count="${#pane_data[@]}"
-  (( pane_count <= 2 )) && return 0
+  ((pane_count <= 2)) && return 0
 
   # For main-vertical: stack panes should have similar heights
   if [[ "${layout}" == "main-vertical" ]]; then
@@ -198,7 +198,7 @@ assert_balanced_rows() {
     for entry in "${pane_data[@]}"; do
       local pw
       pw=$(echo "${entry}" | awk '{print $4}')
-      if (( pw > max_width )); then
+      if ((pw > max_width)); then
         max_width="${pw}"
       fi
     done
@@ -206,19 +206,19 @@ assert_balanced_rows() {
       local pw ph
       pw=$(echo "${entry}" | awk '{print $4}')
       ph=$(echo "${entry}" | awk '{print $2}')
-      if (( pw < max_width )); then
+      if ((pw < max_width)); then
         stack_heights+=("${ph}")
       fi
     done
-    if (( ${#stack_heights[@]} >= 2 )); then
+    if ((${#stack_heights[@]} >= 2)); then
       local min_h=999999 max_h=0
       local h
       for h in "${stack_heights[@]}"; do
-        (( h < min_h )) && min_h="${h}"
-        (( h > max_h )) && max_h="${h}"
+        ((h < min_h)) && min_h="${h}"
+        ((h > max_h)) && max_h="${h}"
       done
-      local hdiff=$(( max_h - min_h ))
-      if (( hdiff > 3 )); then
+      local hdiff=$((max_h - min_h))
+      if ((hdiff > 3)); then
         echo "Unbalanced stack heights in main-vertical: min=${min_h} max=${max_h} (diff=${hdiff})" >&2
         return 1
       fi
@@ -234,7 +234,7 @@ assert_balanced_rows() {
     for entry in "${pane_data[@]}"; do
       local ph
       ph=$(echo "${entry}" | awk '{print $2}')
-      if (( ph > max_height )); then
+      if ((ph > max_height)); then
         max_height="${ph}"
       fi
     done
@@ -242,19 +242,19 @@ assert_balanced_rows() {
       local ph pw
       ph=$(echo "${entry}" | awk '{print $2}')
       pw=$(echo "${entry}" | awk '{print $4}')
-      if (( ph < max_height )); then
+      if ((ph < max_height)); then
         stack_widths+=("${pw}")
       fi
     done
-    if (( ${#stack_widths[@]} >= 2 )); then
+    if ((${#stack_widths[@]} >= 2)); then
       local min_w=999999 max_w=0
       local w
       for w in "${stack_widths[@]}"; do
-        (( w < min_w )) && min_w="${w}"
-        (( w > max_w )) && max_w="${w}"
+        ((w < min_w)) && min_w="${w}"
+        ((w > max_w)) && max_w="${w}"
       done
-      local wdiff=$(( max_w - min_w ))
-      if (( wdiff > 3 )); then
+      local wdiff=$((max_w - min_w))
+      if ((wdiff > 3)); then
         echo "Unbalanced stack widths in main-horizontal: min=${min_w} max=${max_w} (diff=${wdiff})" >&2
         return 1
       fi
@@ -271,7 +271,7 @@ assert_layout_applies() {
   local actual_count
   actual_count=$(get_pane_count)
   # Skip if terminal was too small to create all panes
-  if (( actual_count < count )); then
+  if ((actual_count < count)); then
     skip "terminal too small for ${count} panes (created ${actual_count})"
   fi
   run_tiling layout "${layout}"
