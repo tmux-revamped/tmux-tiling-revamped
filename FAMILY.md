@@ -110,6 +110,22 @@ The sweep distinguishes three outcomes per member, and the third matters as much
 - For a local defect, the reason no other member can express it.
 - A regression test that fails without the fix. Where the defect is systemic, the test is itself systemic, so it belongs in the shared suite rather than in one member's.
 
+### A green pipeline is not a clean sweep
+
+Some defects cannot reach CI at all, so a sweep that only consults the pipeline
+reports them as absent.
+
+| Class | Why CI misses it | Where to look |
+|---|---|---|
+| A path containing a space | Runner checkout paths have no spaces. `run-shell` hands its argument to `/bin/sh`, which word-splits it, so the wrong command runs and reports 127 | A developer checkout under a directory with a space |
+| bash 3.2 | Ubuntu runners carry bash 5, and the macOS jobs resolve whatever is first on `PATH` | `/bin/bash` on macOS, run directly |
+| A blocking entry point | Nothing in CI reads the entry point's stdout and waits on it | Run the entry point under a command substitution and time it |
+| A leaked test fixture | The run ends and the runner is destroyed | A long-lived developer machine, hours later |
+
+When a defect belongs to one of these, run the probe locally and say so in the
+pull request. Reporting a member as clean on the strength of a green pipeline
+it could never have failed is the same error as not checking it.
+
 ### Worked example
 
 The tiling entrypoint declared an associative array at file scope, above its own bash version guard. On the bash 3.2 that macOS still ships as `/bin/bash` that printed a raw usage error at load. The guard that should have caught it used `return` at file scope, which is invalid when TPM runs the file through `run-shell` instead of sourcing it, so the guard never stopped anything and the plugin bound no keys at all while appearing to load.
