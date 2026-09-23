@@ -109,3 +109,73 @@ count_tiling_binds() {
   run command tmux -S "${TILING_SOCKET}" show-hooks -g
   [[ "${output}" != *"tiling.sh hook"* ]]
 }
+
+@test "entry point - a set key wins over another feature's default on the same key" {
+  command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_key_pick_layout "P"
+  bash "${PLUGIN}"
+
+  [[ "$(key_for 'pick')" == "P" ]]
+  [[ -z "$(key_for 'pane-jump')" ]]
+}
+
+@test "entry point - a resolved conflict names both features" {
+  command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_key_pick_layout "P"
+  bash "${PLUGIN}"
+
+  local reported
+  reported=$(command tmux -S "${TILING_SOCKET}" show-option -gqv "@tiling_revamped_conflicts")
+  [[ "${reported}" == *"pick_layout"* ]]
+  [[ "${reported}" == *"pane_jump"* ]]
+}
+
+@test "entry point - a clean config reports no conflict" {
+  bash "${PLUGIN}"
+
+  local reported
+  reported=$(command tmux -S "${TILING_SOCKET}" show-option -gqv "@tiling_revamped_conflicts")
+  [[ -z "${reported}" ]]
+}
+
+@test "entry point - a key conflict binds the slot exactly once" {
+  command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_key_pick_layout "P"
+  bash "${PLUGIN}"
+
+  local bound
+  bound=$(command tmux -S "${TILING_SOCKET}" list-keys -T prefix 2>/dev/null \
+    | grep -cE '^bind-key +(-r )?-T prefix +P ')
+  [[ "${bound}" -eq 1 ]]
+}
+
+@test "entry point - two set keys on one slot keep the first and drop the second" {
+  command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_key_dwindle "z"
+  command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_key_spiral "z"
+  bash "${PLUGIN}"
+
+  [[ "$(key_for 'layout dwindle')" == "z" ]]
+  [[ -z "$(key_for 'layout spiral')" ]]
+}
+
+@test "entry point - conflict warnings are suppressible" {
+  command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_key_pick_layout "P"
+  command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_warn_conflicts "0"
+  run bash "${PLUGIN}"
+
+  [[ "${status}" -eq 0 ]]
+  [[ "$(key_for 'pick')" == "P" ]]
+}
+
+@test "entry point - no associative array is declared at file scope" {
+  run grep -nE '^declare -g?A' "${PLUGIN}"
+
+  [[ "${status}" -ne 0 ]]
+}
+
+@test "entry point - loads without error under bash 3.2" {
+  command -v /bin/bash >/dev/null || skip "no /bin/bash"
+  [[ "$(/bin/bash -c 'echo ${BASH_VERSINFO[0]}')" -lt 4 ]] || skip "/bin/bash is bash 4 or newer"
+
+  run /bin/bash "${PLUGIN}"
+
+  [[ "${output}" != *"invalid option"* ]]
+  [[ "${output}" != *"declare:"* ]]
+}

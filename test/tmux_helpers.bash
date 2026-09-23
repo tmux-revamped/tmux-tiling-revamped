@@ -23,6 +23,12 @@ setup_tmux_server() {
 teardown_tmux_server() {
   command tmux -S "${TMUX_SOCKET}" kill-server 2>/dev/null || true
   rm -f "${TMUX_SOCKET}" 2>/dev/null || true
+  release_tmux_override
+}
+
+release_tmux_override() {
+  export -nf tmux 2>/dev/null || true
+  export -n TMUX_SOCKET TILING_SOCKET 2>/dev/null || true
 }
 
 # Override tmux so all calls within the test use the test socket.
@@ -96,8 +102,12 @@ assert_pane_taller_than() {
 }
 
 run_tiling() {
+  # run-shell hands the string to /bin/sh, which word-splits it, so a checkout
+  # path containing a space runs the wrong command and reports 127.
+  local quoted_cmd
+  printf -v quoted_cmd '%q' "${TILING_CMD}"
   command tmux -S "${TMUX_SOCKET}" \
-    run-shell "TMUX_SOCKET=${TMUX_SOCKET} bash ${TILING_CMD} $*" 2>/dev/null
+    run-shell "TMUX_SOCKET=${TMUX_SOCKET} bash ${quoted_cmd} $*" 2>/dev/null
   sleep 0.2
 }
 

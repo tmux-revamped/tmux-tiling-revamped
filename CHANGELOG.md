@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- A key that two features both resolved to no longer disables one of them
+  without saying so. Every binding is now collected before any of it reaches
+  tmux, a key you set outranks one the plugin defaulted, and the losing action
+  stays unbound instead of overwriting the winner. Setting
+  `@tiling_revamped_key_pick_layout` to `P` silently lost the layout picker to
+  the pane jumper's default `P`, because the jumper was bound later.
+- The navigator, workspace, project and vim-aware picker bindings went straight
+  to `bind-key` and could overwrite each other in the same way. They now go
+  through the same registry.
+- With `@tiling_revamped_alt_keys` and `@tiling_revamped_navigator` both on, the
+  navigator's `M-j` took the jump-to-mark key and nothing said so. The navigator
+  still wins, and the collision is now reported.
+
+### Added
+
+- `@tiling_revamped_conflicts` holds every resolved key conflict after start, so
+  a clobbered binding is diagnosable once the start-up message is gone.
+- `@tiling_revamped_warn_conflicts` (default `1`) silences that message.
+
 ## [2.2.0] - 2026-06-30
 
 ### Added

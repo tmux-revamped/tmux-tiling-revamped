@@ -140,3 +140,52 @@ teardown() {
   grep -q "3.2" "${capture}"
   [[ ! -f "${TEST_TMPDIR}/leak" ]]
 }
+
+@test "help-overlay.sh - _help_lines prefers the published binding map" {
+  get_tmux_option() {
+    if [[ "$1" == "@tiling_revamped_bindings" ]]; then
+      printf 'dwindle\tZ\nspiral\tD\n'
+      return 0
+    fi
+    echo "${2:-}"
+  }
+  export -f get_tmux_option
+  run _help_lines
+  [[ "${output}" == *"Z"*"Dwindle layout"* ]]
+  [[ "${output}" != *"d       Dwindle layout"* ]]
+}
+
+@test "help-overlay.sh - _help_lines omits a feature the map left unbound" {
+  get_tmux_option() {
+    if [[ "$1" == "@tiling_revamped_bindings" ]]; then
+      printf 'spiral\tD\n'
+      return 0
+    fi
+    echo "${2:-}"
+  }
+  export -f get_tmux_option
+  run _help_lines
+  [[ "${output}" != *"Dwindle layout"* ]]
+  [[ "${output}" == *"Spiral layout"* ]]
+}
+
+@test "help-overlay.sh - _help_lines covers the bindings added after 2.1" {
+  run _help_lines
+  [[ "${output}" == *"Jump to any pane"* ]]
+  [[ "${output}" == *"Focus back"* ]]
+  [[ "${output}" == *"Focus forward"* ]]
+}
+
+@test "help-overlay.sh - a feature name is matched whole, not as a substring" {
+  get_tmux_option() {
+    if [[ "$1" == "@tiling_revamped_bindings" ]]; then
+      printf 'pane_jump\tP\njump\tj\n'
+      return 0
+    fi
+    echo "${2:-}"
+  }
+  export -f get_tmux_option
+  run _help_lines
+  [[ "${output}" == *"j       Jump to mark"* ]]
+  [[ "${output}" == *"P       Jump to any pane"* ]]
+}

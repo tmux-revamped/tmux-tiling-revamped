@@ -276,6 +276,15 @@ Open tmux, create a few panes, then press `prefix + d`. All panes rearrange into
 
 All keybindings use the tmux prefix. Every key is configurable via `@tiling_revamped_key_*` options.
 
+Two features must never resolve to the same key. When they do, the key you set
+wins over the one this plugin defaulted, the losing action stays unbound, and
+the resolution is reported on start and left in `@tiling_revamped_conflicts`.
+
+One combination collides out of the box: with `@tiling_revamped_alt_keys` and
+`@tiling_revamped_navigator` both on, the navigator's `M-j` takes the key that
+jump-to-mark would otherwise hold. Move `@tiling_revamped_key_jump` to a free
+key to keep both.
+
 | Key | Action | Command |
 |:----|:-------|:--------|
 | `d` | Apply dwindle layout | `layout dwindle` |
@@ -301,6 +310,9 @@ All keybindings use the tmux prefix. Every key is configurable via `@tiling_reva
 | `r` | Redo last undone layout | `redo` |
 | `=` | Swap focused pane with the largest | `swap-biggest` |
 | `?` | Show keybinding overlay | `help-overlay` |
+| `P` | Jump to any pane across sessions | `pane-jump` |
+| `[` | Focus previously focused pane | `focus-back` |
+| `]` | Focus forward in focus history | `focus-forward` |
 
 ## Configuration
 
@@ -366,7 +378,13 @@ set -g @tiling_revamped_key_redo            "r"
 set -g @tiling_revamped_key_help            "?"
 set -g @tiling_revamped_key_swap_biggest    "="
 set -g @tiling_revamped_key_back_and_forth  "Tab"
+set -g @tiling_revamped_key_pane_jump       "P"
+set -g @tiling_revamped_key_focus_back      "["
+set -g @tiling_revamped_key_focus_forward   "]"
 set -g @tiling_revamped_key_project         ""
+
+# Report a key that two features both resolve to (1 = message on start)
+set -g @tiling_revamped_warn_conflicts      "1"
 
 # Directional swap (disabled by default, set keys to enable)
 set -g @tiling_revamped_key_swap_up    ""
