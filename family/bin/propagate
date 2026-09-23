@@ -97,7 +97,13 @@ commit_and_open() {
   local member="${1}"
   local other="${2}"
 
-  git -C "${other}" add --all
+  local path
+  while IFS= read -r path; do
+    [[ -n "${path}" ]] || continue
+    git -C "${other}" add -- "${path}"
+  done < <(owned_files)
+  git -C "${other}" add -- family/CHECKSUMS
+
   if git -C "${other}" diff --cached --quiet; then
     skipped_members=$((skipped_members + 1))
     printf '%-32s already current\n' "${member}"
