@@ -10,6 +10,9 @@
 setup() {
   PLUGIN_DIR="${BATS_TEST_DIRNAME}/../.."
   PLUGIN="${PLUGIN_DIR}/tmux-tiling-revamped.tmux"
+  if ((BASH_VERSINFO[0] < 4)) && [[ "${BATS_TEST_DESCRIPTION}" != *"bash 3.2"* ]]; then
+    skip "the plugin needs bash 4 or newer and bats runs under bash ${BASH_VERSION}"
+  fi
   export TILING_SOCKET="/tmp/tiling-kb-${BASHPID}-${RANDOM}"
 
   # Route every tmux call (including those inside the plugin subshell) to the
