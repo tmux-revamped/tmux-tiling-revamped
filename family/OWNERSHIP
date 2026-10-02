@@ -47,3 +47,7 @@ owned	test/lib/tmux/tmux-ops.bats
 owned	Makefile
 owned	family/bin/live-keys
 owned	family/KEYS.md
+owned	family/docs/migration.md
+owned	family/bin/check-runner-drift
+owned	.github/actionlint.yaml
+owned	test/family/check-runner-drift.bats

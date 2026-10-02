@@ -64,7 +64,65 @@ Any other member appearing in the steals list in
 [`family/docs/collisions.md`](docs/collisions.md) is taking a tmux default the
 user may still want, and moves.
 
-## Why this is not yet applied
+## The shape
+
+Three namespaces, chosen so a member can never reach into another's.
+
+| Namespace | Owner | Why |
+|---|---|---|
+| Stock tmux keys | tmux, except the declared overriders above | A plugin that takes one removes something the user may still want |
+| `M-` plus a lowercase letter | One key per member, its primary action or its menu | Stock tmux uses only `M-n`, `M-o`, `M-p` and the digits and arrows here, so the letters are free and the initial of the plugin name is almost always available |
+| `M-` plus an uppercase letter | `tmux-tiling-revamped`, exclusively | It is a window manager with 22 actions and genuinely needs a range. Stock tmux binds no uppercase Meta key at all, so it gets one to itself |
+
+Everything a member binds beyond its one key defaults to unbound and is
+documented in its README as opt-in. That is the rule you get for free from the
+decision that a user who wants a different layout configures it: the family
+ships the smallest set that is useful, not every action it can perform.
+
+## Allocation
+
+### One key per member
+
+| Member | Key | Action | Mnemonic |
+|---|---|---|---|
+| `tmux-launcher-revamped` | `M-a` | app launcher menu | apps |
+| `tmux-battery-revamped` | `M-b` | detail popup | battery |
+| `tmux-cpu-revamped` | `M-c` | detail popup | cpu |
+| `tmux-disk-revamped` | `M-d` | detail popup | disk |
+| `tmux-network-revamped` | `M-e` | detail popup | network, `n` is a stock tmux key |
+| `tmux-fzf-revamped` | `M-f` | picker menu | fzf |
+| `tmux-gpu-revamped` | `M-g` | detail popup | gpu |
+| `tmux-bluetooth-revamped` | `M-h` | detail popup | bluetooth, its own initial is taken |
+| `tmux-kube-revamped` | `M-k` | context menu | kube |
+| `tmux-logging-revamped` | `M-l` | logging menu | logging |
+| `tmux-music-revamped` | `M-m` | music menu | music |
+| `tmux-ram-revamped` | `M-r` | detail popup | ram |
+| `tmux-pomodoro-revamped` | `M-s` | start or stop | the timer's verb, `p` is a stock tmux key |
+| `tmux-time-revamped` | `M-t` | world clock menu | time |
+| `tmux-weather-revamped` | `M-w` | forecast popup | weather |
+| `tmux-git-revamped` | `M-v` | git menu | version control, `g` is taken |
+| `tmux-extract-revamped` | `Tab` | extract from the screen | completion, and unclaimed by tmux |
+| `tmux-persist-revamped` | `C-s`, `C-r` | save, restore | save and restore, and they must work without releasing the modifier |
+
+`tmux-autoreload-revamped`, `tmux-plugin-template`, `tmux-scroll-revamped` and
+`tmux-sensible-revamped` bind no prefix key. Scroll binds the mouse wheel in the
+root table, which is opt-in under rule 5.
+
+### Reserved for tiling
+
+`tmux-tiling-revamped` owns every `M-` plus uppercase letter. No other member
+may take one, and tiling takes nothing outside it apart from the keys it is
+allowed to keep because tmux does not bind them.
+
+### Declared overriders
+
+`tmux-pain-control-revamped` keeps its split, resize and pane-movement keys,
+which replace tmux's own by design. `tmux-sensible-revamped` keeps `C-n` and
+`C-p`.
+
+## Why the table is filled in but not yet applied
+
+
 
 A conflict-free allocation is easy to generate and useless if it is generated.
 Running the obvious greedy assignment over the measured data produces 32 moves
@@ -72,15 +130,9 @@ that resolve every clash and read like `M-i` for the battery popup and `M-a` for
 grow-the-master-pane. That is worse for a daily driver than the conflicts it
 fixes, because a key nobody can remember is a key nobody uses.
 
-The allocation is therefore assigned by hand, one member at a time, with the
-mnemonic recorded. Until that is done this file states the policy and the
-measurement, and `family/bin/live-keys` keeps reporting the 26 clashes so the
-gap stays visible instead of being quietly rounded off.
+The table above is therefore assigned by hand with the mnemonic recorded. It is
+a breaking change for anyone already using these plugins, so it lands as one
+coordinated major release with a migration table mapping every old key to its
+new one. `family/bin/live-keys` keeps reporting the 26 clashes until then, so
+the gap stays visible instead of being quietly rounded off.
 
-## Allocation
-
-One row per action, filled in as each member is allocated.
-
-| Member | Action | Key | Tier | Note |
-|---|---|---|---|---|
-| | | | | |

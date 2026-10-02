@@ -26,6 +26,7 @@ Output, tab separated:
   bound    <key>  <member>            claimed by exactly one member
   clash    <key>  <member>,<member>   claimed by more than one
   steals   <key>  <member>            claimed by a member over a stock binding
+  override <key>  <member>            the same, by a member KEYS.md declares may
 
 A key is attributed by diffing the binding table after each entry point runs,
 so it reports what tmux ended up with rather than what the source appears to
@@ -47,6 +48,11 @@ keys_now() {
   tmux -S "${SOCKET}" list-keys -T prefix 2>/dev/null |
     sed -E 's/^bind-key[[:space:]]+(-r[[:space:]]+)?(-T[[:space:]]+[^[:space:]]+[[:space:]]+)?//' |
     awk '{ key = $1; $1 = ""; sub(/^ +/, ""); print key "\t" $0 }' | LC_ALL=C sort -u
+}
+
+is_declared_overrider() {
+  grep -qF "\`${1}\`" "${ROOT}/family/KEYS.md" 2>/dev/null &&
+    awk '/^### Declared overriders/,0' "${ROOT}/family/KEYS.md" | grep -qF "${1}"
 }
 
 stock_keys() {
@@ -138,10 +144,13 @@ main() {
 
   local key member
   while IFS=$'\t' read -r key member; do
-    if stock_keys | grep -qxF "${key}"; then
-      printf 'steals\t%s\t%s\n' "${key}" "${member}"
-      findings=$((findings + 1))
+    stock_keys | grep -qxF "${key}" || continue
+    if is_declared_overrider "${member}"; then
+      printf 'override\t%s\t%s\n' "${key}" "${member}"
+      continue
     fi
+    printf 'steals\t%s\t%s\n' "${key}" "${member}"
+    findings=$((findings + 1))
   done < <(LC_ALL=C sort -u "${owner_file}")
 
   if [[ "${findings}" -gt 0 ]]; then

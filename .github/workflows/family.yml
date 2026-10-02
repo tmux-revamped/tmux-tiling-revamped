@@ -16,24 +16,35 @@ concurrency:
   group: family-${{ github.ref }}
   cancel-in-progress: true
 
-permissions: read-all
+permissions:
+  contents: read
 
 jobs:
   audit:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
 
       - name: Verify this member against the contract
         run: family/bin/audit
 
       - name: Verify the README family section is current
-        run: family/bin/gen-readme --check
+        run: |
+          members="${RUNNER_TEMP}/members"
+          mkdir -p "${members}"
+          while IFS= read -r member; do
+            git clone --quiet --depth=1 "https://github.com/tmux-revamped/${member}.git" "${members}/${member}"
+          done < <(grep -vE '^[[:space:]]*(#|$)' family/MEMBERS)
+          family/bin/gen-readme --check --members-dir "${members}"
 
   siblings:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
 
       - name: Compare every owned file against the other members
         env:
@@ -41,9 +52,11 @@ jobs:
         run: family/bin/sync --check --remote-base https://github.com/tmux-revamped
 
   runner-drift:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
 
       - name: Fail when a newer runner image exists than the one pinned
         env:

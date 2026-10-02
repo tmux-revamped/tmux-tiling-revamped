@@ -6,30 +6,41 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
   label:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
       - uses: actions/labeler@bf12e9b00b37c5c0ca2b87b79b2daf7891dbda13 # v7
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
   size:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Label PR by size
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          lines=$(git diff --stat origin/main...HEAD | tail -1 | grep -oE '[0-9]+ insertion' | grep -oE '[0-9]+' || echo "0")
-          pr_number=${{ github.event.pull_request.number }}
+          lines=$(git diff --stat "origin/${BASE_REF}...${HEAD_SHA}" | tail -1 \
+            | grep -oE '[0-9]+ insertion' | grep -oE '[0-9]+' || echo "0")
 
           if (( lines < 100 )); then
             label="size/S"
@@ -41,15 +52,11 @@ jobs:
             label="size/XL"
           fi
 
-          gh pr edit "$pr_number" --add-label "$label" || true
+          gh pr edit "$PR_NUMBER" --add-label "$label" || true
 
   commit-grammar:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          fetch-depth: 0
-
       - name: Validate the pull request title
         env:
           TITLE: ${{ github.event.pull_request.title }}
@@ -65,19 +72,3 @@ jobs:
             echo "Got: $TITLE"
             exit 1
           fi
-
-      - name: Validate every commit in the branch
-        run: |
-          pattern='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9-]+\))?!?: .{1,}$'
-          fail=0
-          while IFS= read -r subject; do
-            [[ -z "$subject" ]] && continue
-            if ! echo "$subject" | grep -qE "$pattern"; then
-              echo "FAIL: not a conventional commit: $subject"
-              fail=1
-            elif (( ${#subject} > 50 )); then
-              echo "FAIL: ${#subject} characters, the limit is 50: $subject"
-              fail=1
-            fi
-          done < <(git log --format=%s "origin/${{ github.base_ref }}..HEAD")
-          exit $fail

@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../lib/common.sh
+. "${SCRIPT_DIR}/../lib/common.sh"
+
+ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+IMAGES_FILE=""
+LABEL_PATTERN='(ubuntu-[0-9]+\.[0-9]+(-arm)?|macos-[0-9]+(-intel)?)'
+
+usage() {
+  cat <<'USAGE'
+usage: family/bin/check-runner-drift [--images FILE] [PATH]
+
+Fails when a workflow pins a GitHub-hosted runner label, such as ubuntu-24.04
+or macos-26-intel, and a newer generally available image of the same line
+exists. Preview and beta images are ignored.
+
+  --images FILE   read the runner-images README from FILE instead of the API
+  PATH            the member to check, defaults to this repository
+
+Exits 0 when every pin is current, 1 on drift, 2 when the image list cannot
+be read.
+USAGE
+}
+
+label_line() {
+  local label="${1}"
+  [[ "${label}" =~ ^(ubuntu|macos)-([0-9]+)(\.([0-9]+))?(-[a-z]+)?$ ]] || return 1
+  printf '%s%s %d\n' "${BASH_REMATCH[1]}" "${BASH_REMATCH[5]}" \
+    "$((10#${BASH_REMATCH[2]} * 100 + 10#${BASH_REMATCH[4]:-0}))"
+}
+
+read_images() {
+  if [[ -n "${IMAGES_FILE}" ]]; then
+    cat "${IMAGES_FILE}"
+    return
+  fi
+  gh api repos/actions/runner-images/readme --jq .content | base64 --decode
+}
+
+available_labels() {
+  grep -E '^\|' | grep -viE 'preview|beta' | grep -oE "\`${LABEL_PATTERN}\`" | tr -d '`' | sort -u
+}
+
+pinned_labels() {
+  local dir="${1}/.github/workflows"
+  [[ -d "${dir}" ]] || return 0
+  cat "${dir}"/*.yml 2>/dev/null | grep -oE "${LABEL_PATTERN}" | sort -u || true
+}
+
+newest_in_line() {
+  local line="${1}" available="${2}" label candidate_line version best="" best_version=-1
+  while IFS= read -r label; do
+    [[ -n "${label}" ]] || continue
+    read -r candidate_line version < <(label_line "${label}") || continue
+    [[ "${candidate_line}" == "${line}" && "${version}" -gt "${best_version}" ]] || continue
+    best="${label}"
+    best_version="${version}"
+  done <<<"${available}"
+  printf '%s %s\n' "${best}" "${best_version}"
+}
+
+report_drift() {
+  local pinned="${1}" available="${2}" label line version newest newest_version drift=0
+  while IFS= read -r label; do
+    [[ -n "${label}" ]] || continue
+    read -r line version < <(label_line "${label}") || continue
+    read -r newest newest_version < <(newest_in_line "${line}" "${available}")
+    [[ -n "${newest}" && "${newest_version}" -gt "${version}" ]] || continue
+    printf '%s: pins %s, %s is generally available\n' "$(family_repo_name "${ROOT}")" "${label}" "${newest}"
+    drift=1
+  done <<<"${pinned}"
+  return "${drift}"
+}
+
+main() {
+  local target="${ROOT}"
+  while [[ $# -gt 0 ]]; do
+    case "${1}" in
+      --images)
+        IMAGES_FILE="${2:-}"
+        shift 2
+        ;;
+      -h | --help)
+        usage
+        return 0
+        ;;
+      -*)
+        usage >&2
+        return 2
+        ;;
+      *)
+        target="${1}"
+        shift
+        ;;
+    esac
+  done
+
+  local images available pinned
+  images="$(read_images)" || { printf 'error: could not read the runner-images list\n' >&2; return 2; }
+  available="$(available_labels <<<"${images}" || true)"
+  if [[ -z "${available}" ]]; then
+    printf 'error: the runner-images list holds no recognisable runner label\n' >&2
+    return 2
+  fi
+  pinned="$(pinned_labels "${target}")"
+  report_drift "${pinned}" "${available}" || return 1
+  printf '%s: every pinned runner is current\n' "$(family_repo_name "${ROOT}")"
+}
+
+main "$@"
