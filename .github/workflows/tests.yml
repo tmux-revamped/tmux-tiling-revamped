@@ -75,16 +75,18 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install tmux, bats, and GNU tools
-        run: brew install bats-core tmux coreutils gawk gnu-sed grep
+      - name: Install tmux, bats, bash, and GNU tools
+        run: brew install bats-core tmux bash coreutils gawk gnu-sed grep
 
-      - name: Run tests with GNU tools on PATH
+      - name: Run tests with bash 5 and GNU tools on PATH
         run: |
           gnubin="$(brew --prefix coreutils)/libexec/gnubin"
           gnubin="${gnubin}:$(brew --prefix gnu-sed)/libexec/gnubin"
           gnubin="${gnubin}:$(brew --prefix grep)/libexec/gnubin"
           gnubin="${gnubin}:$(brew --prefix gawk)/libexec/gnubin"
-          export PATH="${gnubin}:${PATH}"
+          bashbin="$(brew --prefix bash)/bin"
+          export PATH="${bashbin}:${gnubin}:${PATH}"
+          bash --version | head -1
           awk --version | head -1
           sed --version | head -1
           make test
