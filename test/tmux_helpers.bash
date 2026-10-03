@@ -15,7 +15,7 @@ TMUX_SOCKET="/tmp/tiling-test-${BASHPID}-${RANDOM}"
 
 setup_tmux_server() {
   # Start a detached tmux server with deterministic dimensions
-  command tmux -S "${TMUX_SOCKET}" new-session -d -s test -x 200 -y 50 2>/dev/null
+  command tmux -S "${TMUX_SOCKET}" -f /dev/null new-session -d -s test -x 200 -y 50 2>/dev/null
   # Give the server a moment to initialize
   sleep 0.1
 }
