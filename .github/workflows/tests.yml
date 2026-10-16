@@ -30,19 +30,47 @@ jobs:
 
   test-linux:
     needs: [resolve-ubuntu-lts]
+    name: test-linux (${{ matrix.host }}, ${{ matrix.tools }})
     strategy:
       fail-fast: false
       matrix:
         host: [ubuntu-26.04, ubuntu-26.04-arm]
+        tools: [uutils, gnu]
     runs-on: ${{ matrix.host }}
     container:
       image: ubuntu:${{ needs.resolve-ubuntu-lts.outputs.version }}
+    env:
+      TOOLS: ${{ matrix.tools }}
     steps:
       - name: Bootstrap the container
         run: |
           apt-get update -qq
-          apt-get install -y -qq git make bats tmux ca-certificates
+          DEBIAN_FRONTEND=noninteractive apt-get install -y -qq git make bats tmux zsh ca-certificates
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Select the core tools
+        shell: bash
+        run: |
+          if [[ "${TOOLS}" == "gnu" ]]; then
+            DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --allow-remove-essential \
+              coreutils-from-gnu coreutils-from-uutils-
+          else
+            DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --allow-remove-essential \
+              coreutils-from-uutils coreutils-from-gnu-
+          fi
+          echo "SHELL=$(command -v zsh)" >> "$GITHUB_ENV"
+
+      - name: Verify the profile
+        shell: bash
+        run: |
+          bash --version | head -1
+          zsh --version
+          tmux -V
+          cat --version | head -1
+          expected="GNU coreutils"
+          [[ "${TOOLS}" == "uutils" ]] && expected="uutils coreutils"
+          cat --version | head -1 | grep -qF "${expected}"
+          [[ "${SHELL}" == */zsh ]]
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -52,44 +80,80 @@ jobs:
         run: make test
 
   test-macos:
+    name: test-macos (${{ matrix.os }}, ${{ matrix.profile }})
     strategy:
       fail-fast: false
       matrix:
         os: [macos-26, macos-26-intel]
+        profile: [system, gnu, uutils]
     runs-on: ${{ matrix.os }}
+    env:
+      PROFILE: ${{ matrix.profile }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
 
       - name: Install dependencies
-        run: brew install bats-core tmux
+        run: |
+          packages=(bats-core tmux)
+          case "${PROFILE}" in
+            gnu) packages+=(bash zsh coreutils findutils diffutils gnu-sed grep gawk) ;;
+            uutils) packages+=(bash zsh uutils-coreutils uutils-findutils uutils-diffutils gnu-sed grep gawk) ;;
+          esac
+          brew install "${packages[@]}"
+
+      - name: Select the shells and core tools
+        run: |
+          prefix="$(brew --prefix)"
+          text_tools=("$(brew --prefix gawk)/libexec/gnubin" "$(brew --prefix grep)/libexec/gnubin"
+            "$(brew --prefix gnu-sed)/libexec/gnubin")
+          case "${PROFILE}" in
+            system)
+              paths=(/usr/sbin /sbin /usr/bin /bin)
+              login_shell=/bin/zsh
+              ;;
+            gnu)
+              paths=("${prefix}/bin" "${text_tools[@]}" "$(brew --prefix diffutils)/bin"
+                "$(brew --prefix findutils)/libexec/gnubin" "$(brew --prefix coreutils)/libexec/gnubin")
+              login_shell="${prefix}/bin/zsh"
+              ;;
+            uutils)
+              paths=("${prefix}/bin" "${text_tools[@]}" "$(brew --prefix uutils-diffutils)/libexec/uubin"
+                "$(brew --prefix uutils-findutils)/libexec/uubin" "$(brew --prefix uutils-coreutils)/libexec/uubin")
+              login_shell="${prefix}/bin/zsh"
+              ;;
+          esac
+          for dir in "${paths[@]}"; do
+            echo "${dir}" >> "$GITHUB_PATH"
+          done
+          echo "SHELL=${login_shell}" >> "$GITHUB_ENV"
+
+      - name: Verify the profile
+        run: |
+          command -v bash
+          bash --version | head -1
+          "${SHELL}" --version
+          tmux -V
+          case "${PROFILE}" in
+            system)
+              [[ "$(command -v bash)" == /bin/bash && "${SHELL}" == /bin/zsh ]]
+              if cat --version >/dev/null 2>&1; then exit 1; fi
+              ;;
+            gnu)
+              [[ "$(command -v bash)" == "$(brew --prefix)/bin/bash" && "${SHELL}" == "$(brew --prefix)/bin/zsh" ]]
+              cat --version | head -1 | grep -qF "GNU coreutils"
+              sed --version | head -1 | grep -qF "GNU sed"
+              ;;
+            uutils)
+              [[ "$(command -v bash)" == "$(brew --prefix)/bin/bash" && "${SHELL}" == "$(brew --prefix)/bin/zsh" ]]
+              cat --version | head -1 | grep -qF "uutils coreutils"
+              sed --version | head -1 | grep -qF "GNU sed"
+              ;;
+          esac
 
       - name: Run tests
         run: make test
-
-  test-macos-gnu:
-    runs-on: macos-26
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
-
-      - name: Install tmux, bats, bash, and GNU tools
-        run: brew install bats-core tmux bash coreutils gawk gnu-sed grep
-
-      - name: Run tests with bash 5 and GNU tools on PATH
-        run: |
-          gnubin="$(brew --prefix coreutils)/libexec/gnubin"
-          gnubin="${gnubin}:$(brew --prefix gnu-sed)/libexec/gnubin"
-          gnubin="${gnubin}:$(brew --prefix grep)/libexec/gnubin"
-          gnubin="${gnubin}:$(brew --prefix gawk)/libexec/gnubin"
-          bashbin="$(brew --prefix bash)/bin"
-          export PATH="${bashbin}:${gnubin}:${PATH}"
-          bash --version | head -1
-          awk --version | head -1
-          sed --version | head -1
-          make test
 
   lint:
     runs-on: ubuntu-26.04
@@ -200,7 +264,7 @@ jobs:
           fi
 
   release:
-    needs: [test-linux, test-macos, test-macos-gnu, lint, coverage, version]
+    needs: [test-linux, test-macos, lint, coverage, version]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-26.04
     permissions:

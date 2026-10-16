@@ -68,11 +68,13 @@ user may still want, and moves.
 
 Rule 5 keeps the root table opt-in. These members act on a mouse gesture, which
 has no prefix, so installing one is the request: their root bindings are the
-plugin doing its job. Each binds only mouse keys stock tmux leaves unbound.
+plugin doing its job. A member may wrap a stock mouse binding only when the
+stock command keeps running; every other key must be one stock tmux leaves
+unbound.
 
 | Member | Root keys | Why |
 |---|---|---|
-| `tmux-reorder-revamped` | `MouseDrag1Status`, `MouseDragEnd1Status`, `MouseDragEnd1StatusLeft`, `MouseDragEnd1StatusRight`, `MouseDragEnd1StatusDefault` | Dragging a window tab to reorder windows is its only action |
+| `tmux-reorder-revamped` | `MouseDown1Status`, `MouseUp1Status`, `MouseDrag1Status`, `MouseDragEnd1Status`, `MouseDragEnd1StatusLeft`, `MouseDragEnd1StatusRight`, `MouseDragEnd1StatusDefault` | Dragging a window tab to reorder windows is its only action. It wraps the stock `MouseDown1Status` and keeps its command running |
 
 ## The shape
 
