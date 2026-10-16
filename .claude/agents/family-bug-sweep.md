@@ -1,6 +1,6 @@
 ---
 name: family-bug-sweep
-description: Hunt a defect found in one tmux-revamped member across all 24 members. Use immediately after diagnosing any bug in a family repository, before the fix is called done. Classifies the defect as shared, systemic, or local, runs family/bin/sweep with a pattern or a probe, and reports which members are affected. Returns a per-member verdict and the fix each affected member needs.
+description: Hunt a defect found in one tmux-revamped member across every member. Use immediately after diagnosing any bug in a family repository, before the fix is called done. Classifies the defect as shared, systemic, or local, runs family/bin/sweep with a pattern or a probe, and reports which members are affected. Returns a per-member verdict and the fix each affected member needs.
 tools: Read, Grep, Glob, Bash
 ---
 

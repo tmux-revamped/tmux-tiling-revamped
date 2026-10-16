@@ -62,7 +62,7 @@ Never edit an `owned` file in more than one repository.
 
 1. Make the change in one member.
 2. Run `family/bin/propagate`. It applies the change to every member, increments `family/VERSION`, regenerates `family/CHECKSUMS`, and opens one pull request per repository under a shared branch name.
-3. Review and merge the 24 pull requests.
+3. Review and merge the pull request in every member.
 
 Running `propagate` twice against the same change does nothing the second time.
 
@@ -84,7 +84,7 @@ This is the point of the whole arrangement. A member that gets better alone leav
 
 ## Key bindings
 
-**No two members may ship colliding default keys.** Every default is allocated once, by hand, across the whole family, so that a user who installs all 24 gets no conflict without configuring anything. A user who wants a different layout sets the per-action option themselves.
+**No two members may ship colliding default keys.** Every default is allocated once, by hand, across the whole family, so that a user who installs every member gets no conflict without configuring anything. A user who wants a different layout sets the per-action option themselves.
 
 That rule decides defaults. It does not decide what happens when a user's own remap lands on a key another action already holds, and the two mechanisms must not be confused:
 

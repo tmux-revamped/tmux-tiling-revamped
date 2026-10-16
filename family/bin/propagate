@@ -16,7 +16,7 @@ Copies every owned file from this member into every other member, bumps the
 contract version, regenerates family/CHECKSUMS, and opens one pull request per
 repository under a shared branch name.
 
-  --message SUBJECT   conventional-commit subject for all 24 commits, required
+  --message SUBJECT   conventional-commit subject for every member commit, required
   --members-dir DIR   operate on checkouts under DIR instead of cloning
   --branch NAME       branch name, defaults to family/v<new contract version>
   --no-bump           do not increment family/VERSION

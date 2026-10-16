@@ -1,6 +1,6 @@
 # Working in this repository
 
-This repository is one member of the tmux-revamped family. Read [`FAMILY.md`](FAMILY.md) before changing anything. It is the contract, it is identical in all 24 members, and it overrides any habit that contradicts it.
+This repository is one member of the tmux-revamped family. Read [`FAMILY.md`](FAMILY.md) before changing anything. It is the contract, it is identical in every member, and it overrides any habit that contradicts it.
 
 ## Before you finish a bug fix
 

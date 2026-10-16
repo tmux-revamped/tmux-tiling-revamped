@@ -1,9 +1,9 @@
 # Family Key Allocation
 
 Every key a member binds by default is allocated here. The rule is that no two
-members ship the same default, so installing all 24 produces no conflict without
-the user configuring anything. A user who wants a different layout sets the
-per-action option.
+members ship the same default, so installing every member produces no conflict
+without the user configuring anything. A user who wants a different layout sets
+the per-action option.
 
 `family/bin/live-keys` is the gate. It loads every member into a real tmux
 server and attributes each key by diffing the binding table, so it reports what
@@ -63,6 +63,16 @@ keys are the plugin doing its job rather than a collision.
 Any other member appearing in the steals list in
 [`family/docs/collisions.md`](docs/collisions.md) is taking a tmux default the
 user may still want, and moves.
+
+## Declared root-table members
+
+Rule 5 keeps the root table opt-in. These members act on a mouse gesture, which
+has no prefix, so installing one is the request: their root bindings are the
+plugin doing its job. Each binds only mouse keys stock tmux leaves unbound.
+
+| Member | Root keys | Why |
+|---|---|---|
+| `tmux-reorder-revamped` | `MouseDrag1Status`, `MouseDragEnd1Status`, `MouseDragEnd1StatusLeft`, `MouseDragEnd1StatusRight`, `MouseDragEnd1StatusDefault` | Dragging a window tab to reorder windows is its only action |
 
 ## The shape
 
