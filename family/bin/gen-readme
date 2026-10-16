@@ -35,7 +35,15 @@ member_summary() {
   local readme="${dir}/${member}/README.md"
 
   if [[ -f "${readme}" ]]; then
-    awk 'NR > 1 && NF && $0 !~ /^[#!<[]/ && $0 !~ /^\[!\[/ { print; exit }' "${readme}" |
+    awk 'NR > 1 && NF {
+      line = $0
+      if (line ~ /^<(strong|b|p)>/) {
+        gsub(/<[^>]*>/, "", line)
+      } else if (line ~ /^[#!<[]/ || line ~ /^---+[[:space:]]*$/) {
+        next
+      }
+      if (line ~ /[^[:space:]]/) { print line; exit }
+    }' "${readme}" |
       sed -E 's/\*\*//g; s/\|/\\|/g; s/\.$//' | cut -c1-110
     return 0
   fi
