@@ -74,7 +74,7 @@ unbound.
 
 | Member | Root keys | Why |
 |---|---|---|
-| `tmux-reorder-revamped` | `MouseDown1Status`, `MouseUp1Status`, `MouseDrag1Status`, `MouseDragEnd1Status`, `MouseDragEnd1StatusLeft`, `MouseDragEnd1StatusRight`, `MouseDragEnd1StatusDefault` | Dragging a window tab to reorder windows is its only action. It wraps the stock `MouseDown1Status` and keeps its command running |
+| `tmux-reorder-revamped` | `MouseDown1Status`, `SecondClick1Status`, `TripleClick1Status`, `MouseUp1Status`, `MouseDrag1Status`, `MouseDragEnd1Status`, `MouseDragEnd1StatusLeft`, `MouseDragEnd1StatusRight`, `MouseDragEnd1StatusDefault` | Dragging a window tab to reorder windows is its only action. It wraps the stock `MouseDown1Status` and keeps its command running |
 
 ## The shape
 
