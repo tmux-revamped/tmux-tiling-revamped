@@ -7,9 +7,6 @@ LIB_DIR="${TILING_REVAMPED_LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && 
 
 source "${LIB_DIR}/tmux/tmux-config.sh"
 
-# Deck layout: all panes are full-height, stacked horizontally at equal widths.
-# Conceptually like a "deck of cards" viewed from the side — every pane is
-# reachable but only the focused one is the primary viewport.
 apply_layout_deck() {
   local pane_count
   pane_count=$(get_pane_count)

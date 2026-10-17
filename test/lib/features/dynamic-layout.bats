@@ -5,7 +5,6 @@ load "${BATS_TEST_DIRNAME}/../../helpers.bash"
 setup() {
   setup_test_environment
   source "${BATS_TEST_DIRNAME}/../../../src/lib/features/dynamic-layout.sh"
-  # Stub every layout apply fn so the dispatcher records instead of executing.
   apply_layout_dwindle() { echo "dwindle:${1:-}"; }
   apply_layout_spiral() { echo "spiral:${1:-}"; }
   apply_layout_grid() { echo "grid"; }

@@ -7,11 +7,6 @@ LIB_DIR="${TILING_REVAMPED_LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && 
 
 source "${LIB_DIR}/tmux/tmux-config.sh"
 
-# cycle_layout: step forward or backward through the configured layout list.
-#
-# The cycle list is configured via @tiling_revamped_cycle_layouts and defaults
-# to "dwindle spiral grid main-center monocle".  Each call rotates to the
-# next (or previous) layout in the list.
 cycle_layout() {
   local direction="${1:-next}"
 

@@ -50,7 +50,6 @@ get_current_layout() {
 }
 
 set_current_layout() {
-  # Push current layout to history before changing (if undo module is loaded)
   if declare -f push_layout_history &>/dev/null && [[ "${1}" != "$(get_current_layout)" ]]; then
     push_layout_history
   fi
@@ -83,9 +82,6 @@ set_applying() {
   set_window_option "@tiling_revamped_applying" "$(date +%s)"
 }
 
-# _reapply_current_layout: re-apply the stored layout with current flags.
-# Used by operations (promote, circulate, swap) that change pane positions
-# and need to re-apply the layout to fix sizes.
 _reapply_current_layout() {
   local current_layout
   current_layout=$(get_current_layout)

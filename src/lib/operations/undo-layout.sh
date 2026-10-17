@@ -9,9 +9,6 @@ source "${LIB_DIR}/tmux/tmux-config.sh"
 
 TILING_MAX_UNDO_DEPTH=10
 
-# _stack_push: prepend an entry onto a pipe-separated window-option stack,
-# trimming the stack to TILING_MAX_UNDO_DEPTH entries.  Empty entries are
-# ignored so a missing current layout never pollutes the stack.
 _stack_push() {
   local option="${1}"
   local entry="${2}"
@@ -41,7 +38,6 @@ _stack_push() {
   set_window_option "${option}" "${history}"
 }
 
-# _current_entry: render the window's current "layout:flags" entry, or empty.
 _current_entry() {
   local layout
   layout=$(get_current_layout)
@@ -52,8 +48,6 @@ _current_entry() {
   printf '%s:%s\n' "${layout}" "${flags}"
 }
 
-# _apply_layout_entry: re-apply a "layout" with the given orientation "flags".
-# Returns 1 for an unknown layout name.
 _apply_layout_entry() {
   local layout="${1}"
   local flags="${2}"
@@ -71,9 +65,6 @@ _apply_layout_entry() {
   esac
 }
 
-# push_layout_history: save current layout and orientation before a change.
-# A fresh layout change also invalidates the redo stack.  During undo/redo
-# replay (TILING_REVAMPED_REPLAYING=1) this is a no-op so the stacks stay sane.
 push_layout_history() {
   [[ "${TILING_REVAMPED_REPLAYING:-0}" == "1" ]] && return 0
   [[ "${TILING_REVAMPED_AUTOMATIC:-0}" == "1" ]] && return 0
@@ -90,8 +81,6 @@ push_layout_history() {
   set_window_option "@tiling_revamped_layout_redo" ""
 }
 
-# undo_layout: pop the most recent history entry and re-apply it, pushing the
-# layout left behind onto the redo stack.
 undo_layout() {
   local history
   history=$(get_window_option "@tiling_revamped_layout_history" "")
@@ -121,8 +110,6 @@ undo_layout() {
   return "${rc}"
 }
 
-# redo_layout: pop the most recent redo entry and re-apply it, pushing the
-# layout left behind back onto the history stack so undo works again.
 redo_layout() {
   local redo
   redo=$(get_window_option "@tiling_revamped_layout_redo" "")

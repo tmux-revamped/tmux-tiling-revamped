@@ -7,15 +7,6 @@ LIB_DIR="${TILING_REVAMPED_LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && 
 
 source "${LIB_DIR}/tmux/tmux-config.sh"
 
-# resize_master: grow or shrink the master pane by a configurable step.
-#
-# The step size is @tiling_revamped_resize_step (default 5, percentage points).
-# Resizing adjusts the stored ratio and re-applies the current layout so the
-# master pane reflects the new proportion.
-#
-# Usage:
-#   resize_master grow     # increase master ratio by step
-#   resize_master shrink   # decrease master ratio by step
 resize_master() {
   local direction="${1:-grow}"
   local pane_count
@@ -29,7 +20,6 @@ resize_master() {
   local current_layout
   current_layout=$(get_current_layout)
 
-  # Determine which ratio option to adjust based on the active layout
   local ratio_option="" default_ratio="60"
   case "${current_layout}" in
     main-vertical|main-horizontal)
@@ -41,7 +31,6 @@ resize_master() {
       default_ratio="60"
       ;;
     *)
-      # For BSP and other layouts, resize the first pane directly
       local first_pane
       first_pane=$(tmux list-panes -F '#{pane_id}' 2>/dev/null | head -1)
       if [[ "${direction}" == "grow" ]]; then
@@ -68,7 +57,6 @@ resize_master() {
 
   set_tmux_option "${ratio_option}" "${ratio}"
 
-  # Re-apply the layout with the updated ratio
   case "${current_layout}" in
     main-vertical)   apply_layout_main_vertical ;;
     main-horizontal) apply_layout_main_horizontal ;;

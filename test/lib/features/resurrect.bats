@@ -40,13 +40,6 @@ teardown() {
   [[ "${_TILING_REVAMPED_RESURRECT_LOADED}" == "1" ]]
 }
 
-# Direct-call coverage. The default mock tmux does not emit windows for
-# list-windows, so restore_layouts loops over nothing. These tests install a
-# per-test tmux that emits a window plus a stored layout, driving every branch
-# of the case statement inside the loop body.
-
-# _resurrect_tmux_factory LAYOUT FLAGS: print a tmux override that emits one
-# window for list-windows and the given layout/flags for show-option.
 _resurrect_tmux_for() {
   export RESURRECT_LOG="${TEST_TMPDIR}/resurrect.log"
   export RESURRECT_LAYOUT="${1}"

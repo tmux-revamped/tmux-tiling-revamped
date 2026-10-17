@@ -74,32 +74,45 @@ teardown() {
 }
 
 @test "main-center.sh - _main_center_build produces balanced sides with 5 panes" {
-  # 5 panes: 1 center + 2 left + 2 right
-  run _main_center_build "%0 %1 %2 %3 %4" 200 50 60
-  [[ "${status}" -eq 0 ]]
-  # Left column should contain pane 1 and 2, right should contain 3 and 4
-  [[ "${output}" == *",1"* ]]
-  [[ "${output}" == *",2"* ]]
-  [[ "${output}" == *",3"* ]]
+  # Arrange
+  local panes="%0 %1 %2 %3 %4"
+
+  # Act
+  run _main_center_build "${panes}" 200 50 60
+
+  # Assert
+  [[ "${status}" -eq 0 ]] || false
+  [[ "${output}" == *",1"* ]] || false
+  [[ "${output}" == *",2"* ]] || false
+  [[ "${output}" == *",3"* ]] || false
   [[ "${output}" == *",4"* ]]
 }
 
 @test "main-center.sh - _main_center_build produces balanced sides with 7 panes" {
-  # 7 panes: 1 center + 3 left + 3 right
-  run _main_center_build "%0 %1 %2 %3 %4 %5 %6" 200 50 60
-  [[ "${status}" -eq 0 ]]
-  # All pane IDs present
-  [[ "${output}" == *",0"* ]]
+  # Arrange
+  local panes="%0 %1 %2 %3 %4 %5 %6"
+
+  # Act
+  run _main_center_build "${panes}" 200 50 60
+
+  # Assert
+  [[ "${status}" -eq 0 ]] || false
+  [[ "${output}" == *",0"* ]] || false
   [[ "${output}" == *",6"* ]]
 }
 
 @test "main-center.sh - _main_center_vstack produces vertical stack" {
-  run _main_center_vstack "%1 %2 %3" 0 0 40 50
-  [[ "${status}" -eq 0 ]]
-  # Should contain vertical split markers
-  [[ "${output}" == *"["* ]]
-  [[ "${output}" == *",1"* ]]
-  [[ "${output}" == *",2"* ]]
+  # Arrange
+  local panes="%1 %2 %3"
+
+  # Act
+  run _main_center_vstack "${panes}" 0 0 40 50
+
+  # Assert
+  [[ "${status}" -eq 0 ]] || false
+  [[ "${output}" == *"["* ]] || false
+  [[ "${output}" == *",1"* ]] || false
+  [[ "${output}" == *",2"* ]] || false
   [[ "${output}" == *",3"* ]]
 }
 

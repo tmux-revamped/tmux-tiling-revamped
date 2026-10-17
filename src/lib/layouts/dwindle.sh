@@ -7,7 +7,6 @@ LIB_DIR="${TILING_REVAMPED_LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && 
 
 source "${LIB_DIR}/tmux/tmux-config.sh"
 
-# _layout_checksum: compute tmux's layout string checksum (CRC-16).
 _layout_checksum() {
   local layout="$1"
   local csum=0
@@ -19,11 +18,6 @@ _layout_checksum() {
   printf '%04x' "$csum"
 }
 
-# _bsp_pane_first: determine if the current pane is the first child
-# at a given BSP depth.  Returns "true" or "false".
-#
-# Uses parent-scoped: modulo_hv, is_spiral, corner_tb, corner_lr,
-# spiral_tb, spiral_lr.
 _bsp_pane_first() {
   local depth=$1
   local count=$((depth + 1))
@@ -48,16 +42,6 @@ _bsp_pane_first() {
   echo "$pf"
 }
 
-# _bsp_leaf_permutation: compute which BSP depth maps to which leaf.
-#
-# tmux select-layout assigns panes to leaves positionally (pane at
-# index K goes to the Kth leaf in the layout string), ignoring pane
-# IDs.  For spirals, reversed splits make some panes the second child,
-# causing the leaf order to diverge from BSP depth order.
-#
-# Returns space-separated BSP depths in leaf-traversal order.
-# Example: "0 1 4 5 3 2" means leaf 0 is BSP depth 0, leaf 2 is
-# BSP depth 4, etc.
 _bsp_leaf_permutation() {
   local n=$1
   local start_depth=$2
@@ -80,10 +64,6 @@ _bsp_leaf_permutation() {
   fi
 }
 
-# _bsp_build: recursively build a tmux layout string for BSP tiling.
-#
-# Uses parent-scoped: modulo_hv, is_spiral, corner_tb, corner_lr,
-# spiral_tb, spiral_lr, bsp_split_ratio.
 _bsp_build() {
   local pane_ids_str="$1"
   local x=$2 y=$3 w=$4 h=$5
@@ -107,7 +87,6 @@ _bsp_build() {
   local pane_first
   pane_first=$(_bsp_pane_first "$depth")
 
-  # At depth 0, use the configurable split ratio. Deeper levels use 50/50.
   local ratio=50
   if (( depth == 0 )); then
     ratio="${bsp_split_ratio:-50}"
@@ -146,12 +125,6 @@ _bsp_build() {
   fi
 }
 
-# _bsp_fix_pane_order: swap panes so the Kth pane occupies BSP depth K.
-#
-# After select-layout, tmux assigns pane at index K to leaf K, which
-# may be at BSP depth perm[K] instead of K.  This function swaps panes
-# to correct the assignment.  The geometry is constant (set by the
-# layout string); only pane-to-leaf mapping changes.
 _bsp_fix_pane_order() {
   local -a panes=("$@")
   local pane_count="${#panes[@]}"
@@ -159,7 +132,6 @@ _bsp_fix_pane_order() {
   local -a perm
   read -ra perm <<< "$(_bsp_leaf_permutation "$pane_count" 0)"
 
-  # Check if permutation is identity (no swaps needed, e.g. dwindle)
   local needs_fix=false
   local i
   for (( i=0; i<pane_count; i++ )); do
@@ -170,13 +142,11 @@ _bsp_fix_pane_order() {
   done
   $needs_fix || return 0
 
-  # inv[bsp_depth] = leaf_index (constant: geometry doesn't move)
   local -a inv
   for (( i=0; i<pane_count; i++ )); do
     inv[${perm[$i]}]=$i
   done
 
-  # Bidirectional tracking: which pane is at which leaf and vice versa
   local -a pane_to_leaf leaf_to_pane
   for (( i=0; i<pane_count; i++ )); do
     pane_to_leaf[$i]=$i
@@ -190,7 +160,6 @@ _bsp_fix_pane_order() {
       local other="${leaf_to_pane[$tgt]}"
       tmux swap-pane -d -s "${panes[$i]}" -t "${panes[$other]}" 2>/dev/null
 
-      # Update both mappings
       pane_to_leaf[$i]=$tgt
       pane_to_leaf[$other]=$cur
       leaf_to_pane[$tgt]=$i
@@ -199,11 +168,6 @@ _bsp_fix_pane_order() {
   done
 }
 
-# _apply_bsp_layout: shared BSP implementation for dwindle and spiral.
-#
-# Computes BSP geometry mathematically and applies it via tmux's custom
-# layout string, then fixes pane-to-position assignment with swap-pane
-# for spiral layouts where the leaf order diverges from pane index order.
 _apply_bsp_layout() {
   local is_spiral_arg="${1:-false}"
   local flags="${2:-}"
@@ -219,7 +183,6 @@ _apply_bsp_layout() {
     [[ -z "${flags}" ]] && flags=$(get_tmux_option "@tiling_revamped_default_orientation" "brvc")
   fi
 
-  # Parse orientation flags
   local corner_tb='' spiral_tb='+' corner_lr='' spiral_lr='+' modulo_hv=1 is_spiral=false
 
   case "${flags}" in
@@ -251,14 +214,12 @@ _apply_bsp_layout() {
   window_width=$(tmux display-message -p '#{window_width}' 2>/dev/null || echo "80")
   window_height=$(tmux display-message -p '#{window_height}' 2>/dev/null || echo "24")
 
-  # Configurable first-split ratio (depth 0 only, default 50/50)
   local bsp_split_ratio
   bsp_split_ratio=$(get_numeric_option "@tiling_revamped_split_ratio" "${TILING_DEFAULT_SPLIT_RATIO}" "20" "80")
 
   trap 'set_applying 0' RETURN
   set_applying 1
 
-  # Build and apply the layout string
   local layout_body
   layout_body=$(_bsp_build "${panes[*]}" 0 0 "$window_width" "$window_height" 0)
 
@@ -267,13 +228,10 @@ _apply_bsp_layout() {
 
   tmux select-layout "${checksum},${layout_body}" 2>/dev/null
 
-  # Fix pane-to-leaf mapping for spiral layouts where reversed splits
-  # cause the leaf order to diverge from BSP depth order
   if $is_spiral; then
     _bsp_fix_pane_order "${panes[@]}"
   fi
 
-  # Restore pane selection
   [[ -n "${selected_pane}" ]] && tmux select-pane -t "${selected_pane}" 2>/dev/null || true
 }
 

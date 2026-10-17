@@ -40,8 +40,6 @@ teardown() {
   [[ "${status}" -eq 0 ]]
 }
 
-# ── Direct-call coverage ────────────────────────────────────────────
-
 @test "deck.sh - apply_layout_deck direct call applies even-horizontal" {
   export MOCK_PANE_LIST=$'%0\n%1\n%2'
   apply_layout_deck >/dev/null 2>&1

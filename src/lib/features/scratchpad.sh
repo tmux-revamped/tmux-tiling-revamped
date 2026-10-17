@@ -7,14 +7,6 @@ LIB_DIR="${TILING_REVAMPED_LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && 
 
 source "${LIB_DIR}/tmux/tmux-config.sh"
 
-# Named scratchpads backed by persistent detached tmux sessions.
-# Each scratchpad is a popup that attaches to a dedicated session named
-# "_scratch_<name>".  The popup is shown via display-popup (tmux 3.2+).
-#
-# Usage:
-#   toggle_scratchpad                  - toggle the "default" scratchpad
-#   toggle_scratchpad <name>           - toggle a named scratchpad
-#   toggle_scratchpad <name> <cmd>     - open scratchpad running <cmd>
 toggle_scratchpad() {
   local name="${1:-default}"
   local cmd="${2:-}"

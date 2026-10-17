@@ -8,10 +8,6 @@ LIB_DIR="${TILING_REVAMPED_LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && 
 source "${LIB_DIR}/tmux/tmux-config.sh"
 source "${LIB_DIR}/utils/has-command.sh"
 
-# Marks store a named label on a pane option (@tiling_revamped_mark) and
-# maintain a global semicolon-separated index (@tiling_revamped_marks)
-# in "name:pane_id" format for fast lookup.
-
 mark_pane() {
   local name="${1:-}"
 
@@ -26,11 +22,9 @@ mark_pane() {
   local pane_id
   pane_id=$(get_current_pane)
 
-  # Clear any existing mark with the same name
   local marks
   marks=$(get_tmux_option "@tiling_revamped_marks" "")
 
-  # Remove stale entries for this name
   local cleaned=""
   while IFS= read -r entry; do
     [[ -z "${entry}" ]] && continue
@@ -38,7 +32,6 @@ mark_pane() {
     [[ "${entry_name}" != "${name}" ]] && cleaned="${cleaned:+${cleaned};}${entry}"
   done < <(echo "${marks}" | tr ';' '\n')
 
-  # Append new entry
   cleaned="${cleaned:+${cleaned};}${name}:${pane_id}"
   set_tmux_option "@tiling_revamped_marks" "${cleaned}"
   set_pane_option "@tiling_revamped_mark" "${name}"
@@ -49,7 +42,6 @@ unmark_pane() {
   local pane_id
 
   if [[ -z "${name}" ]]; then
-    # Unmark current pane
     pane_id=$(get_current_pane)
     name=$(get_pane_option "@tiling_revamped_mark" "")
     [[ -z "${name}" ]] && return 0
@@ -59,7 +51,6 @@ unmark_pane() {
   local marks
   marks=$(get_tmux_option "@tiling_revamped_marks" "")
 
-  # Look up pane ID for the named mark so we can clear its pane option
   local target_pane=""
   local cleaned=""
   while IFS= read -r entry; do
@@ -74,7 +65,6 @@ unmark_pane() {
 
   set_tmux_option "@tiling_revamped_marks" "${cleaned}"
 
-  # Clear the pane option on the target pane
   if [[ -n "${target_pane}" ]]; then
     set_pane_option "@tiling_revamped_mark" "" "${target_pane}"
   fi

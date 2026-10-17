@@ -7,9 +7,6 @@ LIB_DIR="${TILING_REVAMPED_LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && 
 
 source "${LIB_DIR}/tmux/tmux-config.sh"
 
-# layout_icon: map a layout name to a single status glyph.
-# Glyphs are emitted as UTF-8 byte escapes so the source stays plain ASCII.
-# Unknown or empty names produce no output.
 layout_icon() {
   local layout="${1:-}"
   case "${layout}" in
@@ -25,9 +22,6 @@ layout_icon() {
   esac
 }
 
-# layout_status: print the active layout for the status line.
-# Emits "<icon> <name>" for a known layout, the bare name for an unknown one,
-# and nothing when no layout is set for the window.
 layout_status() {
   local layout icon
   layout=$(get_current_layout)

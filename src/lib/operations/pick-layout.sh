@@ -1,16 +1,4 @@
 #!/usr/bin/env bash
-#
-# pick-layout.sh: Interactive fzf-based layout picker for tmux-tiling-revamped.
-#
-# Requirements:
-#   - fzf >= 0.53.0 for the --tmux popup; older fzf runs inside display-popup
-#
-# Features:
-#   - ASCII diagram preview for each layout (loaded from exported variables)
-#   - Current layout highlighted in header and pre-selected
-#   - Logical grouping: BSP layouts first, then standard, main, special
-#   - Graceful cancellation on Escape (exit code 130)
-#   - Configurable popup dimensions via @tiling_revamped_pick_width/height
 
 [[ -n "${_TILING_REVAMPED_PICK_LAYOUT_LOADED:-}" ]] && return 0
 _TILING_REVAMPED_PICK_LAYOUT_LOADED=1
@@ -32,7 +20,6 @@ source "${LIB_DIR}/layouts/monocle.sh"
 source "${LIB_DIR}/layouts/deck.sh"
 source "${LIB_DIR}/layouts/previews.sh"
 
-# Logical grouping: BSP layouts first, then standard, main, special layouts
 PICK_LAYOUTS=(
   "dwindle"
   "spiral"
@@ -44,13 +31,10 @@ PICK_LAYOUTS=(
   "deck"
 )
 
-# _get_layout_list: Generate layout list
 _get_layout_list() {
   printf '%s\n' "${PICK_LAYOUTS[@]}"
 }
 
-# _get_layout_preview: Print the ASCII preview for a layout name.
-# Reads from TILING_PREVIEW_* exported variables in each layout module.
 _get_layout_preview() {
   local layout="${1:-}"
   local upper
@@ -59,7 +43,6 @@ _get_layout_preview() {
   echo "${!varname:-No preview available}"
 }
 
-# _pick_with_fzf_tmux: Use fzf's native --tmux popup
 _pick_with_fzf_tmux() {
   local width height preview_width
   width=$(get_tmux_option "@tiling_revamped_pick_width" "${TILING_DEFAULT_PICK_WIDTH}")
@@ -90,7 +73,6 @@ _pick_with_fzf_tmux() {
   echo "${selected}"
 }
 
-# pick_layout: Main entry point - shows fzf picker and applies selected layout
 pick_layout() {
   if ! has_command fzf; then
     log_error "pick-layout" "fzf is not installed"
@@ -108,7 +90,6 @@ pick_layout() {
   selected=$(_pick_with_fzf_tmux)
   pick_exit_code=$?
 
-  # Graceful cancellation on Escape or empty selection
   [[ ${pick_exit_code} -eq 130 ]] && return 0
   [[ -z "${selected}" ]] && return 0
 

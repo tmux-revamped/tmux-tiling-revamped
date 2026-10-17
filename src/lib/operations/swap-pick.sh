@@ -10,8 +10,6 @@ source "${LIB_DIR}/utils/has-command.sh"
 source "${LIB_DIR}/utils/error-logger.sh"
 source "${LIB_DIR}/utils/picker.sh"
 
-# swap_pick: open fzf popup listing all panes with their command and directory.
-# The user selects a pane to swap with the currently focused pane.
 swap_pick() {
   if ! has_command fzf; then
     log_error "swap-pick" "fzf is not installed"

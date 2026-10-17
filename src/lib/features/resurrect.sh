@@ -16,7 +16,6 @@ _restore_window_layout() {
   flags=$(tmux show-option -wqv -t "${win}" "@tiling_revamped_orientation" 2>/dev/null)
   [[ -z "${flags}" ]] && flags="brvc"
 
-  # Select the window and re-apply its layout
   tmux select-window -t "${win}" 2>/dev/null || return 0
 
   (
@@ -34,9 +33,6 @@ _restore_window_layout() {
   )
 }
 
-# restore_layouts: re-apply stored layouts to all windows.
-# Called after tmux-resurrect restores a session. Each window that has
-# a stored @tiling_revamped_layout option gets its layout re-applied.
 restore_layouts() {
   local -a windows=() starting_windows=()
   local win pane active

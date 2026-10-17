@@ -7,10 +7,6 @@ LIB_DIR="${TILING_REVAMPED_LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && 
 
 source "${LIB_DIR}/tmux/tmux-config.sh"
 
-# flip_layout: mirror the orientation along one axis.
-#
-# h - flip horizontal: swap l/r corner (left <-> right)
-# v - flip vertical:   swap t/b corner (top <-> bottom)
 flip_layout() {
   local direction="${1:-h}"
   local current_layout

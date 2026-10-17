@@ -1,17 +1,10 @@
 #!/usr/bin/env bash
-#
-# Integration test helpers for tmux-tiling-revamped.
-#
-# Manages a real tmux server per test via a unique socket.
-# Layout and integration tests source this file instead of helpers.bash.
 
 TILING_CMD="${PLUGIN_DIR}/src/tiling.sh"
 TMUX_SOCKET="/tmp/tiling-test-${BASHPID}-${RANDOM}"
 
 setup_tmux_server() {
-  # Start a detached tmux server with deterministic dimensions
   command tmux -S "${TMUX_SOCKET}" -f /dev/null new-session -d -s test -x 200 -y 50 2>/dev/null
-  # Give the server a moment to initialize
   sleep 0.1
 }
 
@@ -31,10 +24,8 @@ create_panes() {
   local i
   for ((i = 1; i < count; i++)); do
     command tmux -S "${TMUX_SOCKET}" split-window -d 2>/dev/null || {
-      # Vertical split ran out of space; try horizontal
       command tmux -S "${TMUX_SOCKET}" split-window -dh 2>/dev/null || return 1
     }
-    # Redistribute space every 3 splits to allow more panes
     if ((i % 3 == 0)); then
       command tmux -S "${TMUX_SOCKET}" select-layout tiled 2>/dev/null || true
     fi
@@ -91,8 +82,6 @@ assert_pane_taller_than() {
 }
 
 run_tiling() {
-  # run-shell hands the string to /bin/sh, which word-splits it, so a checkout
-  # path containing a space runs the wrong command and reports 127.
   local quoted_cmd
   printf -v quoted_cmd '%q' "${TILING_CMD}"
   command tmux -S "${TMUX_SOCKET}" \
@@ -100,14 +89,9 @@ run_tiling() {
   sleep 0.2
 }
 
-# assert_balanced_columns: verify pane distribution across vertical zones.
-# Finds the widest pane (center/master), counts panes to its left and right.
-# Asserts the difference between left and right counts is at most 1.
-# For layouts without a center pane, asserts all panes have similar widths.
 assert_balanced_columns() {
   local layout="${1}"
 
-  # Layouts where column balance is not applicable
   case "${layout}" in
   monocle | grid | deck) return 0 ;;
   esac
@@ -120,7 +104,6 @@ assert_balanced_columns() {
   local pane_count="${#pane_data[@]}"
   ((pane_count <= 2)) && return 0
 
-  # Find the widest pane (master/center)
   local max_width=0 center_left=0
   local entry pl pw
   for entry in "${pane_data[@]}"; do
@@ -132,13 +115,10 @@ assert_balanced_columns() {
     fi
   done
 
-  # For main-vertical, master is leftmost, stack is right. No left column.
-  # For main-horizontal, master is top. Column balance is N/A.
   case "${layout}" in
   main-vertical | main-horizontal | dwindle | spiral) return 0 ;;
   esac
 
-  # Count panes on each side of the center (main-center)
   local left_count=0 right_count=0
   for entry in "${pane_data[@]}"; do
     pl="${entry%% *}"
@@ -161,9 +141,6 @@ assert_balanced_columns() {
   fi
 }
 
-# assert_balanced_rows: verify pane distribution across horizontal zones.
-# For main-horizontal: counts panes in the bottom row and verifies equal widths.
-# For main-vertical: counts panes in the right column and verifies equal heights.
 assert_balanced_rows() {
   local layout="${1}"
 
@@ -179,7 +156,6 @@ assert_balanced_rows() {
   local pane_count="${#pane_data[@]}"
   ((pane_count <= 2)) && return 0
 
-  # For main-vertical: stack panes should have similar heights
   if [[ "${layout}" == "main-vertical" ]]; then
     local -a stack_heights=()
     local max_width=0
@@ -215,7 +191,6 @@ assert_balanced_rows() {
     return 0
   fi
 
-  # For main-horizontal: stack panes should have similar widths
   if [[ "${layout}" == "main-horizontal" ]]; then
     local -a stack_widths=()
     local max_height=0
@@ -252,14 +227,12 @@ assert_balanced_rows() {
   fi
 }
 
-# assert_layout_applies: verify a layout applies cleanly at a given pane count.
 assert_layout_applies() {
   local layout="${1}"
   local count="${2}"
   create_panes "${count}"
   local actual_count
   actual_count=$(get_pane_count)
-  # Skip if terminal was too small to create all panes
   if ((actual_count < count)); then
     skip "terminal too small for ${count} panes (created ${actual_count})"
   fi

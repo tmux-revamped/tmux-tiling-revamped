@@ -7,9 +7,6 @@ LIB_DIR="${TILING_REVAMPED_LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && 
 
 source "${LIB_DIR}/tmux/tmux-config.sh"
 
-# swap_biggest: swap the focused pane with the largest pane by area.
-# Pane geometry comes from list-panes; the max-area pane is found in bash.
-# After swapping, the current layout is re-applied to preserve sizes.
 swap_biggest() {
   local pane_count
   pane_count=$(get_pane_count)

@@ -41,8 +41,6 @@ teardown() {
   [[ "${_TILING_REVAMPED_SWAP_PICK_LOADED}" == "1" ]]
 }
 
-# ── Direct-call coverage ────────────────────────────────────────────
-
 @test "swap-pick.sh - swap_pick direct call fails without fzf" {
   export MOCK_HAS_FZF="0"
   run swap_pick

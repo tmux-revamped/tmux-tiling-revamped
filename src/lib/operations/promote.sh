@@ -7,9 +7,6 @@ LIB_DIR="${TILING_REVAMPED_LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && 
 
 source "${LIB_DIR}/tmux/tmux-config.sh"
 
-# promote_pane: swap the focused pane with the master (first) pane.
-# If the focused pane is already master, demote it to position 2 (dwm-style).
-# After swapping, the current layout is re-applied so sizes are preserved.
 promote_pane() {
   local -a panes
   while IFS= read -r _p; do panes+=("$_p"); done < <(tmux list-panes -F '#{pane_id}' 2>/dev/null)
@@ -23,7 +20,6 @@ promote_pane() {
   local master_pane="${panes[0]}"
 
   if [[ "${current_pane}" == "${master_pane}" ]]; then
-    # Focused pane is already master: demote to position 2
     if (( pane_count > 1 )); then
       tmux swap-pane -s "${panes[0]}" -t "${panes[1]}" 2>/dev/null || true
     fi

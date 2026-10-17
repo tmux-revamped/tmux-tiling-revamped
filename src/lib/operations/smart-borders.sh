@@ -7,10 +7,6 @@ LIB_DIR="${TILING_REVAMPED_LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && 
 
 source "${LIB_DIR}/tmux/tmux-config.sh"
 
-# smart_borders: hide pane-border chrome while the window holds a single pane,
-# restore it once a second pane appears.  Keyed on #{window_panes} so it can be
-# driven from pane add/remove hooks.  No-op unless @tiling_revamped_smart_borders
-# is enabled.
 smart_borders() {
   is_option_enabled "@tiling_revamped_smart_borders" || return 0
 

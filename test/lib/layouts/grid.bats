@@ -46,8 +46,6 @@ teardown() {
   [[ "${status}" -eq 0 ]]
 }
 
-# ── Direct-call coverage ────────────────────────────────────────────
-
 @test "grid.sh - apply_layout_grid direct call applies tiled layout" {
   export MOCK_PANE_LIST=$'%0\n%1\n%2\n%3'
   apply_layout_grid >/dev/null 2>&1

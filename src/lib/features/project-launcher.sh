@@ -10,8 +10,6 @@ source "${LIB_DIR}/utils/has-command.sh"
 source "${LIB_DIR}/utils/error-logger.sh"
 source "${LIB_DIR}/utils/picker.sh"
 
-# launch_project: open an fzf popup listing project directories.
-# Selecting one creates a new tmux window in that directory.
 launch_project() {
   if ! has_command fzf; then
     log_error "project-launcher" "fzf is not installed"
@@ -26,7 +24,6 @@ launch_project() {
     return 1
   fi
 
-  # Expand ~ to $HOME
   project_dir="${project_dir/#\~/${HOME}}"
 
   if [[ ! -d "${project_dir}" ]]; then

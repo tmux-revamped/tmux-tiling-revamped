@@ -7,11 +7,6 @@ LIB_DIR="${TILING_REVAMPED_LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && 
 
 source "${LIB_DIR}/tmux/tmux-config.sh"
 
-# autosplit_pane: split the current pane along its longest axis.
-#
-# If the pane is more than twice as wide as it is tall, split horizontally.
-# Otherwise split vertically.  This is the autotiling concept from
-# nwg-piotr/autotiling, adapted for on-demand use.
 autosplit_pane() {
   local width height
   width=$(get_pane_width)

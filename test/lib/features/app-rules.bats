@@ -6,7 +6,6 @@ setup() {
   setup_test_environment
   export MOCK_PANE_ID="%1"
   source "${BATS_TEST_DIRNAME}/../../../src/lib/features/app-rules.sh"
-  # Isolate the concrete actions so assertions never touch a real pane.
   promote_pane() { echo "promoted"; }
   set_pane_option() { echo "set-pane $1=$2 on ${3:-current}"; }
   export -f promote_pane set_pane_option

@@ -7,13 +7,6 @@ LIB_DIR="${TILING_REVAMPED_LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && 
 
 source "${LIB_DIR}/tmux/tmux-config.sh"
 
-# circulate_panes: shift all pane positions by one step.
-#
-# next - tmux rotate-window -U: last pane becomes first  (counter-clockwise)
-# prev - tmux rotate-window -D: first pane becomes last  (clockwise)
-#
-# After rotating positions, the current layout is re-applied so that the
-# new arrangement uses the correct sizes for each slot.
 circulate_panes() {
   local direction="${1:-next}"
   local pane_count
@@ -32,7 +25,6 @@ circulate_panes() {
 
   _reapply_current_layout
 
-  # Restore focus to the same pane (it may have moved slots)
   tmux select-pane -t "${selected_pane}" 2>/dev/null || true
 }
 

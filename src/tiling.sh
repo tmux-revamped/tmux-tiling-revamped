@@ -1,49 +1,4 @@
 #!/usr/bin/env bash
-#
-# tiling.sh: command dispatcher for tmux-tiling-revamped.
-#
-# Called by keybindings and hooks via `run-shell`.  Sources all library
-# modules and routes the first argument to the appropriate function.
-#
-# Usage:
-#   tiling.sh layout dwindle [flags]
-#   tiling.sh layout spiral  [flags]
-#   tiling.sh layout grid
-#   tiling.sh layout main-center
-#   tiling.sh layout main-vertical
-#   tiling.sh layout main-horizontal
-#   tiling.sh layout monocle
-#   tiling.sh layout deck
-#   tiling.sh balance
-#   tiling.sh equalize
-#   tiling.sh rotate  [90|180|270]
-#   tiling.sh flip    [h|v]
-#   tiling.sh promote
-#   tiling.sh circulate [next|prev]
-#   tiling.sh autosplit
-#   tiling.sh focus-resize
-#   tiling.sh resize-master [grow|shrink]
-#   tiling.sh sync
-#   tiling.sh swap    [U|D|L|R]
-#   tiling.sh cycle   [next|prev]
-#   tiling.sh pick
-#   tiling.sh undo
-#   tiling.sh workspace <number>
-#   tiling.sh move-to-workspace <number>
-#   tiling.sh project
-#   tiling.sh swap-pick
-#   tiling.sh validate [fix]
-#   tiling.sh info
-#   tiling.sh doctor
-#   tiling.sh restore-layouts
-#   tiling.sh help
-#   tiling.sh mark    <name>
-#   tiling.sh unmark  [name]
-#   tiling.sh jump    [name]
-#   tiling.sh scratchpad [name] [cmd]
-#   tiling.sh preset  save <name>
-#   tiling.sh preset  apply [name]
-#   tiling.sh hook    split|kill|exit|resize|focus|new-window
 
 PLUGIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TILING_REVAMPED_LIB_DIR="${PLUGIN_DIR}/src/lib"
@@ -102,7 +57,6 @@ _handle_hook() {
 
   [[ -n "${window}" && "${window}" != "$(get_current_window)" ]] && return 0
 
-  # Handle new-window: apply default layout if configured
   if [[ "${event}" == "new-window" ]]; then
     local default_layout
     default_layout=$(get_tmux_option "@tiling_revamped_default_layout" "")
@@ -122,13 +76,10 @@ _handle_hook() {
     return 0
   fi
 
-  # Recursion guard: skip if a layout is currently being applied
   is_applying && return 0
 
-  # Check if auto-apply is enabled for this window
   is_auto_apply_enabled || return 0
 
-  # Dynamic layout by pane count overrides stored-layout reapplication.
   if _dynamic_layout_enabled; then
     apply_dynamic_layout
     return 0
@@ -137,7 +88,6 @@ _handle_hook() {
   local current_layout
   current_layout=$(get_current_layout)
 
-  # No layout stored for this window: nothing to reapply
   [[ -z "${current_layout}" ]] && return 0
 
   local flags

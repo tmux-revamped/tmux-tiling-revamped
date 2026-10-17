@@ -9,11 +9,9 @@ source "${LIB_DIR}/tmux/tmux-config.sh"
 source "${LIB_DIR}/utils/has-command.sh"
 source "${LIB_DIR}/utils/constants.sh"
 
-# run_doctor: check the environment and report issues.
 run_doctor() {
   local issues=0
 
-  # Bash version
   if (( BASH_VERSINFO[0] >= 4 )); then
     echo "PASS  bash ${BASH_VERSION}"
   else
@@ -21,7 +19,6 @@ run_doctor() {
     issues=$(( issues + 1 ))
   fi
 
-  # tmux version
   local tmux_version
   tmux_version=$(tmux -V 2>/dev/null | sed 's/[^0-9.]//g')
   if [[ -n "${tmux_version}" ]]; then
@@ -42,7 +39,6 @@ run_doctor() {
     echo "PASS  tmux detected"
   fi
 
-  # fzf
   if has_command fzf; then
     local fzf_version
     fzf_version=$(fzf --version 2>/dev/null | cut -d' ' -f1)
@@ -51,17 +47,14 @@ run_doctor() {
     echo "WARN  fzf not installed (layout picker, marks, presets disabled)"
   fi
 
-  # fd (optional, for project launcher)
   if has_command fd; then
     echo "PASS  fd installed (fast project listing)"
   else
     echo "INFO  fd not installed (project launcher will use find)"
   fi
 
-  # Plugin version
   echo "INFO  tmux-tiling-revamped ${TILING_REVAMPED_VERSION}"
 
-  # Current layout state
   local layout
   layout=$(get_current_layout)
   if [[ -n "${layout}" ]]; then
@@ -70,7 +63,6 @@ run_doctor() {
     echo "INFO  no layout active"
   fi
 
-  # Auto-apply status
   local auto_apply
   auto_apply=$(get_tmux_option "@tiling_revamped_auto_apply" "1")
   echo "INFO  auto-apply: ${auto_apply}"

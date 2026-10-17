@@ -7,9 +7,6 @@ LIB_DIR="${TILING_REVAMPED_LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && 
 
 source "${LIB_DIR}/tmux/tmux-config.sh"
 
-# balance_panes: equalize all pane sizes while preserving the current
-# layout topology.  For BSP layouts this resets all split ratios to 50%.
-# For grid/deck it uses the tmux built-in even-* layouts.
 balance_panes() {
   local current_layout
   current_layout=$(get_current_layout)
@@ -24,7 +21,6 @@ balance_panes() {
       tmux select-layout even-horizontal 2>/dev/null || true
       ;;
     monocle)
-      # Nothing to balance in monocle
       ;;
     dwindle)
       local flags

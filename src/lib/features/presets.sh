@@ -8,11 +8,6 @@ LIB_DIR="${TILING_REVAMPED_LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && 
 source "${LIB_DIR}/tmux/tmux-config.sh"
 source "${LIB_DIR}/utils/has-command.sh"
 
-# Presets are named layout configurations stored as tmux options.
-# A preset captures: layout name, orientation flags, and master ratio.
-# Format: "layout:flags:master_ratio"
-# Example: @tiling_revamped_preset_dev = "dwindle:brvc:60"
-
 save_preset() {
   local preset_name="${1:-}"
 
@@ -44,7 +39,6 @@ _open_preset_picker() {
 
 preset_pick() {
   local preset_name
-  # List all @tiling_revamped_preset_* options and pick one
   preset_name=$(tmux show-options -g 2>/dev/null \
     | grep '@tiling_revamped_preset_' \
     | sed 's/@tiling_revamped_preset_//' \

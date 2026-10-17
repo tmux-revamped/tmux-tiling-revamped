@@ -1,11 +1,4 @@
 #!/usr/bin/env bats
-#
-# Balance invariant tests: verify every layout produces balanced pane
-# distribution at pane counts from 1 up to the maximum the test
-# server supports (200x50 window, typically 10-12 panes).
-#
-# A layout is balanced when no column or row zone has more than 1
-# pane difference from any other zone in the same group.
 
 load "${BATS_TEST_DIRNAME}/tmux_helpers.bash"
 
@@ -16,8 +9,6 @@ setup() {
 teardown() {
   teardown_tmux_server
 }
-
-# ── Dwindle ────────────────────────────────────────────────────────
 
 @test "balance: dwindle applies at 1 pane" {
   assert_layout_applies dwindle 1
@@ -59,8 +50,6 @@ teardown() {
   assert_layout_applies dwindle 10
 }
 
-# ── Spiral ─────────────────────────────────────────────────────────
-
 @test "balance: spiral applies at 2 panes" {
   assert_layout_applies spiral 2
 }
@@ -81,8 +70,6 @@ teardown() {
   assert_layout_applies spiral 10
 }
 
-# ── Grid ───────────────────────────────────────────────────────────
-
 @test "balance: grid applies at 1 pane" {
   assert_layout_applies grid 1
 }
@@ -102,8 +89,6 @@ teardown() {
 @test "balance: grid applies at 9 panes" {
   assert_layout_applies grid 9
 }
-
-# ── Main-Vertical ──────────────────────────────────────────────────
 
 @test "balance: main-vertical applies at 1 pane" {
   assert_layout_applies main-vertical 1
@@ -133,8 +118,6 @@ teardown() {
   assert_balanced_rows main-vertical
 }
 
-# ── Main-Horizontal ───────────────────────────────────────────────
-
 @test "balance: main-horizontal applies at 1 pane" {
   assert_layout_applies main-horizontal 1
 }
@@ -162,8 +145,6 @@ teardown() {
   assert_layout_applies main-horizontal 9
   assert_balanced_rows main-horizontal
 }
-
-# ── Main-Center ────────────────────────────────────────────────────
 
 @test "balance: main-center applies at 1 pane" {
   assert_layout_applies main-center 1
@@ -213,8 +194,6 @@ teardown() {
   assert_balanced_columns main-center
 }
 
-# ── Monocle ────────────────────────────────────────────────────────
-
 @test "balance: monocle applies at 1 pane" {
   assert_layout_applies monocle 1
 }
@@ -222,8 +201,6 @@ teardown() {
 @test "balance: monocle applies at 3 panes" {
   assert_layout_applies monocle 3
 }
-
-# ── Deck ───────────────────────────────────────────────────────────
 
 @test "balance: deck applies at 1 pane" {
   assert_layout_applies deck 1

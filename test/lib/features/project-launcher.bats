@@ -38,10 +38,14 @@ teardown() {
 }
 
 @test "project-launcher.sh - launch_project succeeds with valid directory" {
+  # Arrange
   export MOCK_TILING_PROJECT_DIR="${TEST_TMPDIR}"
   mkdir -p "${TEST_TMPDIR}/project-a"
-  # The fzf mock returns no selection, so launch_project exits gracefully.
+
+  # Act
   run launch_project
+
+  # Assert
   [[ "${status}" -eq 0 ]]
 }
 

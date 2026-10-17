@@ -1,4 +1,5 @@
 #!/usr/bin/env bats
+# shellcheck disable=SC2034
 
 load "${BATS_TEST_DIRNAME}/../../helpers.bash"
 
@@ -17,13 +18,9 @@ teardown() {
   cleanup_test_environment
 }
 
-# ── Function existence ──────────────────────────────────────────────
-
 @test "spiral.sh - apply_layout_spiral function exists" {
   function_exists apply_layout_spiral
 }
-
-# ── Basic operation ──────────────────────────────────────────────────
 
 @test "spiral.sh - apply_layout_spiral succeeds with multiple panes" {
   run apply_layout_spiral "brvs"
@@ -40,8 +37,6 @@ teardown() {
   run apply_layout_spiral "brvc"
   [[ "${status}" -eq 0 ]]
 }
-
-# ── Pane count coverage ─────────────────────────────────────────────
 
 @test "spiral.sh - apply_layout_spiral works with 2 panes" {
   export MOCK_PANE_LIST=$'%0\n%1'
@@ -72,8 +67,6 @@ teardown() {
   run apply_layout_spiral
   [[ "${status}" -eq 0 ]]
 }
-
-# ── Orientation variants ─────────────────────────────────────────────
 
 @test "spiral.sh - apply_layout_spiral with horizontal orientation" {
   run apply_layout_spiral "brhs"
@@ -122,8 +115,6 @@ teardown() {
   done
 }
 
-# ── Spiral-specific geometry ─────────────────────────────────────────
-
 @test "spiral.sh - spiral layout differs from dwindle for same panes" {
   local corner_tb='' spiral_tb='+' corner_lr='' spiral_lr='+' modulo_hv=1
 
@@ -160,8 +151,6 @@ teardown() {
   [[ "${status}" -eq 0 ]]
 }
 
-# ── Direct-call coverage of apply_layout_spiral body ────────────────
-
 @test "spiral.sh - apply_layout_spiral direct call already has s flag" {
   _apply_bsp_layout() { return 0; }
   export -f _apply_bsp_layout
@@ -195,18 +184,16 @@ teardown() {
 }
 
 @test "spiral.sh - spiral and dwindle share first two pane positions" {
+  # Arrange
   local corner_tb='' spiral_tb='+' corner_lr='' spiral_lr='+' modulo_hv=1
-
+  local panes="%0 %1 %2 %3 %4" dwindle_result spiral_result
   is_spiral=false
-  local dwindle_result
-  dwindle_result=$(_bsp_build "%0 %1 %2 %3 %4" 0 0 200 50 0)
-
+  dwindle_result=$(_bsp_build "${panes}" 0 0 200 50 0)
   is_spiral=true
-  local spiral_result
-  spiral_result=$(_bsp_build "%0 %1 %2 %3 %4" 0 0 200 50 0)
 
-  # Both start with same root and first two panes (depth 0,1 have no spiral reversal)
-  local dwindle_prefix="${dwindle_result%%,1,*}"
-  local spiral_prefix="${spiral_result%%,1,*}"
-  [[ "${dwindle_prefix}" == "${spiral_prefix}" ]]
+  # Act
+  spiral_result=$(_bsp_build "${panes}" 0 0 200 50 0)
+
+  # Assert
+  [[ "${dwindle_result%%,1,*}" == "${spiral_result%%,1,*}" ]]
 }

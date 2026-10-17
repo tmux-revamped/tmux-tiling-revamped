@@ -45,8 +45,6 @@ teardown() {
   [[ "${status}" -eq 0 ]]
 }
 
-# ── Direct-call coverage ────────────────────────────────────────────
-
 @test "monocle.sh - apply_layout_monocle direct call zooms when not zoomed" {
   export MOCK_WINDOW_ZOOMED="0"
   export MOCK_TILING_LAYOUT="dwindle"

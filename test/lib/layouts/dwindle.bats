@@ -1,4 +1,5 @@
 #!/usr/bin/env bats
+# shellcheck disable=SC2034
 
 load "${BATS_TEST_DIRNAME}/../../helpers.bash"
 
@@ -16,8 +17,6 @@ setup() {
 teardown() {
   cleanup_test_environment
 }
-
-# ── Function existence ──────────────────────────────────────────────
 
 @test "dwindle.sh - apply_layout_dwindle function exists" {
   function_exists apply_layout_dwindle
@@ -42,8 +41,6 @@ teardown() {
 @test "dwindle.sh - _bsp_build function exists" {
   function_exists _bsp_build
 }
-
-# ── _layout_checksum ────────────────────────────────────────────────
 
 @test "dwindle.sh - _layout_checksum produces 4-char hex output" {
   run _layout_checksum "100x50,0,0,0"
@@ -72,8 +69,6 @@ teardown() {
   [[ "${output}" == "0000" ]]
 }
 
-# ── _bsp_pane_first ─────────────────────────────────────────────────
-
 @test "dwindle.sh - _bsp_pane_first returns true at depth 0 for brvc" {
   local corner_tb='' spiral_tb='+' corner_lr='' spiral_lr='+' modulo_hv=1 is_spiral=false
   run _bsp_pane_first 0
@@ -97,49 +92,76 @@ teardown() {
 }
 
 @test "dwindle.sh - _bsp_pane_first returns false at depth 2 for brvs spiral" {
+  # Arrange
   local corner_tb='' spiral_tb='+' corner_lr='' spiral_lr='+' modulo_hv=1 is_spiral=true
-  # depth 2 → count 3, count%5=3 > 2 → spiral reversal
-  run _bsp_pane_first 2
+  local depth=2
+
+  # Act
+  run _bsp_pane_first "${depth}"
+
+  # Assert
   [[ "${output}" == "false" ]]
 }
 
 @test "dwindle.sh - _bsp_pane_first returns false at depth 3 for brvs spiral" {
+  # Arrange
   local corner_tb='' spiral_tb='+' corner_lr='' spiral_lr='+' modulo_hv=1 is_spiral=true
-  # depth 3 → count 4, count%5=4 > 2 → spiral reversal
-  run _bsp_pane_first 3
+  local depth=3
+
+  # Act
+  run _bsp_pane_first "${depth}"
+
+  # Assert
   [[ "${output}" == "false" ]]
 }
 
 @test "dwindle.sh - _bsp_pane_first returns true at depth 4 for brvs spiral" {
+  # Arrange
   local corner_tb='' spiral_tb='+' corner_lr='' spiral_lr='+' modulo_hv=1 is_spiral=true
-  # depth 4 → count 5, count%5=0, not > 2 → no reversal
-  run _bsp_pane_first 4
+  local depth=4
+
+  # Act
+  run _bsp_pane_first "${depth}"
+
+  # Assert
   [[ "${output}" == "true" ]]
 }
 
 @test "dwindle.sh - _bsp_pane_first handles left corner flag" {
+  # Arrange
   local corner_tb='' spiral_tb='+' corner_lr='+' spiral_lr='' modulo_hv=1 is_spiral=false
-  # corner_lr='+' → pane_first=false (pane goes right/bottom)
-  run _bsp_pane_first 0
+  local depth=0
+
+  # Act
+  run _bsp_pane_first "${depth}"
+
+  # Assert
   [[ "${output}" == "false" ]]
 }
 
 @test "dwindle.sh - _bsp_pane_first handles top corner flag" {
+  # Arrange
   local corner_tb='+' spiral_tb='' corner_lr='' spiral_lr='+' modulo_hv=1 is_spiral=false
-  # V-split at depth 1: corner_tb='+' → pane_first=false
-  run _bsp_pane_first 1
+  local depth=1
+
+  # Act
+  run _bsp_pane_first "${depth}"
+
+  # Assert
   [[ "${output}" == "false" ]]
 }
 
 @test "dwindle.sh - _bsp_pane_first handles horizontal branch direction" {
+  # Arrange
   local corner_tb='' spiral_tb='+' corner_lr='' spiral_lr='+' modulo_hv=0 is_spiral=false
-  # modulo_hv=0: depth 0 → count 1 → 1%2=1 != 0 → V-split (not H)
-  # V-split, corner_tb='' → pane_first=true
-  run _bsp_pane_first 0
+  local depth=0
+
+  # Act
+  run _bsp_pane_first "${depth}"
+
+  # Assert
   [[ "${output}" == "true" ]]
 }
-
-# ── _bsp_leaf_permutation ───────────────────────────────────────────
 
 @test "dwindle.sh - _bsp_leaf_permutation returns identity for 1 pane" {
   local corner_tb='' spiral_tb='+' corner_lr='' spiral_lr='+' modulo_hv=1 is_spiral=false
@@ -160,16 +182,26 @@ teardown() {
 }
 
 @test "dwindle.sh - _bsp_leaf_permutation returns non-identity for spiral 5 panes" {
+  # Arrange
   local corner_tb='' spiral_tb='+' corner_lr='' spiral_lr='+' modulo_hv=1 is_spiral=true
-  run _bsp_leaf_permutation 5 0
-  # Depths 2,3 are reversed → pane at depth 2 becomes last in its subtree
+  local pane_count=5
+
+  # Act
+  run _bsp_leaf_permutation "${pane_count}" 0
+
+  # Assert
   [[ "${output}" != "0 1 2 3 4" ]]
 }
 
 @test "dwindle.sh - _bsp_leaf_permutation for spiral 6 panes" {
+  # Arrange
   local corner_tb='' spiral_tb='+' corner_lr='' spiral_lr='+' modulo_hv=1 is_spiral=true
-  run _bsp_leaf_permutation 6 0
-  # Depths 0,1 first (pane_first=true), then spiral reversals at 2,3
+  local pane_count=6
+
+  # Act
+  run _bsp_leaf_permutation "${pane_count}" 0
+
+  # Assert
   [[ "${output}" == "0 1 4 5 3 2" ]]
 }
 
@@ -178,8 +210,6 @@ teardown() {
   run _bsp_leaf_permutation 3 2
   [[ "${output}" == "2 3 4" ]]
 }
-
-# ── _bsp_build ───────────────────────────────────────────────────────
 
 @test "dwindle.sh - _bsp_build single pane produces leaf node" {
   local modulo_hv=1 is_spiral=false corner_tb='' spiral_tb='+' corner_lr='' spiral_lr='+'
@@ -194,69 +224,97 @@ teardown() {
 }
 
 @test "dwindle.sh - _bsp_build 2 panes produces H-split for vertical branch" {
+  # Arrange
   local modulo_hv=1 is_spiral=false corner_tb='' spiral_tb='+' corner_lr='' spiral_lr='+'
-  run _bsp_build "%0 %1" 0 0 200 50 0
-  # H-split indicated by {}
-  [[ "${output}" == *"{"* ]]
-  [[ "${output}" == *",0"* ]]
+  local panes="%0 %1"
+
+  # Act
+  run _bsp_build "${panes}" 0 0 200 50 0
+
+  # Assert
+  [[ "${output}" == *"{"* ]] || false
+  [[ "${output}" == *",0"* ]] || false
   [[ "${output}" == *",1"* ]]
 }
 
 @test "dwindle.sh - _bsp_build 2 panes produces V-split for horizontal branch" {
+  # Arrange
   local modulo_hv=0 is_spiral=false corner_tb='' spiral_tb='+' corner_lr='' spiral_lr='+'
-  run _bsp_build "%0 %1" 0 0 200 50 0
-  # V-split indicated by []
+  local panes="%0 %1"
+
+  # Act
+  run _bsp_build "${panes}" 0 0 200 50 0
+
+  # Assert
   [[ "${output}" == *"["* ]]
 }
 
 @test "dwindle.sh - _bsp_build 3 panes produces nested structure" {
+  # Arrange
   local modulo_hv=1 is_spiral=false corner_tb='' spiral_tb='+' corner_lr='' spiral_lr='+'
-  run _bsp_build "%0 %1 %2" 0 0 200 50 0
-  [[ "${status}" -eq 0 ]]
-  # Root should be H-split
-  [[ "${output}" == 200x50,0,0* ]]
-  # Should contain all 3 pane IDs
-  [[ "${output}" == *",0,"* ]] || [[ "${output}" == *",0}" ]] || [[ "${output}" == *",0]" ]]
-  [[ "${output}" == *",1,"* ]] || [[ "${output}" == *",1}" ]] || [[ "${output}" == *",1]" ]]
+  local panes="%0 %1 %2"
+
+  # Act
+  run _bsp_build "${panes}" 0 0 200 50 0
+
+  # Assert
+  [[ "${status}" -eq 0 ]] || false
+  [[ "${output}" == 200x50,0,0* ]] || false
+  [[ "${output}" == *",0,"* || "${output}" == *",0}" || "${output}" == *",0]" ]] || false
+  [[ "${output}" == *",1,"* || "${output}" == *",1}" || "${output}" == *",1]" ]] || false
   [[ "${output}" == *",2"* ]]
 }
 
 @test "dwindle.sh - _bsp_build geometry sums match parent dimensions" {
+  # Arrange
   local modulo_hv=1 is_spiral=false corner_tb='' spiral_tb='+' corner_lr='' spiral_lr='+'
-  local result
-  result=$(_bsp_build "%0 %1" 0 0 200 50 0)
-  # H-split: left_w + 1 (separator) + right_w = 200
-  # left_w = (200-1)/2 = 99, right_w = 200-99-1 = 100
-  [[ "${result}" == *"99x50,0,0,0"* ]]
+  local panes="%0 %1" result
+
+  # Act
+  result=$(_bsp_build "${panes}" 0 0 200 50 0)
+
+  # Assert
+  [[ "${result}" == *"99x50,0,0,0"* ]] || false
   [[ "${result}" == *"100x50,100,0,1"* ]]
 }
 
 @test "dwindle.sh - _bsp_build V-split geometry sums match parent" {
+  # Arrange
   local modulo_hv=0 is_spiral=false corner_tb='' spiral_tb='+' corner_lr='' spiral_lr='+'
-  local result
-  result=$(_bsp_build "%0 %1" 0 0 200 50 0)
-  # V-split: top_h + 1 (separator) + bottom_h = 50
-  # top_h = (50-1)/2 = 24, bottom_h = 50-24-1 = 25
-  [[ "${result}" == *"200x24,0,0,0"* ]]
+  local panes="%0 %1" result
+
+  # Act
+  result=$(_bsp_build "${panes}" 0 0 200 50 0)
+
+  # Assert
+  [[ "${result}" == *"200x24,0,0,0"* ]] || false
   [[ "${result}" == *"200x25,0,25,1"* ]]
 }
 
 @test "dwindle.sh - _bsp_build spiral reverses pane placement" {
+  # Arrange
   local modulo_hv=1 is_spiral=true corner_tb='' spiral_tb='+' corner_lr='' spiral_lr='+'
-  local result
-  result=$(_bsp_build "%0 %1 %2 %3 %4" 0 0 200 50 0)
-  [[ "${status}" -eq 0 ]]
-  # Spiral: pane 0 should still be first (depth 0, no reversal)
-  # But deeper panes should reverse at count%5 > 2
-  [[ "${result}" == 200x50,0,0* ]]
+  local panes="%0 %1 %2 %3 %4"
+
+  # Act
+  run _bsp_build "${panes}" 0 0 200 50 0
+
+  # Assert
+  [[ "${status}" -eq 0 ]] || false
+  [[ "${output}" == 200x50,0,0* ]]
 }
 
 @test "dwindle.sh - _bsp_build with 6 panes produces valid layout" {
+  # Arrange
   local modulo_hv=1 is_spiral=false corner_tb='' spiral_tb='+' corner_lr='' spiral_lr='+'
-  run _bsp_build "%0 %1 %2 %3 %4 %5" 0 0 200 50 0
-  [[ "${status}" -eq 0 ]]
-  # All 6 pane IDs must appear
-  [[ "${output}" == *",0,"* ]] || [[ "${output}" == *",0}" ]] || [[ "${output}" == *",0]" ]]
+  local panes="%0 %1 %2 %3 %4 %5"
+
+  # Act
+  run _bsp_build "${panes}" 0 0 200 50 0
+
+  # Assert
+  [[ "${status}" -eq 0 ]] || false
+  [[ "${output}" == *",0,"* || "${output}" == *",0}" || "${output}" == *",0]" ]] || false
   [[ "${output}" == *",5"* ]]
 }
 
@@ -266,8 +324,6 @@ teardown() {
   [[ "${status}" -eq 0 ]]
   [[ "${output}" == *",7"* ]]
 }
-
-# ── apply_layout_dwindle ─────────────────────────────────────────────
 
 @test "dwindle.sh - apply_layout_dwindle succeeds with multiple panes" {
   run apply_layout_dwindle "brvc"
@@ -364,8 +420,6 @@ teardown() {
   done
 }
 
-# ── Layout string format validation ─────────────────────────────────
-
 @test "dwindle.sh - layout string has matching braces" {
   local modulo_hv=1 is_spiral=false corner_tb='' spiral_tb='+' corner_lr='' spiral_lr='+'
   local result
@@ -398,19 +452,27 @@ teardown() {
 }
 
 @test "dwindle.sh - layout string H-split root for modulo_hv=1" {
+  # Arrange
   local modulo_hv=1 is_spiral=false corner_tb='' spiral_tb='+' corner_lr='' spiral_lr='+'
-  local result
-  result=$(_bsp_build "%0 %1" 0 0 200 50 0)
-  # H-split starts with {
+  local panes="%0 %1" result
+
+  # Act
+  result=$(_bsp_build "${panes}" 0 0 200 50 0)
+
+  # Assert
   local after_coords="${result#*,0,0}"
   [[ "${after_coords:0:1}" == "{" ]]
 }
 
 @test "dwindle.sh - layout string V-split root for modulo_hv=0" {
+  # Arrange
   local modulo_hv=0 is_spiral=false corner_tb='' spiral_tb='+' corner_lr='' spiral_lr='+'
-  local result
-  result=$(_bsp_build "%0 %1" 0 0 200 50 0)
-  # V-split starts with [
+  local panes="%0 %1" result
+
+  # Act
+  result=$(_bsp_build "${panes}" 0 0 200 50 0)
+
+  # Assert
   local after_coords="${result#*,0,0}"
   [[ "${after_coords:0:1}" == "[" ]]
 }

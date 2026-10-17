@@ -1,11 +1,4 @@
 #!/usr/bin/env bash
-#
-# previews.sh: the ASCII layout diagrams shown by the pick-layout picker.
-#
-# They live in one data-only file, excluded from coverage, because each preview
-# is a multi-line string literal: kcov counts every art line as an uncovered
-# statement, which otherwise caps the eight layout modules well below the floor.
-# No logic and no sourcing here, only the exported TILING_PREVIEW_* variables.
 
 [[ -n "${_TILING_REVAMPED_PREVIEWS_LOADED:-}" ]] && return 0
 _TILING_REVAMPED_PREVIEWS_LOADED=1

@@ -7,9 +7,6 @@ LIB_DIR="${TILING_REVAMPED_LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && 
 
 source "${LIB_DIR}/tmux/tmux-config.sh"
 
-# Main-vertical layout: one large left pane, remaining panes stacked
-# vertically on the right.  Wraps tmux's built-in main-vertical layout
-# and sizes the master pane to @tiling_revamped_master_ratio percent.
 apply_layout_main_vertical() {
   local pane_count
   pane_count=$(get_pane_count)

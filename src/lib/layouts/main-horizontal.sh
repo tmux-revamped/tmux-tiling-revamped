@@ -7,9 +7,6 @@ LIB_DIR="${TILING_REVAMPED_LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && 
 
 source "${LIB_DIR}/tmux/tmux-config.sh"
 
-# Main-horizontal layout: one large top pane, remaining panes placed
-# side by side below.  Wraps tmux's built-in main-horizontal layout
-# and sizes the master pane to @tiling_revamped_master_ratio percent.
 apply_layout_main_horizontal() {
   local pane_count
   pane_count=$(get_pane_count)

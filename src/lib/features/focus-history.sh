@@ -1,14 +1,4 @@
 #!/usr/bin/env bash
-#
-# focus-history.sh: a capped back/forward stack of focused pane ids.
-#
-# The stack lives in the window option @tiling_revamped_focus_stack (oldest to
-# newest, space separated) with a cursor in @tiling_revamped_focus_pos.  A
-# pane-focus-in hook records each focus; the back and forward keys walk the
-# stack.  Every id is validated against list-panes before it is selected, so a
-# closed pane is skipped rather than selected.  Recording is suppressed for the
-# one focus event our own navigation triggers via the @tiling_revamped_focus_nav
-# guard, which the next record clears.
 
 [[ -n "${_TILING_REVAMPED_FOCUS_HISTORY_LOADED:-}" ]] && return 0
 _TILING_REVAMPED_FOCUS_HISTORY_LOADED=1
@@ -18,14 +8,12 @@ LIB_DIR="${TILING_REVAMPED_LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && 
 source "${LIB_DIR}/tmux/tmux-config.sh"
 source "${LIB_DIR}/utils/constants.sh"
 
-# _focus_pane_alive: true when <id> is a live pane in the current window.
 _focus_pane_alive() {
   local id="${1:-}"
   [[ -z "${id}" ]] && return 1
   tmux list-panes -F '#{pane_id}' 2>/dev/null | grep -qx "${id}"
 }
 
-# focus_history_record: push the focused pane, capping and resetting forward.
 focus_history_record() {
   local nav
   nav=$(get_window_option "@tiling_revamped_focus_nav" "0")
@@ -48,7 +36,6 @@ focus_history_record() {
   local -a ids
   read -ra ids <<< "${stack}"
 
-  # Drop any forward history: keep entries up to and including the cursor.
   local -a kept=()
   if [[ "${pos}" =~ ^[0-9]+$ ]]; then
     local i
@@ -59,7 +46,6 @@ focus_history_record() {
     kept=("${ids[@]}")
   fi
 
-  # Skip a duplicate of the current tail.
   local last_idx=$(( ${#kept[@]} - 1 ))
   if (( last_idx >= 0 )) && [[ "${kept[last_idx]}" == "${pane}" ]]; then
     return 0
@@ -67,7 +53,6 @@ focus_history_record() {
 
   kept+=("${pane}")
 
-  # Cap the stack length, dropping the oldest entries first.
   while (( ${#kept[@]} > max )); do
     kept=("${kept[@]:1}")
   done
@@ -76,7 +61,6 @@ focus_history_record() {
   set_window_option "@tiling_revamped_focus_pos" "$(( ${#kept[@]} - 1 ))"
 }
 
-# _focus_history_step: move the cursor by <dir> to the nearest live pane.
 _focus_history_step() {
   local dir="${1}"
 
@@ -105,12 +89,10 @@ _focus_history_step() {
   set_window_option "@tiling_revamped_focus_pos" "${idx}"
 }
 
-# focus_history_back: select the previous pane in the history.
 focus_history_back() {
   _focus_history_step -1
 }
 
-# focus_history_forward: select the next pane in the history.
 focus_history_forward() {
   _focus_history_step 1
 }

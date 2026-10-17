@@ -1,9 +1,4 @@
 #!/usr/bin/env bats
-#
-# Integration tests: validate every feature against a real tmux server.
-#
-# Each test starts a fresh tmux server (200x50), creates panes, runs
-# tiling.sh commands, and asserts the resulting state.
 
 load "${BATS_TEST_DIRNAME}/tmux_helpers.bash"
 
@@ -14,8 +9,6 @@ setup() {
 teardown() {
   teardown_tmux_server
 }
-
-# ── Helper ──────────────────────────────────────────────────────────
 
 get_layout() {
   command tmux -S "${TMUX_SOCKET}" show-option -wqv "@tiling_revamped_layout" 2>/dev/null
@@ -41,7 +34,32 @@ get_pane_height() {
   command tmux -S "${TMUX_SOCKET}" display-message -p -t "${1}" '#{pane_height}' 2>/dev/null
 }
 
-# ── Layouts ─────────────────────────────────────────────────────────
+main_center_side_counts() {
+  local max_width=0 center_pane_left=0 left_count=0 right_count=0
+  local line pl pw
+  while IFS= read -r line; do
+    pl="${line#* }"
+    pl="${pl%% *}"
+    pw="${line##* }"
+    if (( pw > max_width )); then
+      max_width="${pw}"
+      center_pane_left="${pl}"
+    fi
+  done < <(command tmux -S "${TMUX_SOCKET}" list-panes -F '#{pane_id} #{pane_left} #{pane_width}' 2>/dev/null)
+  while IFS= read -r line; do
+    pl="${line#* }"
+    pl="${pl%% *}"
+    pw="${line##* }"
+    if (( pw == max_width )); then
+      continue
+    elif (( pl < center_pane_left )); then
+      left_count=$(( left_count + 1 ))
+    else
+      right_count=$(( right_count + 1 ))
+    fi
+  done < <(command tmux -S "${TMUX_SOCKET}" list-panes -F '#{pane_id} #{pane_left} #{pane_width}' 2>/dev/null)
+  printf '%s %s' "${left_count}" "${right_count}"
+}
 
 @test "integration: dwindle layout with 3 panes" {
   create_panes 3
@@ -51,12 +69,16 @@ get_pane_height() {
 }
 
 @test "integration: dwindle master pane occupies roughly half the window" {
+  # Arrange
   create_panes 4
-  run_tiling layout dwindle
   local -a panes
-  while IFS= read -r _p; do panes+=("$_p"); done < <(get_pane_ids)
-  # BSP first split divides in half; rounding may shift 1px, so check >= 40%
   local master_w window_w threshold
+
+  # Act
+  run_tiling layout dwindle
+
+  # Assert
+  while IFS= read -r _p; do panes+=("$_p"); done < <(get_pane_ids)
   master_w=$(get_pane_width "${panes[0]}")
   window_w=$(command tmux -S "${TMUX_SOCKET}" display-message -p '#{window_width}' 2>/dev/null)
   threshold=$(( window_w * 40 / 100 ))
@@ -97,11 +119,14 @@ get_pane_height() {
 }
 
 @test "integration: main-center master is wider than sides" {
+  # Arrange
   create_panes 3
-  run_tiling layout main-center
-  # After main-center, pane order is: left-side, center, right-side
-  # Center pane (index 1) must be the widest
   local -a panes
+
+  # Act
+  run_tiling layout main-center
+
+  # Assert
   while IFS= read -r _p; do panes+=("$_p"); done < <(get_pane_ids)
   assert_pane_wider_than "${panes[1]}" "${panes[0]}"
   assert_pane_wider_than "${panes[1]}" "${panes[2]}"
@@ -163,8 +188,6 @@ get_pane_height() {
   assert_pane_count 3
 }
 
-# ── Layout switching ────────────────────────────────────────────────
-
 @test "integration: switch from dwindle to grid preserves panes" {
   create_panes 4
   run_tiling layout dwindle
@@ -183,17 +206,19 @@ get_pane_height() {
   assert_pane_count 3
 }
 
-# ── Operations ──────────────────────────────────────────────────────
-
 @test "integration: balance resets pane sizes for dwindle" {
+  # Arrange
   create_panes 4
   run_tiling layout dwindle
-  # Manually resize a pane to create imbalance
   local first_pane
   first_pane=$(command tmux -S "${TMUX_SOCKET}" list-panes -F '#{pane_id}' 2>/dev/null | head -1)
   command tmux -S "${TMUX_SOCKET}" resize-pane -t "${first_pane}" -R 30 2>/dev/null || true
   sleep 0.1
+
+  # Act
   run_tiling balance
+
+  # Assert
   [[ "$(get_layout)" == "dwindle" ]]
 }
 
@@ -219,13 +244,17 @@ get_pane_height() {
 }
 
 @test "integration: promote swaps focused pane with master" {
+  # Arrange
   create_panes 3
   run_tiling layout dwindle
-  # Select the second pane
   command tmux -S "${TMUX_SOCKET}" select-pane -t 1 2>/dev/null
   sleep 0.1
+
+  # Act
   run_tiling promote
-  [[ "$(get_layout)" == "dwindle" ]]
+
+  # Assert
+  [[ "$(get_layout)" == "dwindle" ]] || false
   assert_pane_count 3
 }
 
@@ -245,14 +274,17 @@ get_pane_height() {
 }
 
 @test "integration: rotate 90 changes orientation" {
+  # Arrange
   create_panes 3
   run_tiling layout dwindle
-  local before
+  local before after
   before=$(get_orientation)
+
+  # Act
   run_tiling rotate 90
-  local after
+
+  # Assert
   after=$(get_orientation)
-  # Orientation should change (v<->h toggle)
   [[ "${before}" != "${after}" ]]
 }
 
@@ -278,8 +310,6 @@ get_pane_height() {
   run_tiling autosplit
   assert_pane_count 2
 }
-
-# ── Resize master ───────────────────────────────────────────────────
 
 @test "integration: resize-master grow increases master width in main-vertical" {
   create_panes 3
@@ -320,8 +350,6 @@ get_pane_height() {
   (( after_height >= before_height ))
 }
 
-# ── Sync ────────────────────────────────────────────────────────────
-
 @test "integration: sync toggles synchronize-panes on" {
   create_panes 2
   run_tiling sync
@@ -339,19 +367,20 @@ get_pane_height() {
   [[ "${sync_val}" == "off" ]]
 }
 
-# ── Swap direction ──────────────────────────────────────────────────
-
 @test "integration: swap R swaps focused pane with right neighbor" {
+  # Arrange
   create_panes 3
   run_tiling layout dwindle
-  local -a panes_before
+  local -a panes_before panes_after
   while IFS= read -r _p; do panes_before+=("$_p"); done < <(get_pane_ids)
-  # Focus the master pane (leftmost)
   command tmux -S "${TMUX_SOCKET}" select-pane -t "${panes_before[0]}" 2>/dev/null
   sleep 0.1
+
+  # Act
   run_tiling swap R
+
+  # Assert
   assert_pane_count 3
-  local -a panes_after
   while IFS= read -r _p; do panes_after+=("$_p"); done < <(get_pane_ids)
   [[ "${panes_after[0]}" != "${panes_before[0]}" ]] || false
   [[ "$(get_active_pane)" == "${panes_before[0]}" ]]
@@ -371,8 +400,6 @@ get_pane_height() {
   [[ "${panes_after[1]}" == "${panes_before[2]}" ]] || false
   [[ "${panes_after[2]}" == "${panes_before[1]}" ]]
 }
-
-# ── Cycle ───────────────────────────────────────────────────────────
 
 @test "integration: cycle next moves through layout sequence" {
   create_panes 3
@@ -398,8 +425,6 @@ get_pane_height() {
   [[ "$(get_layout)" == "dwindle" ]]
 }
 
-# ── Marks ───────────────────────────────────────────────────────────
-
 @test "integration: mark pane stores mark name" {
   create_panes 3
   run_tiling mark "editor"
@@ -409,20 +434,21 @@ get_pane_height() {
 }
 
 @test "integration: jump to mark selects the correct pane" {
+  # Arrange
   create_panes 3
   local -a panes
   while IFS= read -r _p; do panes+=("$_p"); done < <(get_pane_ids)
-  # Mark the second pane
   command tmux -S "${TMUX_SOCKET}" select-pane -t "${panes[1]}" 2>/dev/null
   sleep 0.1
   run_tiling mark "build"
-  # Switch to the first pane
   command tmux -S "${TMUX_SOCKET}" select-pane -t "${panes[0]}" 2>/dev/null
   sleep 0.1
+
+  # Act
   run_tiling jump "build"
-  local active
-  active=$(get_active_pane)
-  [[ "${active}" == "${panes[1]}" ]]
+
+  # Assert
+  [[ "$(get_active_pane)" == "${panes[1]}" ]]
 }
 
 @test "integration: unmark removes the mark" {
@@ -434,8 +460,6 @@ get_pane_height() {
   [[ -z "${mark}" ]]
 }
 
-# ── Presets ─────────────────────────────────────────────────────────
-
 @test "integration: preset save and apply restores layout" {
   create_panes 3
   run_tiling layout dwindle
@@ -445,8 +469,6 @@ get_pane_height() {
   run_tiling preset apply "dev"
   [[ "$(get_layout)" == "dwindle" ]]
 }
-
-# ── Orientation flags ───────────────────────────────────────────────
 
 @test "integration: dwindle with brvc orientation" {
   create_panes 4
@@ -466,8 +488,6 @@ get_pane_height() {
   run_tiling layout spiral brvs
   [[ "$(get_layout)" == "spiral" ]]
 }
-
-# ── Multi-pane stress ──────────────────────────────────────────────
 
 @test "integration: dwindle with 8 panes" {
   create_panes 8
@@ -511,15 +531,16 @@ get_pane_height() {
   assert_pane_count 5
 }
 
-# ── Auto-reapplication ──────────────────────────────────────────────
-
 @test "integration: dwindle re-applies after split" {
+  # Arrange
   create_panes 3
   run_tiling layout dwindle
-  # Set auto-apply globally
   command tmux -S "${TMUX_SOCKET}" set-option -g "@tiling_revamped_auto_apply" "1" 2>/dev/null
-  # Manually trigger the hook handler
+
+  # Act
   run_tiling hook split
+
+  # Assert
   [[ "$(get_layout)" == "dwindle" ]]
 }
 
@@ -538,8 +559,6 @@ get_pane_height() {
   run_tiling hook resize
   [[ "$(get_layout)" == "main-horizontal" ]]
 }
-
-# ── Promote and circulate across all layout types ───────────────────
 
 @test "integration: promote works with main-vertical" {
   create_panes 3
@@ -566,12 +585,14 @@ get_pane_height() {
   [[ "$(get_layout)" == "grid" ]]
 }
 
-# ── Default layout hook ─────────────────────────────────────────────
-
 @test "integration: new-window hook applies default layout" {
+  # Arrange
   command tmux -S "${TMUX_SOCKET}" set-option -g "@tiling_revamped_default_layout" "grid" 2>/dev/null
-  # Simulate the hook by calling it directly
+
+  # Act
   run_tiling hook new-window
+
+  # Assert
   [[ "$(get_layout)" == "grid" ]]
 }
 
@@ -597,39 +618,16 @@ get_pane_height() {
   [[ -z "${layout}" ]]
 }
 
-# ── Balanced main-center ──────────────────────────────────────────
-
 @test "integration: main-center with 5 panes has balanced sides" {
+  # Arrange
   create_panes 5
+
+  # Act
   run_tiling layout main-center
-  [[ "$(get_layout)" == "main-center" ]]
-  # Find the center pane (widest) and classify others by position
-  local max_width=0 center_pane_left=0
-  while IFS= read -r line; do
-    local w="${line##* }"
-    local l="${line#* }"
-    l="${l%% *}"
-    if (( w > max_width )); then
-      max_width="${w}"
-      center_pane_left="${l}"
-    fi
-  done < <(command tmux -S "${TMUX_SOCKET}" list-panes -F '#{pane_id} #{pane_left} #{pane_width}' 2>/dev/null)
-  # Count panes on each side of the center
-  local left_count=0 right_count=0
-  while IFS= read -r line; do
-    local pl="${line#* }"
-    pl="${pl%% *}"
-    local pw="${line##* }"
-    if (( pw == max_width )); then
-      continue
-    elif (( pl < center_pane_left )); then
-      left_count=$(( left_count + 1 ))
-    else
-      right_count=$(( right_count + 1 ))
-    fi
-  done < <(command tmux -S "${TMUX_SOCKET}" list-panes -F '#{pane_id} #{pane_left} #{pane_width}' 2>/dev/null)
-  [[ "${left_count}" -eq 2 ]]
-  [[ "${right_count}" -eq 2 ]]
+
+  # Assert
+  [[ "$(get_layout)" == "main-center" ]] || false
+  [[ "$(main_center_side_counts)" == "2 2" ]]
 }
 
 @test "integration: main-center with 7 panes has balanced sides" {
@@ -663,34 +661,35 @@ get_pane_height() {
   [[ "${right_count}" -eq 3 ]]
 }
 
-# ── Layout picker ─────────────────────────────────────────────────
-
 @test "integration: pick command is routed in dispatcher" {
-  # pick requires fzf interactive input, which is unavailable in CI.
-  # Just verify the command does not crash the dispatcher.
-  run_tiling pick || true
-  true
-}
+  # Arrange
+  local command_name="pick"
 
-# ── Deck in cycle ─────────────────────────────────────────────────
+  # Act
+  run run_tiling "${command_name}"
+
+  # Assert
+  [ "${status}" -eq 0 ]
+  command tmux -S "${TMUX_SOCKET}" has-session -t test 2>/dev/null
+}
 
 @test "integration: cycle includes deck in default order" {
+  # Arrange
   create_panes 3
   run_tiling layout monocle
-  # monocle is second-to-last in cycle, deck is last
+
+  # Act
   run_tiling cycle next
+
+  # Assert
   [[ "$(get_layout)" == "deck" ]]
 }
-
-# New: status indicator
 
 @test "integration: status command is routed in dispatcher" {
   run_tiling layout dwindle
   run_tiling status || true
   true
 }
-
-# New: redo
 
 @test "integration: redo re-applies an undone layout" {
   create_panes 3
@@ -752,8 +751,6 @@ get_pane_height() {
   [[ "$(command tmux -S "${TMUX_SOCKET}" display-message -p '#{window_layout}')" == "${active_layout}" ]]
 }
 
-# New: swap with biggest
-
 @test "integration: swap-biggest keeps the pane count and is routed" {
   create_panes 3
   run_tiling layout main-vertical
@@ -762,8 +759,6 @@ get_pane_height() {
   run_tiling swap-biggest
   assert_pane_count 3
 }
-
-# New: smart borders
 
 @test "integration: smart-borders hides chrome on a single pane" {
   command tmux -S "${TMUX_SOCKET}" set -g @tiling_revamped_smart_borders 1
@@ -782,8 +777,6 @@ get_pane_height() {
   [[ "${status_val}" == "top" ]]
 }
 
-# New: workspace back-and-forth
-
 @test "integration: back-and-forth toggles to the previous window" {
   local first
   first=$(command tmux -S "${TMUX_SOCKET}" display-message -p '#{window_id}' 2>/dev/null)
@@ -793,8 +786,6 @@ get_pane_height() {
   active=$(command tmux -S "${TMUX_SOCKET}" display-message -p '#{window_id}' 2>/dev/null)
   [[ "${active}" == "${first}" ]]
 }
-
-# New: help overlay
 
 @test "integration: help-overlay command is routed in dispatcher" {
   run_tiling help-overlay || true

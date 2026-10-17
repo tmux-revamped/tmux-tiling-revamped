@@ -13,7 +13,6 @@ teardown() {
   cleanup_test_environment
 }
 
-# Record the seam call instead of executing it.
 _capture_set_window_option() {
   set_window_option() { printf '%s %s\n' "$1" "$2" >> "${CAPTURE}"; }
   export -f set_window_option

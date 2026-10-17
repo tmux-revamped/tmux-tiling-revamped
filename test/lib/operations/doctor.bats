@@ -20,9 +20,15 @@ teardown() {
 }
 
 @test "doctor.sh - run_doctor completes without crash" {
+  # Arrange
+  local last_line
+
+  # Act
   run run_doctor
-  # In mock environment, exit code may be 0 or 1 depending on tmux mock
-  [[ "${status}" -eq 0 ]] || [[ "${status}" -eq 1 ]]
+
+  # Assert
+  last_line="${output##*$'\n'}"
+  [[ ( "${status}" -eq 0 && "${last_line}" == "All checks passed" ) || ( "${status}" -eq 1 && "${last_line}" == *" issue(s) found" ) ]]
 }
 
 @test "doctor.sh - run_doctor outputs bash version" {

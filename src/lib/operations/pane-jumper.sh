@@ -1,11 +1,4 @@
 #!/usr/bin/env bash
-#
-# pane-jumper.sh: fuzzy jump to any pane across every session.
-#
-# An fzf popup lists every pane in the server with a live capture-pane preview.
-# Selecting an entry switches the client to that session, window, and pane.  The
-# popup needs fzf plus tmux 3.2+; when either is missing the jumper degrades to
-# tmux's built-in choose-tree so the key still does something useful.
 
 [[ -n "${_TILING_REVAMPED_PANE_JUMPER_LOADED:-}" ]] && return 0
 _TILING_REVAMPED_PANE_JUMPER_LOADED=1
@@ -17,7 +10,6 @@ source "${LIB_DIR}/utils/constants.sh"
 source "${LIB_DIR}/utils/has-command.sh"
 source "${LIB_DIR}/utils/picker.sh"
 
-# _pane_jumper_has_popup: true when tmux is new enough for display-popup (3.2+).
 _pane_jumper_has_popup() {
   local version major minor
   version=$(tmux -V 2>/dev/null | sed 's/[^0-9.]//g')
@@ -34,19 +26,16 @@ _pane_jumper_has_popup() {
   return 1
 }
 
-# _pane_jumper_list: one line per pane, "location pane_id command title".
 _pane_jumper_list() {
   tmux list-panes -a -F \
     '#{pane_id}|#{session_id}|#{window_id}|#{session_name}:#{window_index}.#{pane_index} #{pane_current_command} #{pane_title}' \
     2>/dev/null
 }
 
-# _pane_jumper_fallback: built-in tree picker when the popup is unavailable.
 _pane_jumper_fallback() {
   tmux choose-tree -Zw 2>/dev/null || true
 }
 
-# _pane_jumper_select: switch to the session, window, and pane of a selection.
 _pane_jumper_select() {
   local selection="${1:-}"
   [[ -z "${selection}" ]] && return 0
@@ -68,7 +57,6 @@ _pane_jumper_select() {
   tmux select-pane -t "${pane_id}" 2>/dev/null || true
 }
 
-# pane_jumper: main entry point.
 pane_jumper() {
   if ! has_command fzf || ! _pane_jumper_has_popup; then
     _pane_jumper_fallback

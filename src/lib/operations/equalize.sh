@@ -7,9 +7,6 @@ LIB_DIR="${TILING_REVAMPED_LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && 
 
 source "${LIB_DIR}/tmux/tmux-config.sh"
 
-# equalize_panes: make every pane exactly the same size.  Unlike balance_panes
-# which preserves the layout topology, equalize completely ignores topology and
-# distributes space evenly along one axis.
 equalize_panes() {
   local pane_count
   pane_count=$(get_pane_count)

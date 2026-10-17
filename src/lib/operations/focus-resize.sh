@@ -7,11 +7,6 @@ LIB_DIR="${TILING_REVAMPED_LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && 
 
 source "${LIB_DIR}/tmux/tmux-config.sh"
 
-# focus_resize_pane: resize the focused pane toward the golden ratio.
-#
-# The focused pane expands to @tiling_revamped_focus_ratio percent (default
-# 62) of the window dimensions.  All other panes shrink proportionally.
-# Called by the pane-focus-in[100] hook when @tiling_revamped_focus_resize=1.
 focus_resize_pane() {
   local pane_count
   pane_count=$(get_pane_count)

@@ -7,7 +7,6 @@ LIB_DIR="${TILING_REVAMPED_LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && 
 
 source "${LIB_DIR}/tmux/tmux-config.sh"
 
-# _decode_orientation: translate orientation flags to plain English.
 _decode_orientation() {
   local flags="${1:-brvc}"
   local desc=""
@@ -20,7 +19,6 @@ _decode_orientation() {
   echo "${desc}"
 }
 
-# show_info: display current tiling state for the active window.
 show_info() {
   local layout pane_count flags orientation history_depth
 

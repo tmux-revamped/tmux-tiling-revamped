@@ -7,8 +7,6 @@ LIB_DIR="${TILING_REVAMPED_LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && 
 
 source "${LIB_DIR}/tmux/tmux-config.sh"
 
-# Grid layout: even N×M grid.  Uses tmux's built-in "tiled" layout which
-# distributes panes into the smallest rectangle that fits all of them.
 apply_layout_grid() {
   local pane_count
   pane_count=$(get_pane_count)

@@ -8,18 +8,6 @@ LIB_DIR="${TILING_REVAMPED_LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && 
 source "${LIB_DIR}/tmux/tmux-config.sh"
 source "${LIB_DIR}/layouts/dwindle.sh"
 
-# Main-center layout: one wide center pane with balanced side columns.
-#
-# 1 pane:   [ main ]
-# 2 panes:  [ main ][ side ]  (60/40)
-# 3 panes:  [ left ][ main ][ right ]  (20/60/20)
-# 4+ panes: extras distributed evenly between left and right columns
-#
-# Distribution: left_count = (pane_count - 1) / 2, right gets the remainder.
-# This keeps the sides balanced within 1 pane of each other.
-
-# _main_center_vstack: build a vertical stack layout string for N panes.
-# Args: pane_ids_str x y w h
 _main_center_vstack() {
   local pane_ids_str="$1"
   local x=$2 y=$3 w=$4 h=$5
@@ -55,8 +43,6 @@ _main_center_vstack() {
   echo "${w}x${h},${x},${y}[${parts}]"
 }
 
-# _main_center_build: build the full three-column layout string.
-# Args: panes_str window_width window_height main_ratio
 _main_center_build() {
   local panes_str="$1"
   local ww=$2 wh=$3 ratio=$4
@@ -88,12 +74,10 @@ _main_center_build() {
 
   local center_str="${main_w}x${wh},${center_x},0,${panes[0]##%}"
 
-  # Left column: panes 1..left_count
   local left_panes="${panes[*]:1:${left_count}}"
   local left_str
   left_str=$(_main_center_vstack "${left_panes}" 0 0 "${left_w}" "${wh}")
 
-  # Right column: panes (left_count+1)..end
   local right_start=$(( left_count + 1 ))
   local right_panes="${panes[*]:${right_start}:${right_count}}"
   local right_str

@@ -6,7 +6,6 @@ setup() {
   setup_test_environment
   export MOCK_PANE_ID="%0"
   source "${BATS_TEST_DIRNAME}/../../../src/lib/features/focus-history.sh"
-  # Persist window options to files so the stack survives across seam calls.
   get_window_option() {
     local f="${TEST_TMPDIR}/wopt_${1//[^a-zA-Z0-9]/_}"
     if [[ -f "${f}" ]]; then cat "${f}"; else printf '%s' "${2:-}"; fi

@@ -7,13 +7,6 @@ LIB_DIR="${TILING_REVAMPED_LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && 
 
 source "${LIB_DIR}/tmux/tmux-config.sh"
 
-# rotate_layout: rotate the orientation flags by the given degrees.
-#
-# 90/270  - swap h/v branch direction (portrait <-> landscape)
-# 180     - invert both corner axes (mirror diagonally)
-#
-# After updating the stored orientation, the current BSP layout is
-# re-applied with the new flags.  Non-BSP layouts are unaffected.
 rotate_layout() {
   local degrees="${1:-90}"
   local current_layout

@@ -1,11 +1,4 @@
 #!/usr/bin/env bats
-#
-# Integration tests for the TPM entry point (tmux-tiling-revamped.tmux).
-#
-# These run the real plugin file against a real, isolated tmux server and
-# inspect the resulting key bindings.  A mock tmux cannot reproduce the bug
-# these guard against: an option set to an empty string must disable its
-# binding rather than fall back to the default key.
 
 setup() {
   PLUGIN_DIR="${BATS_TEST_DIRNAME}/../.."
@@ -15,13 +8,10 @@ setup() {
   fi
   export TILING_SOCKET="/tmp/tiling-kb-${BASHPID}-${RANDOM}"
 
-  # Route every tmux call (including those inside the plugin subshell) to the
-  # isolated test socket.  Exported so the `"${BASH}" "${PLUGIN}"` child inherits it.
   tmux() { command tmux -S "${TILING_SOCKET}" "$@"; }
   export -f tmux
   export TILING_SOCKET
 
-  # -f /dev/null keeps the user's ~/.tmux.conf (and its own plugin copy) out.
   command tmux -S "${TILING_SOCKET}" -f /dev/null \
     new-session -d -s test -x 200 -y 50 2>/dev/null
   sleep 0.1
@@ -32,8 +22,6 @@ teardown() {
   rm -f "${TILING_SOCKET}" 2>/dev/null || true
 }
 
-# Echo the prefix key bound to a tiling action, or nothing if unbound.
-# Args: the trailing tiling.sh argument, e.g. "layout dwindle" or "pick".
 key_for() {
   command tmux -S "${TILING_SOCKET}" list-keys 2>/dev/null \
     | grep -E "tiling.sh ${1}( |\")" \

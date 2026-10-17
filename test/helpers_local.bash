@@ -1,10 +1,4 @@
 #!/usr/bin/env bash
-#
-# Test helpers for tmux-tiling-revamped.
-#
-# Unit tests source this file for mock tmux and lifecycle helpers.
-# Integration tests (layout tests) use tmux_helpers.bash instead,
-# which manages a real tmux server per test.
 
 setup_test_environment_local() {
   TEST_SRC_DIR="${TEST_TMPDIR}/src"
@@ -14,8 +8,6 @@ setup_test_environment_local() {
   export SCRIPT_DIR="${TEST_SRC_DIR}"
   export LIB_DIR="${TEST_LIB_DIR}"
 
-  # Reset source guards so each test starts fresh
-  # Reset ALL source guards so each test file starts fresh
   unset _TILING_REVAMPED_CONSTANTS_LOADED
   unset _TILING_REVAMPED_TMUX_CONFIG_LOADED
   unset _TILING_REVAMPED_DWINDLE_LOADED
@@ -62,8 +54,6 @@ setup_test_environment_local() {
   unset _TILING_REVAMPED_PICKER_LOADED
 }
 
-# Mock tmux function for unit tests.
-
 _mock_opt_dir() {
   printf '%s' "${MOCK_OPTS_DIR:-${TEST_TMPDIR:-/tmp}/mock-opts}"
 }
@@ -95,7 +85,6 @@ _mock_opt_write() {
   fi
 }
 
-# Controlled via MOCK_* environment variables.
 tmux() {
   [[ -n "${MOCK_TMUX_LOG:-}" ]] && printf '%s\n' "$*" >> "${MOCK_TMUX_LOG}"
   case "$1" in
@@ -290,11 +279,6 @@ command() {
   fi
 }
 
-# Mock fzf so tests never launch the real interactive picker. The real
-# `fzf --tmux` opens a tmux popup on whatever client is attached, which leaks
-# onto the developer's own session when the suite runs inside tmux, and blocks
-# waiting for input. The mock drains stdin and returns MOCK_FZF_SELECTION
-# (empty by default, meaning "no selection").
 fzf() {
   if [[ "${1:-}" == "--version" ]]; then
     printf '%s\n' "${MOCK_FZF_VERSION:-0.54.0 (mock)}"

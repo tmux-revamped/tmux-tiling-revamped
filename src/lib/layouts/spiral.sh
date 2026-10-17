@@ -12,7 +12,6 @@ apply_layout_spiral() {
   _apply_bsp_layout "true" "${flags}"
   set_current_layout "spiral"
 
-  # Normalize flags: ensure 's' trajectory flag is stored
   local stored_flags="${flags:-$(get_window_option "@tiling_revamped_orientation" "brvs")}"
   case "${stored_flags}" in
     *s*) ;;
