@@ -48,129 +48,181 @@ teardown() {
 # _resurrect_tmux_factory LAYOUT FLAGS: print a tmux override that emits one
 # window for list-windows and the given layout/flags for show-option.
 _resurrect_tmux_for() {
-  local layout="$1" flags="${2:-brvc}"
-  eval "tmux() {
-    case \"\$1\" in
-      list-windows) printf '%s\\n' '@1' ;;
+  export RESURRECT_LOG="${TEST_TMPDIR}/resurrect.log"
+  export RESURRECT_LAYOUT="${1}"
+  export RESURRECT_FLAGS="${2-brvc}"
+  tmux() {
+    printf '%s\n' "$*" >> "${RESURRECT_LOG}"
+    case "$1" in
+      list-windows) printf '%s\n' '@1|%1|1' ;;
       show-option)
-        case \"\$*\" in
-          *@tiling_revamped_layout*) printf '%s\\n' '${layout}' ;;
-          *@tiling_revamped_orientation*) printf '%s\\n' '${flags}' ;;
-          *) printf '%s\\n' '' ;;
+        case "$*" in
+          *@tiling_revamped_layout*) printf '%s\n' "${RESURRECT_LAYOUT}" ;;
+          *@tiling_revamped_orientation*) printf '%s\n' "${RESURRECT_FLAGS}" ;;
+          *) printf '\n' ;;
         esac ;;
-      select-window) return 0 ;;
-      *) return 0 ;;
+      select-window) return "${RESURRECT_SELECT_RC:-0}" ;;
     esac
-  }"
+    return 0
+  }
   export -f tmux
+}
+
+_record_applies() {
+  _apply_bsp_layout() { printf 'applied bsp %s %s %s\n' "$1" "$2" "${TMUX_PANE}" >> "${RESURRECT_LOG}"; }
+  apply_layout_grid() { printf 'applied grid %s\n' "${TMUX_PANE}" >> "${RESURRECT_LOG}"; }
+  apply_layout_main_vertical() { printf 'applied main-vertical %s\n' "${TMUX_PANE}" >> "${RESURRECT_LOG}"; }
+  apply_layout_main_horizontal() { printf 'applied main-horizontal %s\n' "${TMUX_PANE}" >> "${RESURRECT_LOG}"; }
+  apply_layout_main_center() { printf 'applied main-center %s\n' "${TMUX_PANE}" >> "${RESURRECT_LOG}"; }
+  apply_layout_deck() { printf 'applied deck %s\n' "${TMUX_PANE}" >> "${RESURRECT_LOG}"; }
+  export -f _apply_bsp_layout apply_layout_grid apply_layout_main_vertical \
+    apply_layout_main_horizontal apply_layout_main_center apply_layout_deck
 }
 
 @test "resurrect.sh - restore_layouts direct call with no windows" {
-  restore_layouts >/dev/null 2>&1
+  # Arrange
+  export MOCK_TMUX_LOG="${TEST_TMPDIR}/tmux.log"
+
+  # Act
+  restore_layouts
+
+  # Assert
+  ! grep -q '^select-window' "${MOCK_TMUX_LOG}"
 }
 
 @test "resurrect.sh - restore_layouts re-applies dwindle layout" {
-  _apply_bsp_layout() { return 0; }
-  export -f _apply_bsp_layout
+  # Arrange
   _resurrect_tmux_for "dwindle" "brvc"
-  restore_layouts >/dev/null 2>&1
+  _record_applies
+
+  # Act
+  restore_layouts
+
+  # Assert
+  grep -qx 'applied bsp false brvc %1' "${RESURRECT_LOG}"
 }
 
 @test "resurrect.sh - restore_layouts re-applies spiral layout" {
-  _apply_bsp_layout() { return 0; }
-  export -f _apply_bsp_layout
+  # Arrange
   _resurrect_tmux_for "spiral" "brvs"
-  restore_layouts >/dev/null 2>&1
+  _record_applies
+
+  # Act
+  restore_layouts
+
+  # Assert
+  grep -qx 'applied bsp true brvs %1' "${RESURRECT_LOG}"
 }
 
 @test "resurrect.sh - restore_layouts re-applies grid layout" {
-  apply_layout_grid() { return 0; }
-  export -f apply_layout_grid
+  # Arrange
   _resurrect_tmux_for "grid"
-  restore_layouts >/dev/null 2>&1
+  _record_applies
+
+  # Act
+  restore_layouts
+
+  # Assert
+  grep -qx 'applied grid %1' "${RESURRECT_LOG}"
 }
 
 @test "resurrect.sh - restore_layouts re-applies main-vertical layout" {
-  apply_layout_main_vertical() { return 0; }
-  export -f apply_layout_main_vertical
+  # Arrange
   _resurrect_tmux_for "main-vertical"
-  restore_layouts >/dev/null 2>&1
+  _record_applies
+
+  # Act
+  restore_layouts
+
+  # Assert
+  grep -qx 'applied main-vertical %1' "${RESURRECT_LOG}"
 }
 
 @test "resurrect.sh - restore_layouts re-applies main-horizontal layout" {
-  apply_layout_main_horizontal() { return 0; }
-  export -f apply_layout_main_horizontal
+  # Arrange
   _resurrect_tmux_for "main-horizontal"
-  restore_layouts >/dev/null 2>&1
+  _record_applies
+
+  # Act
+  restore_layouts
+
+  # Assert
+  grep -qx 'applied main-horizontal %1' "${RESURRECT_LOG}"
 }
 
 @test "resurrect.sh - restore_layouts re-applies main-center layout" {
-  apply_layout_main_center() { return 0; }
-  export -f apply_layout_main_center
+  # Arrange
   _resurrect_tmux_for "main-center"
-  restore_layouts >/dev/null 2>&1
+  _record_applies
+
+  # Act
+  restore_layouts
+
+  # Assert
+  grep -qx 'applied main-center %1' "${RESURRECT_LOG}"
 }
 
 @test "resurrect.sh - restore_layouts re-applies deck layout" {
-  apply_layout_deck() { return 0; }
-  export -f apply_layout_deck
+  # Arrange
   _resurrect_tmux_for "deck"
-  restore_layouts >/dev/null 2>&1
+  _record_applies
+
+  # Act
+  restore_layouts
+
+  # Assert
+  grep -qx 'applied deck %1' "${RESURRECT_LOG}"
 }
 
 @test "resurrect.sh - restore_layouts skips monocle layout" {
+  # Arrange
   _resurrect_tmux_for "monocle"
-  restore_layouts >/dev/null 2>&1
+  _record_applies
+
+  # Act
+  restore_layouts
+
+  # Assert
+  ! grep -q '^applied ' "${RESURRECT_LOG}"
 }
 
 @test "resurrect.sh - restore_layouts skips window with empty layout" {
-  tmux() {
-    case "$1" in
-      list-windows) printf '%s\n' '@1' ;;
-      show-option) printf '%s\n' '' ;;
-      *) return 0 ;;
-    esac
-  }
-  export -f tmux
-  restore_layouts >/dev/null 2>&1
+  # Arrange
+  _resurrect_tmux_for ""
+  _record_applies
+
+  # Act
+  restore_layouts
+
+  # Assert
+  ! grep -q '^applied ' "${RESURRECT_LOG}" || false
+  ! grep -q 'show-option -wqv -t @1 @tiling_revamped_orientation' "${RESURRECT_LOG}"
 }
 
 @test "resurrect.sh - restore_layouts defaults orientation when flags empty" {
-  _apply_bsp_layout() { return 0; }
-  export -f _apply_bsp_layout
-  tmux() {
-    case "$1" in
-      list-windows) printf '%s\n' '@1' ;;
-      show-option)
-        case "$*" in
-          *@tiling_revamped_layout*) printf '%s\n' 'dwindle' ;;
-          *) printf '%s\n' '' ;;
-        esac ;;
-      *) return 0 ;;
-    esac
-  }
-  export -f tmux
-  restore_layouts >/dev/null 2>&1
+  # Arrange
+  _resurrect_tmux_for "dwindle" ""
+  _record_applies
+
+  # Act
+  restore_layouts
+
+  # Assert
+  grep -qx 'applied bsp false brvc %1' "${RESURRECT_LOG}"
 }
 
 @test "resurrect.sh - restore_layouts continues when select-window fails" {
-  _apply_bsp_layout() { return 0; }
-  export -f _apply_bsp_layout
-  tmux() {
-    case "$1" in
-      list-windows) printf '%s\n' '@1' ;;
-      show-option)
-        case "$*" in
-          *@tiling_revamped_layout*) printf '%s\n' 'dwindle' ;;
-          *@tiling_revamped_orientation*) printf '%s\n' 'brvc' ;;
-          *) printf '%s\n' '' ;;
-        esac ;;
-      select-window) return 1 ;;
-      *) return 0 ;;
-    esac
-  }
-  export -f tmux
-  restore_layouts >/dev/null 2>&1
+  # Arrange
+  _resurrect_tmux_for "dwindle" "brvc"
+  _record_applies
+  export RESURRECT_SELECT_RC=1
+
+  # Act
+  run restore_layouts
+
+  # Assert
+  [[ "${status}" -eq 0 ]] || false
+  ! grep -q '^applied ' "${RESURRECT_LOG}"
 }
 
 _resurrect_logging_tmux() {

@@ -88,9 +88,21 @@ teardown() {
 }
 
 @test "undo-layout.sh - push_layout_history trims beyond the max depth" {
+  # Arrange
   export MOCK_TILING_LAYOUT="dwindle"
   export MOCK_TILING_LAYOUT_HISTORY="a:b|a:b|a:b|a:b|a:b|a:b|a:b|a:b|a:b|a:b|a:b|a:b"
-  push_layout_history >/dev/null 2>&1 || true
+  local cap="${TEST_TMPDIR}/trimmed-history.txt"
+  set_window_option() {
+    [[ "$1" == "@tiling_revamped_layout_history" ]] && printf '%s\n' "$2" > "${cap}"
+    return 0
+  }
+
+  # Act
+  push_layout_history
+
+  # Assert
+  [[ "$(tr '|' '\n' < "${cap}" | grep -c .)" -eq 10 ]] || false
+  grep -q '^dwindle:brvc|a:b|' "${cap}"
 }
 
 @test "undo-layout.sh - redo_layout function exists" {

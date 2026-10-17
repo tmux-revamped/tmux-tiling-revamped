@@ -63,11 +63,26 @@ teardown() {
 }
 
 @test "presets.sh - apply_preset dispatches every layout in a saved preset" {
+  # Arrange
+  local applied="${TEST_TMPDIR}/applied"
+  apply_layout_dwindle() { printf 'dwindle ' >> "${applied}"; }
+  apply_layout_spiral() { printf 'spiral ' >> "${applied}"; }
+  apply_layout_grid() { printf 'grid ' >> "${applied}"; }
+  apply_layout_main_vertical() { printf 'main-vertical ' >> "${applied}"; }
+  apply_layout_main_horizontal() { printf 'main-horizontal ' >> "${applied}"; }
+  apply_layout_main_center() { printf 'main-center ' >> "${applied}"; }
+  apply_layout_monocle() { printf 'monocle ' >> "${applied}"; }
+  apply_layout_deck() { printf 'deck ' >> "${applied}"; }
   local layout
+
+  # Act
   for layout in dwindle spiral grid main-vertical main-horizontal main-center monocle deck; do
     export MOCK_TMUX_OPTION_VALUE="${layout}:brvc:60"
-    apply_preset "p" >/dev/null 2>&1 || true
+    apply_preset "p"
   done
+
+  # Assert
+  [[ "$(cat "${applied}")" == "dwindle spiral grid main-vertical main-horizontal main-center monocle deck " ]]
 }
 
 @test "presets.sh - apply_preset rejects an unknown layout in the preset" {
