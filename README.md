@@ -347,8 +347,6 @@ All options use the `@tiling_revamped_` prefix.
 | `@tiling_revamped_border_status` | `top` | Border status restored when a second pane appears |
 | `@tiling_revamped_help_width` | `50%` | Help overlay popup width |
 | `@tiling_revamped_help_height` | `60%` | Help overlay popup height |
-| `@tiling_revamped_min_pane_width` | `10` | Minimum pane width before layout refuses to apply |
-| `@tiling_revamped_min_pane_height` | `5` | Minimum pane height before layout refuses to apply |
 | `@tiling_revamped_enable_logging` | `0` | Write debug logs to `~/.tmux/tiling-logs/` |
 
 ### Custom Keybindings
@@ -616,8 +614,6 @@ src/
       constants.sh            # Option names and defaults
       error-logger.sh         # Rotating log file
       has-command.sh           # Command existence check
-      pane-guard.sh           # Minimum pane size checker
-      deprecation.sh          # Option migration warnings
 test/
   helpers.bash                # Mock tmux for unit tests
   tmux_helpers.bash           # Real tmux server for integration tests

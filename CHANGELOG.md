@@ -46,6 +46,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   current one, and leaves each session on the window it was showing. Each
   window's layout is applied with `TMUX_PANE` set to that window's active pane,
   so the layout commands act on the window being restored.
+- The README no longer documents `@tiling_revamped_min_pane_width` and
+  `@tiling_revamped_min_pane_height`. Nothing called the size guard that read
+  them, so no layout ever refused to apply. The guard and the unused
+  deprecation helper are removed.
 
 ## [2.3.0] - 2026-09-23
 
