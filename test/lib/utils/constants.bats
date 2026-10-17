@@ -143,3 +143,18 @@ teardown() {
   [[ -n "${_TILING_REVAMPED_CONSTANTS_LOADED}" ]]
   [[ "${_TILING_REVAMPED_CONSTANTS_LOADED}" == "1" ]]
 }
+
+@test "constants.sh - every option the source reads has a constant" {
+  # Arrange
+  local src_dir="${BATS_TEST_DIRNAME}/../../../src/lib"
+  local option missing=""
+
+  # Act
+  while IFS= read -r option; do
+    grep -qF -- "${option}" "${src_dir}/utils/constants.sh" || missing="${missing} ${option}"
+  done < <(grep -rh '@tiling_revamped_' "${src_dir}" | grep -vE '^[[:space:]]*#' \
+    | grep -oE '@tiling_revamped_[a-z_]*' | sort -u)
+
+  # Assert
+  [[ -z "${missing}" ]]
+}

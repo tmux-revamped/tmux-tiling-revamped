@@ -22,38 +22,50 @@ jobs:
 
       - name: Check constants exhaustiveness
         run: |
-          while IFS= read -r opt; do
-            if ! grep -q "$opt" src/lib/utils/constants.sh; then
-              echo "WARN: $opt used in source but not in constants.sh"
-            fi
-          done < <(grep -roh '@tiling_revamped_[a-z_]*' src/lib/ | sort -u)
-
-      - name: Check ASCII art width consistency
-        run: |
           fail=0
-          for f in src/lib/layouts/*.sh; do
-            [[ "$f" == */previews.sh ]] && continue
-            widths=$(grep -E '^[┌├└│┬┴┼─┤┐┘]' "$f" 2>/dev/null | awk '{print length}' | sort -u)
-            count=$(echo "$widths" | wc -l | tr -d ' ')
-            if (( count > 1 )); then
-              echo "FAIL: inconsistent line widths in $f: $widths"
+          while IFS= read -r opt; do
+            if ! grep -qF -- "$opt" src/lib/utils/constants.sh; then
+              echo "FAIL: $opt used in source but not in constants.sh"
               fail=1
             fi
-          done
-          exit $fail
+          done < <(grep -rh '@tiling_revamped_' src/lib/ | grep -vE '^[[:space:]]*#' \
+            | grep -oE '@tiling_revamped_[a-z_]*' | sort -u)
+          exit "$fail"
+
+      - name: Check ASCII art width consistency
+        shell: python3 {0}
+        run: |
+          import glob
+          import sys
+
+          box = {chr(code) for code in range(0x2500, 0x2580)}
+          failed = False
+          for path in sorted(glob.glob("src/lib/layouts/*.sh")):
+              with open(path, encoding="utf-8") as handle:
+                  widths = {len(line.rstrip("\n")) for line in handle if line[:1] in box}
+              if len(widths) > 1:
+                  print(f"FAIL: inconsistent line widths in {path}: {sorted(widths)}")
+                  failed = True
+          sys.exit(1 if failed else 0)
 
       - name: Check README-to-code sync
         run: |
+          fail=0
           for cmd in balance equalize rotate flip promote circulate autosplit focus-resize resize-master sync swap cycle pick undo workspace move-to-workspace project swap-pick validate info doctor restore-layouts help; do
-            if ! grep -q "\"${cmd}\"" README.md 2>/dev/null && ! grep -q "\`${cmd}\`" README.md 2>/dev/null; then
-              echo "WARN: command '$cmd' not found in README"
+            if ! grep -qE "tiling\.sh ${cmd}( |$)|\`${cmd}\`" README.md; then
+              echo "FAIL: command '$cmd' not found in README"
+              fail=1
             fi
           done
+          exit "$fail"
 
       - name: Check help text sync
         run: |
+          fail=0
           while IFS= read -r cmd; do
-            if ! grep -q "$cmd" src/tiling.sh; then
-              true  # dispatcher commands use different format
+            if ! grep -qE "^    ${cmd}\)" src/tiling.sh; then
+              echo "FAIL: help lists '$cmd' but the dispatcher has no case for it"
+              fail=1
             fi
-          done < <(sed -n '/^  layout /,/^HELP$/p' src/tiling.sh | grep -oE '^\s+\S+' | tr -d ' ' | sort -u)
+          done < <(sed -n '/^  layout /,/^HELP$/p' src/tiling.sh | grep -oE '^[[:space:]]+[^[:space:]]+' | tr -d ' ' | sort -u)
+          exit "$fail"

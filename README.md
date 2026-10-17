@@ -507,6 +507,7 @@ The dispatcher at `src/tiling.sh` accepts direct commands for scripting and cust
 ./src/tiling.sh promote
 ./src/tiling.sh circulate prev
 ./src/tiling.sh autosplit
+./src/tiling.sh focus-resize
 ./src/tiling.sh resize-master grow
 ./src/tiling.sh sync
 ./src/tiling.sh swap R
