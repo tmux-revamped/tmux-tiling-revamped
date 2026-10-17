@@ -113,8 +113,8 @@ option to the old key restores exactly what you had.
 | `tmux-tiling-revamped` | redo | `r` | `M-Z` | `@tiling_revamped_key_redo` |
 
 Plugins with no row kept their defaults: battery `M-b`, cpu `M-c`, fzf `M-f`, git `M-v`, persist `C-s` and `C-r`, reorder's status-line
-mouse gestures, and pain-control's navigation, resize, split, `c`, `@`, `!`,
-`{`, `}`, `+`, `m` and `=` keys. Sensible keeps `C-n` and `C-p`. Autoreload,
+mouse gestures, and pain-control's navigation, resize, split, `c`, `*`, `@`,
+`!`, `{`, `}`, `+`, `m` and `=` keys. Sensible keeps `C-n` and `C-p`. Autoreload,
 bluetooth, network and the template bind nothing.
 
 ## Keeping what you had
