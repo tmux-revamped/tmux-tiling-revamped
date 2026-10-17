@@ -13,7 +13,7 @@ binding table after that member ran.
 | Claimed by exactly one member | 83 |
 | Claimed by more than one member | 0 |
 | Claimed over a stock binding by a declared overrider or root-table member | 15 |
-| Claimed over a stock binding by any other member | 1 |
+| Claimed over a stock binding by any other member | 0 |
 
 ## Clashes between members
 
@@ -38,7 +38,6 @@ None.
 | `copy-mode:M-w` | tmux-sensible-revamped | declared overrider, clipboard copy |
 | `copy-mode:MouseDragEnd1Pane` | tmux-sensible-revamped | declared overrider, clipboard copy |
 | `root:MouseDown1Status` | tmux-reorder-revamped | declared root-table member, wraps the stock command |
-| `prefix:Tab` | tmux-extract-revamped | allocated in KEYS.md; stock on tmux 3.8, which binds it to a floating pane |
 
 ## Reproducing
 
@@ -46,5 +45,5 @@ None.
 family/bin/live-keys --members-dir ..
 ```
 
-It exits non-zero while any clash or undeclared steal remains. On tmux 3.8 it
-reports the `Tab` steal and exits 1.
+It exits non-zero while any clash or undeclared steal remains, and exits 0 on
+tmux 3.8.

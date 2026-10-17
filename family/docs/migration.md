@@ -30,7 +30,7 @@ It owns every `M-` plus an uppercase letter and takes nothing else.
 | `tmux-time-revamped` | `M-t` | world clock menu |
 | `tmux-weather-revamped` | `M-w` | forecast popup |
 | `tmux-git-revamped` | `M-v` | git menu |
-| `tmux-extract-revamped` | `Tab` | extract from the screen |
+| `tmux-extract-revamped` | `M-x` | extract from the screen |
 | `tmux-persist-revamped` | `C-s`, `C-r` | save, restore |
 
 ## Every old default and where it went
@@ -84,6 +84,7 @@ option to the old key restores exactly what you had.
 | `tmux-pain-control-revamped` | capture the scrollback | `C` | unbound | `@pane_control_capture_key` |
 | `tmux-pain-control-revamped` | name the pane | `P` | unbound | `@pane_control_pane_name_key` |
 | `tmux-pain-control-revamped` | scratch popup | `g` | unbound | `@pane_control_scratch_key` |
+| `tmux-extract-revamped` | picker | `Tab` | `M-x` | `@extract_revamped_key` |
 | `tmux-tiling-revamped` | autotile | `C-d` | `M-A` | `@tiling_revamped_key_autotile` |
 | `tmux-tiling-revamped` | balance | `b` | `M-B` | `@tiling_revamped_key_balance` |
 | `tmux-tiling-revamped` | circulate | `C-r` | `M-C` | `@tiling_revamped_key_circulate` |
@@ -111,8 +112,7 @@ option to the old key restores exactly what you had.
 | `tmux-tiling-revamped` | synchronize panes | `S` | `M-Y` | `@tiling_revamped_key_sync` |
 | `tmux-tiling-revamped` | redo | `r` | `M-Z` | `@tiling_revamped_key_redo` |
 
-Plugins with no row kept their defaults: battery `M-b`, cpu `M-c`, extract
-`Tab`, fzf `M-f`, git `M-v`, persist `C-s` and `C-r`, reorder's status-line
+Plugins with no row kept their defaults: battery `M-b`, cpu `M-c`, fzf `M-f`, git `M-v`, persist `C-s` and `C-r`, reorder's status-line
 mouse gestures, and pain-control's navigation, resize, split, `c`, `@`, `!`,
 `{`, `}`, `+`, `m` and `=` keys. Sensible keeps `C-n` and `C-p`. Autoreload,
 bluetooth, network and the template bind nothing.

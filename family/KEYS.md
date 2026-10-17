@@ -24,11 +24,11 @@ rather than read:
 | Claimed by exactly one member | 83 |
 | Claimed by more than one member | 0 |
 | Claimed over a stock binding by a declared overrider or root-table member | 15 |
-| Claimed over a stock binding by any other member | 1 |
+| Claimed over a stock binding by any other member | 0 |
 
-The one remaining steal is `Tab`, allocated to `tmux-extract-revamped` below.
-tmux 3.8 binds it by default to a new floating pane, so on 3.8 extract takes
-that key over.
+No member takes a stock key it is not declared to replace. Extract used to
+default to `Tab`, which tmux 3.8 binds to a floating new-pane helper along with
+`BTab`, so it moved to `M-x`.
 
 ## Tiers
 
@@ -118,7 +118,7 @@ ships the smallest set that is useful, not every action it can perform.
 | `tmux-time-revamped` | `M-t` | world clock menu | time |
 | `tmux-weather-revamped` | `M-w` | forecast popup | weather |
 | `tmux-git-revamped` | `M-v` | git menu | version control, `g` is taken |
-| `tmux-extract-revamped` | `Tab` | extract from the screen | completion; tmux 3.8 binds it, see Status |
+| `tmux-extract-revamped` | `M-x` | extract from the screen | extract, `Tab` is a stock key on tmux 3.8 |
 | `tmux-persist-revamped` | `C-s`, `C-r` | save, restore | save and restore, and they must work without releasing the modifier |
 
 `tmux-autoreload-revamped`, `tmux-plugin-template`, `tmux-scroll-revamped` and
