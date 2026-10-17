@@ -233,3 +233,15 @@ wait_for_file() {
   # Assert
   [[ "$(cat "${marker}" 2>/dev/null)" == "layout dwindle" ]]
 }
+
+@test "entry point - the mark prompt substitutes the escaped response" {
+  # Arrange
+  local bound
+
+  # Act
+  "${BASH}" "${PLUGIN}"
+
+  # Assert
+  bound=$(command tmux -S "${TILING_SOCKET}" list-keys -T prefix M)
+  [[ "${bound}" == *"mark '%%%'"* ]]
+}

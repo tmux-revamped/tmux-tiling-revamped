@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fzf 0.53.0, the first release with `--tmux`. The picker used to accept
   0.44.0 and the other three never checked, so fzf 0.44 to 0.52 failed on the
   unknown flag. An older fzf now runs inside a `display-popup` instead.
+- The mark prompt passes the typed name through `%%%`, which escapes quotes for
+  tmux. A name containing a double quote used to break the command string.
 
 ## [2.3.0] - 2026-09-23
 

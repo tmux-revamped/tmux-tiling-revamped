@@ -272,7 +272,7 @@ _setup_keybindings() {
   # Mark uses command-prompt, so always prefix-based (empty key = disabled)
   [[ -n "${key_mark}" ]] && _register_binding "mark" "$(_key_priority mark)" \
     prefix "${key_mark}" "${key_mark}" command-prompt \
-    -p "Mark name:" "$(_tiling_run_shell "mark '%%'")"
+    -p "Mark name:" "$(_tiling_run_shell "mark '%%%'")"
   _bind "${alt_keys}" "${key_jump}" "${TILING_RUN} jump" "jump"
   _bind "${alt_keys}" "${key_scratchpad}" "${TILING_RUN} scratchpad" "scratchpad"
 
