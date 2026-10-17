@@ -323,10 +323,15 @@ All options use the `@tiling_revamped_` prefix.
 | Option | Default | Description |
 |:-------|:--------|:------------|
 | `@tiling_revamped_auto_apply` | `1` | Reapply layout when panes are added or removed |
+| `@tiling_revamped_enabled` | (empty) | Window option that overrides `@tiling_revamped_auto_apply` for one window: `1` reapplies, any other value does not. Set it with `set -w` |
+| `@tiling_revamped_dynamic_layout` | (empty) | Space-separated `count:layout` pairs, for example `1:monocle 2:main-vertical 3:dwindle 5:grid`. On auto-apply the pair with the greatest count not above the pane count wins |
+| `@tiling_revamped_app_rules` | (empty) | Newline-separated `command:action` rules matched as globs against a new pane's command; the first match wins. Actions: `master`, `float`, `scratchpad` |
 | `@tiling_revamped_default_layout` | (empty) | Auto-apply this layout on new windows |
 | `@tiling_revamped_default_orientation` | `brvc` | Default BSP orientation for new windows |
 | `@tiling_revamped_focus_resize` | `0` | Expand focused pane toward golden ratio on focus |
 | `@tiling_revamped_focus_ratio` | `62` | Percentage of window for focused pane |
+| `@tiling_revamped_focus_history` | `0` | Set to `1` to record every pane focus for the focus back and forward keys |
+| `@tiling_revamped_focus_max` | `20` | Focus history entries kept per window, clamped to 2-500 |
 | `@tiling_revamped_master_ratio` | `60` | Master pane percentage for main-vertical and main-horizontal |
 | `@tiling_revamped_main_center_ratio` | `60` | Width percentage for main-center center pane |
 | `@tiling_revamped_split_ratio` | `50` | First BSP split ratio (20-80). Useful for ultrawide monitors |
@@ -343,11 +348,32 @@ All options use the `@tiling_revamped_` prefix.
 | `@tiling_revamped_pick_width` | `60%` | Layout picker popup width |
 | `@tiling_revamped_pick_height` | `40%` | Layout picker popup height |
 | `@tiling_revamped_pick_preview_width` | `60%` | Layout picker preview panel width |
+| `@tiling_revamped_key_pick_layout_alt` | (empty) | Bind `M-<key>` in the root table to the layout picker; inside vim or fzf the key passes through |
+| `@tiling_revamped_jump_width` | `70%` | Pane jumper popup width |
+| `@tiling_revamped_jump_height` | `60%` | Pane jumper popup height |
+| `@tiling_revamped_jump_preview_width` | `60%` | Pane jumper preview panel width |
 | `@tiling_revamped_smart_borders` | `0` | Hide pane borders while a window holds a single pane |
 | `@tiling_revamped_border_status` | `top` | Border status restored when a second pane appears |
 | `@tiling_revamped_help_width` | `50%` | Help overlay popup width |
 | `@tiling_revamped_help_height` | `60%` | Help overlay popup height |
 | `@tiling_revamped_enable_logging` | `0` | Write debug logs to `~/.tmux/tiling-revamped-logs/tiling-revamped.log` |
+
+### Internal state
+
+The plugin manages these options itself. Do not set them, except presets, which may also be written by hand in the same format.
+
+| Option | Holds |
+|:-------|:------|
+| `@tiling_revamped_bindings` | One line per feature with the key it holds after conflict resolution, read by the help overlay |
+| `@tiling_revamped_last_window` | The window most recently left, for the workspace back-and-forth key |
+| `@tiling_revamped_layout_redo` | Window option: the redo stack of `layout:flags` entries that undo left behind |
+| `@tiling_revamped_monocle_prev_layout` | Window option: the layout restored when monocle is toggled off |
+| `@tiling_revamped_focus_stack` | Window option: focused pane ids, oldest to newest, for focus history |
+| `@tiling_revamped_focus_pos` | Window option: the cursor into the focus stack |
+| `@tiling_revamped_focus_nav` | Window option: `1` while a focus back or forward move is in flight, so that focus is not recorded |
+| `@tiling_revamped_float` | Pane option: `1` on a pane an app rule tagged with `float` |
+| `@tiling_revamped_scratchpad` | Pane option: `1` on a pane an app rule tagged with `scratchpad` |
+| `@tiling_revamped_preset_<name>` | A preset saved by `preset save <name>` as `layout:flags:ratio`, for example `@tiling_revamped_preset_dev` holding `dwindle:brvc:60` |
 
 ### Custom Keybindings
 
