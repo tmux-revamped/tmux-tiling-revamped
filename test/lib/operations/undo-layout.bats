@@ -231,3 +231,32 @@ teardown() {
   [[ "${status}" -eq 0 ]]
   grep -q '@tiling_revamped_layout_history|spiral:brvs' "${cap}"
 }
+
+@test "undo-layout.sh - push_layout_history skips an entry already at the head" {
+  # Arrange
+  export MOCK_TILING_LAYOUT="dwindle"
+  export MOCK_TILING_ORIENTATION="brvc"
+  export MOCK_TILING_LAYOUT_HISTORY="dwindle:brvc|grid:brvc"
+  local cap="${TEST_TMPDIR}/dedupe.txt"
+  set_window_option() { printf '%s=[%s]\n' "$1" "$2" >> "${cap}"; }
+
+  # Act
+  push_layout_history
+
+  # Assert
+  [[ ! -e "${cap}" ]]
+}
+
+@test "undo-layout.sh - push_layout_history records nothing for automatic re-tiling" {
+  # Arrange
+  export TILING_REVAMPED_AUTOMATIC="1"
+  export MOCK_TILING_LAYOUT="grid"
+  local cap="${TEST_TMPDIR}/automatic.txt"
+  set_window_option() { printf '%s=[%s]\n' "$1" "$2" >> "${cap}"; }
+
+  # Act
+  push_layout_history
+
+  # Assert
+  [[ ! -e "${cap}" ]]
+}

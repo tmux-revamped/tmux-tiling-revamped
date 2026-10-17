@@ -97,6 +97,7 @@ source "${PLUGIN_DIR}/src/lib/operations/pane-jumper.sh"
 
 _handle_hook() {
   local event="${1:-}"
+  local TILING_REVAMPED_AUTOMATIC=1
 
   # Handle new-window: apply default layout if configured
   if [[ "${event}" == "new-window" ]]; then

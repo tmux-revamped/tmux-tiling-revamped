@@ -719,6 +719,21 @@ get_pane_height() {
   [[ "$(get_layout)" == "spiral" ]]
 }
 
+@test "integration: hook re-tiling adds nothing to the undo history" {
+  # Arrange
+  create_panes 3
+  command tmux -S "${TMUX_SOCKET}" set-option -g "@tiling_revamped_auto_apply" "1" 2>/dev/null
+  run_tiling layout dwindle
+  run_tiling layout grid
+
+  # Act
+  run_tiling hook split
+  run_tiling hook resize
+
+  # Assert
+  [[ "$(command tmux -S "${TMUX_SOCKET}" show-option -wqv "@tiling_revamped_layout_history")" == "dwindle:brvc" ]]
+}
+
 # New: swap with biggest
 
 @test "integration: swap-biggest keeps the pane count and is routed" {

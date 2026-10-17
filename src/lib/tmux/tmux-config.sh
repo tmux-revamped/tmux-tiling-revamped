@@ -51,7 +51,7 @@ get_current_layout() {
 
 set_current_layout() {
   # Push current layout to history before changing (if undo module is loaded)
-  if declare -f push_layout_history &>/dev/null; then
+  if declare -f push_layout_history &>/dev/null && [[ "${1}" != "$(get_current_layout)" ]]; then
     push_layout_history
   fi
   set_window_option "@tiling_revamped_layout" "${1}"

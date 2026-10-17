@@ -129,3 +129,29 @@ teardown() {
   export MOCK_TMUX_OPTION_VALUE="7"
   [[ "$(get_numeric_option "@x" "5" 2 10)" == "7" ]]
 }
+
+@test "tmux-config.sh - set_current_layout records no history when the layout is unchanged" {
+  # Arrange
+  export MOCK_TILING_LAYOUT="grid"
+  local marker="${TEST_TMPDIR}/pushed"
+  push_layout_history() { touch "${marker}"; }
+
+  # Act
+  set_current_layout "grid"
+
+  # Assert
+  [[ ! -e "${marker}" ]]
+}
+
+@test "tmux-config.sh - set_current_layout records history when the layout changes" {
+  # Arrange
+  export MOCK_TILING_LAYOUT="grid"
+  local marker="${TEST_TMPDIR}/pushed"
+  push_layout_history() { touch "${marker}"; }
+
+  # Act
+  set_current_layout "dwindle"
+
+  # Assert
+  [[ -e "${marker}" ]]
+}

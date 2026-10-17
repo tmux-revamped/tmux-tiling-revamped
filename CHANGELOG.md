@@ -25,6 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   unknown flag. An older fzf now runs inside a `display-popup` instead.
 - The mark prompt passes the typed name through `%%%`, which escapes quotes for
   tmux. A name containing a double quote used to break the command string.
+- Undo steps back to the layout you chose before. Every split, kill and resize
+  hook re-applied the layout through the same path as a user change and pushed
+  a history entry each time, so undo mostly replayed the current layout. Hooks
+  no longer record history, re-applying the same layout records nothing, and an
+  entry equal to the head of the history is not pushed twice.
 
 ## [2.3.0] - 2026-09-23
 

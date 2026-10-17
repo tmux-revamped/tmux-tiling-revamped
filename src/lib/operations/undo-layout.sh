@@ -77,10 +77,15 @@ _apply_layout_entry() {
 # replay (TILING_REVAMPED_REPLAYING=1) this is a no-op so the stacks stay sane.
 push_layout_history() {
   [[ "${TILING_REVAMPED_REPLAYING:-0}" == "1" ]] && return 0
+  [[ "${TILING_REVAMPED_AUTOMATIC:-0}" == "1" ]] && return 0
 
   local entry
   entry=$(_current_entry)
   [[ -z "${entry}" ]] && return 0
+
+  local history
+  history=$(get_window_option "@tiling_revamped_layout_history" "")
+  [[ "${history%%|*}" == "${entry}" ]] && return 0
 
   _stack_push "@tiling_revamped_layout_history" "${entry}"
   set_window_option "@tiling_revamped_layout_redo" ""
