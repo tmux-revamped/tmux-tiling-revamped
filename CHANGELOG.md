@@ -42,6 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   split each entry on spaces and targeted the session by name, which tmux
   prefix-matches. It now carries the pane, window and session ids in
   `|`-separated fields and targets those.
+- `restore-layouts` re-applies stored layouts in every session, not only the
+  current one, and leaves each session on the window it was showing. Each
+  window's layout is applied with `TMUX_PANE` set to that window's active pane,
+  so the layout commands act on the window being restored.
 
 ## [2.3.0] - 2026-09-23
 

@@ -172,3 +172,40 @@ _resurrect_tmux_for() {
   export -f tmux
   restore_layouts >/dev/null 2>&1
 }
+
+_resurrect_logging_tmux() {
+  export RESURRECT_LOG="${TEST_TMPDIR}/resurrect.log"
+  export RESURRECT_LAYOUT="${1}"
+  export RESURRECT_FLAGS="${2-brvc}"
+  tmux() {
+    printf '%s\n' "$*" >> "${RESURRECT_LOG}"
+    case "$1" in
+      list-windows) printf '%s\n' '@1|%1|0' '@2|%4|1' ;;
+      show-option)
+        case "$*" in
+          *@tiling_revamped_layout*) printf '%s\n' "${RESURRECT_LAYOUT}" ;;
+          *@tiling_revamped_orientation*) printf '%s\n' "${RESURRECT_FLAGS}" ;;
+          *) printf '\n' ;;
+        esac ;;
+      select-window) return "${RESURRECT_SELECT_RC:-0}" ;;
+    esac
+    return 0
+  }
+  export -f tmux
+}
+
+@test "resurrect.sh - restore_layouts covers every session and returns to the starting window" {
+  # Arrange
+  _resurrect_logging_tmux "grid"
+  apply_layout_grid() { printf 'applied grid %s\n' "${TMUX_PANE}" >> "${RESURRECT_LOG}"; }
+  export -f apply_layout_grid
+
+  # Act
+  restore_layouts
+
+  # Assert
+  grep -q '^list-windows -a ' "${RESURRECT_LOG}" || false
+  grep -qx 'applied grid %1' "${RESURRECT_LOG}" || false
+  grep -qx 'applied grid %4' "${RESURRECT_LOG}" || false
+  [[ "$(grep '^select-window' "${RESURRECT_LOG}" | tail -n 1)" == "select-window -t @2" ]]
+}

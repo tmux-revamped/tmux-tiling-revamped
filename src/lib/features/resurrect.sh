@@ -8,26 +8,20 @@ LIB_DIR="${SCRIPT_DIR}/.."
 
 source "${LIB_DIR}/tmux/tmux-config.sh"
 
-# restore_layouts: re-apply stored layouts to all windows.
-# Called after tmux-resurrect restores a session. Each window that has
-# a stored @tiling_revamped_layout option gets its layout re-applied.
-restore_layouts() {
-  local -a windows
-  while IFS= read -r win; do
-    windows+=("${win}")
-  done < <(tmux list-windows -F '#{window_id}' 2>/dev/null)
+_restore_window_layout() {
+  local win="${1}" pane="${2}"
+  local layout flags
+  layout=$(tmux show-option -wqv -t "${win}" "@tiling_revamped_layout" 2>/dev/null)
+  [[ -z "${layout}" ]] && return 0
 
-  local win layout flags
-  for win in "${windows[@]}"; do
-    layout=$(tmux show-option -wqv -t "${win}" "@tiling_revamped_layout" 2>/dev/null)
-    [[ -z "${layout}" ]] && continue
+  flags=$(tmux show-option -wqv -t "${win}" "@tiling_revamped_orientation" 2>/dev/null)
+  [[ -z "${flags}" ]] && flags="brvc"
 
-    flags=$(tmux show-option -wqv -t "${win}" "@tiling_revamped_orientation" 2>/dev/null)
-    [[ -z "${flags}" ]] && flags="brvc"
+  # Select the window and re-apply its layout
+  tmux select-window -t "${win}" 2>/dev/null || return 0
 
-    # Select the window and re-apply its layout
-    tmux select-window -t "${win}" 2>/dev/null || continue
-
+  (
+    export TMUX_PANE="${pane}"
     case "${layout}" in
       dwindle)         _apply_bsp_layout "false" "${flags}" ;;
       spiral)          _apply_bsp_layout "true" "${flags}" ;;
@@ -38,7 +32,30 @@ restore_layouts() {
       deck)            apply_layout_deck ;;
       monocle)         ;; # Zoom state is not restorable
     esac
+  )
+}
+
+# restore_layouts: re-apply stored layouts to all windows.
+# Called after tmux-resurrect restores a session. Each window that has
+# a stored @tiling_revamped_layout option gets its layout re-applied.
+restore_layouts() {
+  local -a windows=() starting_windows=()
+  local win pane active
+  while IFS='|' read -r win pane active; do
+    [[ -z "${win}" ]] && continue
+    windows+=("${win}|${pane}")
+    [[ "${active}" == "1" ]] && starting_windows+=("${win}")
+  done < <(tmux list-windows -a -F '#{window_id}|#{pane_id}|#{window_active}' 2>/dev/null)
+
+  local entry
+  for entry in ${windows[@]+"${windows[@]}"}; do
+    _restore_window_layout "${entry%%|*}" "${entry#*|}"
+  done
+
+  for win in ${starting_windows[@]+"${starting_windows[@]}"}; do
+    tmux select-window -t "${win}" 2>/dev/null || true
   done
 }
 
+export -f _restore_window_layout
 export -f restore_layouts
