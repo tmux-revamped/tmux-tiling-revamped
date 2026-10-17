@@ -113,6 +113,7 @@ _mock_opt_write() {
 
 # Controlled via MOCK_* environment variables.
 tmux() {
+  [[ -n "${MOCK_TMUX_LOG:-}" ]] && printf '%s\n' "$*" >> "${MOCK_TMUX_LOG}"
   case "$1" in
     -V)
       echo "tmux 3.4"

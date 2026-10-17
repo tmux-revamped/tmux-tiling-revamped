@@ -276,6 +276,7 @@ HELP
     mark)       mark_pane "${1:-}" ;;
     unmark)     unmark_pane "${1:-}" ;;
     jump)       jump_to_mark "${1:-}" ;;
+    jump-pick)  jump_pick ;;
     scratchpad) toggle_scratchpad "${1:-default}" "${2:-}" ;;
     preset)
       local preset_cmd="${1:-}"
@@ -289,6 +290,7 @@ HELP
           ;;
       esac
       ;;
+    preset-pick) preset_pick ;;
     hook)       _handle_hook "${1:-}" ;;
     *)
       log_error "tiling" "Unknown command: ${cmd}"

@@ -34,24 +34,35 @@ save_preset() {
   set_tmux_option "@tiling_revamped_preset_${preset_name}" "${preset_value}"
 }
 
+_open_preset_picker() {
+  if ! has_command fzf; then
+    log_error "presets" "No preset name given and fzf is not installed"
+    return 1
+  fi
+
+  tmux display-popup -E "$(tiling_popup_command "preset-pick")" 2>/dev/null || true
+}
+
+preset_pick() {
+  local preset_name
+  # List all @tiling_revamped_preset_* options and pick one
+  preset_name=$(tmux show-options -g 2>/dev/null \
+    | grep '@tiling_revamped_preset_' \
+    | sed 's/@tiling_revamped_preset_//' \
+    | cut -d' ' -f1 \
+    | fzf --prompt="Apply preset: " --height=10) || return 0
+  [[ -z "${preset_name}" ]] && return 0
+
+  apply_preset "${preset_name}"
+}
+
 apply_preset() {
   local preset_name="${1:-}"
 
   if [[ -z "${preset_name}" ]]; then
-    if has_command fzf; then
-      # List all @tiling_revamped_preset_* options and pick one
-      preset_name=$(tmux show-options -g 2>/dev/null \
-        | grep '@tiling_revamped_preset_' \
-        | sed 's/@tiling_revamped_preset_//' \
-        | cut -d' ' -f1 \
-        | fzf --prompt="Apply preset: " --height=10) || return 0
-    else
-      log_error "presets" "No preset name given and fzf is not installed"
-      return 1
-    fi
+    _open_preset_picker
+    return
   fi
-
-  [[ -z "${preset_name}" ]] && return 0
 
   local preset_value
   preset_value=$(get_tmux_option "@tiling_revamped_preset_${preset_name}" "")
@@ -84,4 +95,6 @@ apply_preset() {
 }
 
 export -f save_preset
+export -f _open_preset_picker
+export -f preset_pick
 export -f apply_preset

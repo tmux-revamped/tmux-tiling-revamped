@@ -81,23 +81,38 @@ unmark_pane() {
   fi
 }
 
+_open_mark_picker() {
+  if ! has_command fzf; then
+    log_error "marks" "No mark name given and fzf is not installed"
+    return 1
+  fi
+
+  local marks
+  marks=$(get_tmux_option "@tiling_revamped_marks" "")
+  [[ -z "${marks}" ]] && return 0
+
+  tmux display-popup -E "$(tiling_popup_command "jump-pick")" 2>/dev/null || true
+}
+
+jump_pick() {
+  local marks name
+  marks=$(get_tmux_option "@tiling_revamped_marks" "")
+  [[ -z "${marks}" ]] && return 0
+
+  name=$(echo "${marks}" | tr ';' '\n' | grep -v '^$' \
+    | cut -d: -f1 | fzf --prompt="Jump to mark: " --height=10) || return 0
+  [[ -z "${name}" ]] && return 0
+
+  jump_to_mark "${name}"
+}
+
 jump_to_mark() {
   local name="${1:-}"
 
   if [[ -z "${name}" ]]; then
-    if has_command fzf; then
-      local marks
-      marks=$(get_tmux_option "@tiling_revamped_marks" "")
-      [[ -z "${marks}" ]] && return 0
-      name=$(echo "${marks}" | tr ';' '\n' | grep -v '^$' \
-        | cut -d: -f1 | fzf --prompt="Jump to mark: " --height=10) || return 0
-    else
-      log_error "marks" "No mark name given and fzf is not installed"
-      return 1
-    fi
+    _open_mark_picker
+    return
   fi
-
-  [[ -z "${name}" ]] && return 0
 
   local marks
   marks=$(get_tmux_option "@tiling_revamped_marks" "")
@@ -123,4 +138,6 @@ jump_to_mark() {
 
 export -f mark_pane
 export -f unmark_pane
+export -f _open_mark_picker
+export -f jump_pick
 export -f jump_to_mark

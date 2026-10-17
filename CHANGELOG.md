@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   contains a space, a quote or a `#`. The path is now shell-quoted and
   `#`-escaped in every `run-shell` command; before, `/bin/sh` split it and every
   key answered with exit 127.
+- Jumping to a mark or applying a preset without a name opens the fzf picker in
+  a popup. It used to start fzf inside the `run-shell` job, which has no
+  terminal, so the picker never appeared.
 
 ## [2.3.0] - 2026-09-23
 

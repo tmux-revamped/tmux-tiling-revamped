@@ -80,3 +80,29 @@ teardown() {
   export MOCK_TILING_LAYOUT="grid"
   save_preset "work" >/dev/null 2>&1
 }
+
+@test "presets.sh - apply_preset with no name opens the picker in a popup" {
+  # Arrange
+  export MOCK_HAS_FZF="1"
+  export MOCK_TMUX_LOG="${TEST_TMPDIR}/tmux.log"
+
+  # Act
+  apply_preset ""
+
+  # Assert
+  grep -q '^display-popup -E .*tiling\.sh preset-pick$' "${MOCK_TMUX_LOG}"
+}
+
+@test "presets.sh - preset_pick applies the picked preset" {
+  # Arrange
+  export MOCK_HAS_FZF="1"
+  export MOCK_FZF_SELECTION="dev"
+  export MOCK_TMUX_OPTION_VALUE="grid:brvc:60"
+  export MOCK_TMUX_LOG="${TEST_TMPDIR}/tmux.log"
+
+  # Act
+  preset_pick
+
+  # Assert
+  grep -qx 'select-layout tiled' "${MOCK_TMUX_LOG}"
+}

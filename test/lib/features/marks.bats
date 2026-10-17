@@ -116,3 +116,30 @@ teardown() {
   mark_pane "" >/dev/null 2>&1 || true
   mark_pane '!!!' >/dev/null 2>&1 || true
 }
+
+@test "marks.sh - jump_to_mark with no name opens the picker in a popup" {
+  # Arrange
+  export MOCK_HAS_FZF="1"
+  export MOCK_TILING_MARKS="editor:%2"
+  export MOCK_TMUX_LOG="${TEST_TMPDIR}/tmux.log"
+
+  # Act
+  jump_to_mark ""
+
+  # Assert
+  grep -q '^display-popup -E .*tiling\.sh jump-pick$' "${MOCK_TMUX_LOG}"
+}
+
+@test "marks.sh - jump_pick selects the pane of the picked mark" {
+  # Arrange
+  export MOCK_HAS_FZF="1"
+  export MOCK_TILING_MARKS="editor:%2;build:%3"
+  export MOCK_FZF_SELECTION="build"
+  export MOCK_TMUX_LOG="${TEST_TMPDIR}/tmux.log"
+
+  # Act
+  jump_pick
+
+  # Assert
+  grep -qx 'select-pane -t %3' "${MOCK_TMUX_LOG}"
+}

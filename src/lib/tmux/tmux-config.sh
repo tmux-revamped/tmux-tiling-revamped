@@ -8,6 +8,14 @@ LIB_DIR="${SCRIPT_DIR}/.."
 
 source "${LIB_DIR}/tmux/tmux-ops.sh"
 
+_TILING_REVAMPED_DISPATCHER="${LIB_DIR}/../tiling.sh"
+
+tiling_popup_command() {
+  local dispatcher
+  printf -v dispatcher '%q' "${_TILING_REVAMPED_DISPATCHER}"
+  printf '%s %s' "${dispatcher}" "${1}"
+}
+
 is_option_enabled() {
   local value
   value=$(get_tmux_option "${1}" "0")
@@ -98,6 +106,7 @@ _reapply_current_layout() {
   esac
 }
 
+export -f tiling_popup_command
 export -f _reapply_current_layout
 export -f is_option_enabled
 export -f is_window_option_enabled
