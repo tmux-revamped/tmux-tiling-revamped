@@ -14,7 +14,12 @@ setup() {
 
   command tmux -S "${TILING_SOCKET}" -f /dev/null \
     new-session -d -s test -x 200 -y 50 2>/dev/null
-  sleep 0.1
+  local attempt
+  for ((attempt = 0; attempt < 50; attempt++)); do
+    command tmux -S "${TILING_SOCKET}" has-session -t test 2>/dev/null && return 0
+    sleep 0.1
+  done
+  return 1
 }
 
 teardown() {
@@ -64,7 +69,7 @@ count_tiling_binds() {
   # Assert
   outside=$(command tmux -S "${TILING_SOCKET}" list-keys 2>/dev/null \
     | grep 'tiling.sh' \
-    | grep -vE '^bind-key +(-r +)?-T prefix +M-[A-Z] ')
+    | { grep -vE '^bind-key +(-r +)?-T prefix +M-[A-Z] ' || true; })
   [[ -z "${outside}" ]]
 }
 
