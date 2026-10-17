@@ -351,15 +351,25 @@ get_pane_height() {
   sleep 0.1
   run_tiling swap R
   assert_pane_count 3
+  local -a panes_after
+  while IFS= read -r _p; do panes_after+=("$_p"); done < <(get_pane_ids)
+  [[ "${panes_after[0]}" != "${panes_before[0]}" ]] || false
+  [[ "$(get_active_pane)" == "${panes_before[0]}" ]]
 }
 
 @test "integration: swap D swaps focused pane with bottom neighbor" {
   create_panes 3
   run_tiling layout dwindle
-  command tmux -S "${TMUX_SOCKET}" select-pane -t 1 2>/dev/null
+  local -a panes_before
+  while IFS= read -r _p; do panes_before+=("$_p"); done < <(get_pane_ids)
+  command tmux -S "${TMUX_SOCKET}" select-pane -t "${panes_before[1]}" 2>/dev/null
   sleep 0.1
   run_tiling swap D
   assert_pane_count 3
+  local -a panes_after
+  while IFS= read -r _p; do panes_after+=("$_p"); done < <(get_pane_ids)
+  [[ "${panes_after[1]}" == "${panes_before[2]}" ]] || false
+  [[ "${panes_after[2]}" == "${panes_before[1]}" ]]
 }
 
 # ── Cycle ───────────────────────────────────────────────────────────

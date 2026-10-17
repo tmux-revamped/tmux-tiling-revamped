@@ -7,6 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LIB_DIR="${SCRIPT_DIR}/.."
 
 source "${LIB_DIR}/tmux/tmux-config.sh"
+source "${LIB_DIR}/utils/error-logger.sh"
 
 # swap_pane_direction: swap the focused pane with its neighbor in the
 # given direction (U/D/L/R).
@@ -20,12 +21,24 @@ swap_pane_direction() {
   pane_count=$(get_pane_count)
   (( pane_count <= 1 )) && return 0
 
+  local target
+  case "${direction}" in
+    U) target="{up-of}" ;;
+    D) target="{down-of}" ;;
+    L) target="{left-of}" ;;
+    R) target="{right-of}" ;;
+    *)
+      log_error "swap" "Unknown swap direction: ${direction}"
+      return 1
+      ;;
+  esac
+
   local current_pane
   current_pane=$(get_current_pane)
 
   # Find the neighbor pane in the requested direction
   local neighbor
-  neighbor=$(tmux display-message -p -t "{${direction}}" '#{pane_id}' 2>/dev/null) || return 0
+  neighbor=$(tmux display-message -p -t "${target}" '#{pane_id}' 2>/dev/null) || return 0
 
   # No neighbor in that direction, or neighbor is self
   [[ -z "${neighbor}" || "${neighbor}" == "${current_pane}" ]] && return 0

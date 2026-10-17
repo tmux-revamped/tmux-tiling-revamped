@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Jumping to a mark or applying a preset without a name opens the fzf picker in
   a popup. It used to start fzf inside the `run-shell` job, which has no
   terminal, so the picker never appeared.
+- Directional swap moves the pane. It asked tmux for the targets `{U}`, `{D}`,
+  `{L}` and `{R}`, which tmux does not know, so the lookup failed and nothing
+  was swapped. It now uses `{up-of}`, `{down-of}`, `{left-of}` and `{right-of}`.
 
 ## [2.3.0] - 2026-09-23
 

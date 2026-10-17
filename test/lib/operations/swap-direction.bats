@@ -108,3 +108,31 @@ teardown() {
   export MOCK_PANE_LIST="%0"
   swap_pane_direction R >/dev/null 2>&1 || true
 }
+
+@test "swap-direction.sh - each direction resolves the neighbor with a valid tmux target" {
+  # Arrange
+  export MOCK_TMUX_LOG="${TEST_TMPDIR}/tmux.log"
+
+  # Act
+  swap_pane_direction U
+  swap_pane_direction D
+  swap_pane_direction L
+  swap_pane_direction R
+
+  # Assert
+  [[ "$(grep -c '^display-message -p -t {up-of} ' "${MOCK_TMUX_LOG}")" -eq 1 ]] || false
+  [[ "$(grep -c '^display-message -p -t {down-of} ' "${MOCK_TMUX_LOG}")" -eq 1 ]] || false
+  [[ "$(grep -c '^display-message -p -t {left-of} ' "${MOCK_TMUX_LOG}")" -eq 1 ]] || false
+  [[ "$(grep -c '^display-message -p -t {right-of} ' "${MOCK_TMUX_LOG}")" -eq 1 ]]
+}
+
+@test "swap-direction.sh - an unknown direction is rejected" {
+  # Arrange
+  export MOCK_TMUX_LOG="${TEST_TMPDIR}/tmux.log"
+
+  # Act
+  run swap_pane_direction X
+
+  # Assert
+  [[ "${status}" -eq 1 ]]
+}
