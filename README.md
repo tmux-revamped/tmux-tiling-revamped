@@ -653,8 +653,10 @@ src/
       has-command.sh           # Command existence check
       picker.sh               # fzf --tmux version gate and popup fallback
 test/
-  helpers.bash                # Mock tmux for unit tests
-  tmux_helpers.bash           # Real tmux server for integration tests
+  helpers.bash                # Shared mock tmux for unit tests
+  helpers_local.bash          # Tiling mocks and source guard resets
+  tmux_helpers.bash           # Shared real tmux server for integration tests
+  tmux_helpers_local.bash     # Pane and layout assertions
   integration.bats            # End-to-end scenarios
   balance.bats                # Balance invariant tests
   docs.bats                   # README options are read by the code
