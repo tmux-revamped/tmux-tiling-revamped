@@ -78,8 +78,36 @@ teardown() {
 }
 
 @test "tmux-config.sh - is_applying returns true when set" {
-  export MOCK_TILING_APPLYING="1"
+  export MOCK_EPOCH="1705320600"
+  export MOCK_TILING_APPLYING="1705320598"
   is_applying
+}
+
+@test "tmux-config.sh - is_applying expires a guard left behind by a crashed run" {
+  # Arrange
+  export MOCK_EPOCH="1705320600"
+  export MOCK_TILING_APPLYING="1705317000"
+
+  # Act
+  run is_applying
+
+  # Assert
+  [[ "${status}" -ne 0 ]]
+}
+
+@test "tmux-config.sh - set_applying stores the guard on the window, not the server" {
+  # Arrange
+  export MOCK_EPOCH="1705320600"
+  export MOCK_TMUX_LOG="${TEST_TMPDIR}/tmux.log"
+
+  # Act
+  set_applying 1
+  set_applying 0
+
+  # Assert
+  grep -qx 'set-option -wq @tiling_revamped_applying 1705320600' "${MOCK_TMUX_LOG}" || false
+  grep -qx 'set-option -wqu @tiling_revamped_applying' "${MOCK_TMUX_LOG}" || false
+  ! grep -q -- '-g' "${MOCK_TMUX_LOG}"
 }
 
 @test "tmux-config.sh - set_applying does not error" {

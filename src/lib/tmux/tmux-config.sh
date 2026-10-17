@@ -9,6 +9,7 @@ LIB_DIR="${SCRIPT_DIR}/.."
 source "${LIB_DIR}/tmux/tmux-ops.sh"
 
 _TILING_REVAMPED_DISPATCHER="${LIB_DIR}/../tiling.sh"
+TILING_APPLYING_TTL=10
 
 tiling_popup_command() {
   local dispatcher
@@ -68,11 +69,19 @@ is_auto_apply_enabled() {
 }
 
 is_applying() {
-  [[ "$(get_tmux_option "@tiling_revamped_applying" "0")" == "1" ]]
+  local started now number_pattern='^[0-9]+$'
+  started=$(get_window_option "@tiling_revamped_applying" "")
+  [[ "${started}" =~ ${number_pattern} ]] || return 1
+  now=$(date +%s)
+  (( now >= started && now - started < TILING_APPLYING_TTL ))
 }
 
 set_applying() {
-  set_tmux_option "@tiling_revamped_applying" "${1:-1}"
+  if [[ "${1:-1}" == "0" ]]; then
+    tmux set-option -wqu "@tiling_revamped_applying" 2>/dev/null || true
+    return 0
+  fi
+  set_window_option "@tiling_revamped_applying" "$(date +%s)"
 }
 
 # _reapply_current_layout: re-apply the stored layout with current flags.

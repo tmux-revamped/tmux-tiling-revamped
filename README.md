@@ -562,7 +562,7 @@ State is stored in tmux user options:
 | `@tiling_revamped_layout` | window | Current layout name |
 | `@tiling_revamped_orientation` | window | BSP orientation flags |
 | `@tiling_revamped_layout_history` | window | Undo stack (pipe-separated) |
-| `@tiling_revamped_applying` | global | Recursion guard |
+| `@tiling_revamped_applying` | window | Recursion guard: the second a layout started applying, ignored after 10 seconds |
 | `@tiling_revamped_mark` | pane | Mark name |
 | `@tiling_revamped_marks` | global | Mark index |
 

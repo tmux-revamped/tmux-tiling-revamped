@@ -30,6 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a history entry each time, so undo mostly replayed the current layout. Hooks
   no longer record history, re-applying the same layout records nothing, and an
   entry equal to the head of the history is not pushed twice.
+- The guard that stops hooks from re-tiling while a layout is being applied is
+  now kept per window and expires after 10 seconds. It was one server-wide flag,
+  so applying a layout in one window suppressed re-tiling in every other, and a
+  run killed mid-apply left it set and turned auto-tiling off until restart.
 
 ## [2.3.0] - 2026-09-23
 
