@@ -1,26 +1,16 @@
 #!/usr/bin/env bash
-#
-# Unit test helpers for plugins built from tmux-plugin-template.
-#
-# Provides a mock tmux that keeps options in a temp directory, one file per
-# option. A directory store works on Bash 3.2, which is what macOS ships, and it
-# survives subshells, so values set inside a bats `run` are visible afterwards.
-# Time is mocked so cache ages are deterministic.
 
 setup_test_environment() {
   TEST_TMPDIR=$(mktemp -d)
   export TEST_TMPDIR
   export TMUX_TEST_MODE=1
 
-  # On-disk tmux option store. Reset per test for isolation.
   MOCK_OPTS_DIR="${TEST_TMPDIR}/opts"
   export MOCK_OPTS_DIR
   mkdir -p "${MOCK_OPTS_DIR}"
 
-  # Deterministic clock. Tests advance MOCK_EPOCH to simulate elapsed time.
   export MOCK_EPOCH=1000000
 
-  # Reset source guards so each test re-sources fresh.
   unset _TMUX_PLUGIN_CONSTANTS_LOADED
   unset _TMUX_PLUGIN_HAS_COMMAND_LOADED
   unset _TMUX_PLUGIN_ERROR_LOGGER_LOADED
@@ -45,9 +35,6 @@ _mock_opt_file() {
   printf '%s/%s' "${MOCK_OPTS_DIR}" "$(printf '%s' "$1" | tr -c 'A-Za-z0-9_.-' '_')"
 }
 
-# Mock tmux: only the option verbs the libraries use. set-option writes a file,
-# show-option reads it, and if-shell -F runs its commands when an option equals
-# a value. Everything else is a no-op success.
 tmux() {
   local verb="$1"
   shift || true
@@ -132,8 +119,6 @@ _mock_run_commands() {
   done
 }
 
-# Mock date: +%s returns the controllable epoch; the log timestamp format
-# returns a fixed string; everything else defers to the real date.
 date() {
   case "$1" in
     +%s) echo "${MOCK_EPOCH:-1000000}" ;;

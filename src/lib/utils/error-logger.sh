@@ -1,11 +1,4 @@
 #!/usr/bin/env bash
-#
-# error-logger.sh: opt-in structured logging.
-#
-# Logging is off by default and writes nothing unless the user sets
-# @<plugin>_revamped_enable_logging to 1. Logs go to ~/.tmux/<ns>-logs, never to
-# a temp dir, so they survive across tmux server restarts for debugging. A plugin
-# sets PLUGIN_LOG_NS (e.g. "cpu-revamped") before sourcing.
 
 [[ -n "${_TMUX_PLUGIN_ERROR_LOGGER_LOADED:-}" ]] && return 0
 _TMUX_PLUGIN_ERROR_LOGGER_LOADED=1
@@ -36,7 +29,6 @@ _rotate_log() {
   fi
 }
 
-# log_error COMPONENT MESSAGE -> append one line when logging is enabled.
 log_error() {
   local component="${1:-unknown}"
   local message="${2:-}"

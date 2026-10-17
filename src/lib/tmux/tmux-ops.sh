@@ -1,15 +1,8 @@
 #!/usr/bin/env bash
-#
-# tmux-ops.sh: thin wrappers over tmux option get/set.
-#
-# Every plugin in the family reads and writes its state through these helpers.
-# The cache layer builds on top of them, which is why all runtime state lives in
-# tmux server user-options and never in temp files.
 
 [[ -n "${_TMUX_PLUGIN_TMUX_OPS_LOADED:-}" ]] && return 0
 _TMUX_PLUGIN_TMUX_OPS_LOADED=1
 
-# get_tmux_option OPTION [DEFAULT] -> the global option value, or DEFAULT if unset.
 get_tmux_option() {
   local option="${1}"
   local default="${2:-}"
@@ -26,7 +19,6 @@ get_tmux_option() {
   echo "${default}"
 }
 
-# set_tmux_option OPTION VALUE -> store a global option.
 set_tmux_option() {
   tmux set-option -gq "${1}" "${2}" 2>/dev/null
 }
@@ -106,7 +98,6 @@ get_window_panes() {
   tmux display-message -p '#{window_panes}' 2>/dev/null || echo "0"
 }
 
-# unset_tmux_option OPTION -> remove a global option.
 unset_tmux_option() {
   tmux set-option -gqu "${1}" 2>/dev/null
 }
