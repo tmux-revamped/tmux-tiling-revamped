@@ -4,7 +4,7 @@ load "${BATS_TEST_DIRNAME}/../../helpers.bash"
 
 setup() {
   setup_test_environment
-  export MOCK_PANE_LIST=$'main:1.0 %0 zsh shell\nwork:2.1 %5 vim editor'
+  export MOCK_PANE_LIST=$'%0|$0|@0|main:1.0 zsh shell\n%5|$1|@2|work:2.1 vim editor'
   source "${BATS_TEST_DIRNAME}/../../../src/lib/operations/pane-jumper.sh"
 }
 
@@ -89,10 +89,24 @@ teardown() {
 @test "pane-jumper.sh - select switches session, window, and pane" {
   tmux() { echo "$*"; return 0; }
   export -f tmux
-  run _pane_jumper_select "work:2.1 %5 vim editor"
-  [[ "${output}" == *"switch-client -t work"* ]]
-  [[ "${output}" == *"select-window -t work:2"* ]]
+  run _pane_jumper_select '%5|$1|@2|work:2.1 vim editor'
+  [[ "${output}" == *'switch-client -t $1'* ]]
+  [[ "${output}" == *"select-window -t @2"* ]]
   [[ "${output}" == *"select-pane -t %5"* ]]
+}
+
+@test "pane-jumper.sh - select targets ids when the session name has spaces" {
+  # Arrange
+  tmux() { echo "$*"; return 0; }
+  export -f tmux
+
+  # Act
+  run _pane_jumper_select '%7|$3|@9|my work:1.0 vim a | b'
+
+  # Assert
+  [[ "${output}" == *'switch-client -t $3'* ]] || false
+  [[ "${output}" == *"select-window -t @9"* ]] || false
+  [[ "${output}" == *"select-pane -t %7"* ]]
 }
 
 @test "pane-jumper.sh - falls back when fzf is absent" {
@@ -144,11 +158,11 @@ teardown() {
 
 @test "pane-jumper.sh - selects the pane returned by fzf" {
   export MOCK_HAS_FZF="1"
-  export MOCK_FZF_SELECTION="work:2.1 %5 vim editor"
+  export MOCK_FZF_SELECTION='%5|$1|@2|work:2.1 vim editor'
   _pane_jumper_select() { echo "selected:$1"; }
   export -f _pane_jumper_select
   run pane_jumper
-  [[ "${output}" == *"selected:work:2.1 %5 vim editor"* ]]
+  [[ "${output}" == *'selected:%5|$1|@2|work:2.1 vim editor'* ]]
 }
 
 @test "pane-jumper.sh - an fzf without --tmux runs the jumper in a popup" {

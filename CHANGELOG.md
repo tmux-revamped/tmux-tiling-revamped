@@ -37,6 +37,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A pane closing or splitting in a background window no longer re-tiles the
   window you are looking at. The hooks now pass the window they fired for, and
   the handler skips the re-tile when that is not the active window.
+- The pane jumper reaches panes in sessions whose names contain spaces, and no
+  longer lands in the wrong session when one name is a prefix of another. It
+  split each entry on spaces and targeted the session by name, which tmux
+  prefix-matches. It now carries the pane, window and session ids in
+  `|`-separated fields and targets those.
 
 ## [2.3.0] - 2026-09-23
 

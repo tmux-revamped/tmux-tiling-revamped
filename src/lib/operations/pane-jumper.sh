@@ -38,7 +38,7 @@ _pane_jumper_has_popup() {
 # _pane_jumper_list: one line per pane, "location pane_id command title".
 _pane_jumper_list() {
   tmux list-panes -a -F \
-    '#{session_name}:#{window_index}.#{pane_index} #{pane_id} #{pane_current_command} #{pane_title}' \
+    '#{pane_id}|#{session_id}|#{window_id}|#{session_name}:#{window_index}.#{pane_index} #{pane_current_command} #{pane_title}' \
     2>/dev/null
 }
 
@@ -52,15 +52,20 @@ _pane_jumper_select() {
   local selection="${1:-}"
   [[ -z "${selection}" ]] && return 0
 
-  local location pane_id rest
-  read -r location pane_id rest <<< "${selection}"
-  [[ -z "${pane_id}" ]] && return 0
+  local pane_id session_id window_id rest
+  pane_id="${selection%%|*}"
+  rest="${selection#*|}"
+  session_id="${rest%%|*}"
+  rest="${rest#*|}"
+  window_id="${rest%%|*}"
 
-  local session="${location%%:*}"
-  local window="${location%.*}"
+  local id_pattern='^[%$@][0-9]+$'
+  [[ "${pane_id}" =~ ${id_pattern} ]] || return 0
+  [[ "${session_id}" =~ ${id_pattern} ]] || return 0
+  [[ "${window_id}" =~ ${id_pattern} ]] || return 0
 
-  tmux switch-client -t "${session}" 2>/dev/null || true
-  tmux select-window -t "${window}" 2>/dev/null || true
+  tmux switch-client -t "${session_id}" 2>/dev/null || true
+  tmux select-window -t "${window_id}" 2>/dev/null || true
   tmux select-pane -t "${pane_id}" 2>/dev/null || true
 }
 
@@ -86,7 +91,9 @@ pane_jumper() {
   selected=$(printf '%s\n' "${pane_list}" \
     | picker_fzf "center,${width},${height}" \
         --prompt="Jump to pane: " \
-        --preview="tmux capture-pane -p -t {2}" \
+        --delimiter='[|]' \
+        --with-nth='4..' \
+        --preview="tmux capture-pane -p -t {1}" \
         --preview-window="right:${preview_width}" 2>/dev/null)
 
   [[ -z "${selected}" ]] && return 0
