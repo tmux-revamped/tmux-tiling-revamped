@@ -9,6 +9,7 @@ LIB_DIR="${SCRIPT_DIR}/.."
 source "${LIB_DIR}/tmux/tmux-config.sh"
 source "${LIB_DIR}/utils/has-command.sh"
 source "${LIB_DIR}/utils/error-logger.sh"
+source "${LIB_DIR}/utils/picker.sh"
 
 # launch_project: open an fzf popup listing project directories.
 # Selecting one creates a new tmux window in that directory.
@@ -37,15 +38,18 @@ launch_project() {
   local depth
   depth=$(get_tmux_option "@tiling_revamped_project_depth" "1")
 
+  picker_open_popup "project" "${TILING_PROJECT_PICK_WIDTH}" "${TILING_PROJECT_PICK_HEIGHT}" && return 0
+
+  local spec="center,${TILING_PROJECT_PICK_WIDTH},${TILING_PROJECT_PICK_HEIGHT}"
   local selected
   if has_command fd; then
     selected=$(fd --type d --max-depth "${depth}" --base-directory "${project_dir}" 2>/dev/null \
-      | fzf --tmux "center,60%,40%" --prompt="Project: " 2>/dev/null)
+      | picker_fzf "${spec}" --prompt="Project: " 2>/dev/null)
   else
     selected=$(find "${project_dir}" -mindepth 1 -maxdepth "${depth}" -type d 2>/dev/null \
       | sed "s|^${project_dir}/||" \
       | sort \
-      | fzf --tmux "center,60%,40%" --prompt="Project: " 2>/dev/null)
+      | picker_fzf "${spec}" --prompt="Project: " 2>/dev/null)
   fi
 
   [[ -z "${selected}" ]] && return 0

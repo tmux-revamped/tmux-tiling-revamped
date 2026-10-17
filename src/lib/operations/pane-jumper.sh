@@ -16,6 +16,7 @@ LIB_DIR="${SCRIPT_DIR}/.."
 source "${LIB_DIR}/tmux/tmux-config.sh"
 source "${LIB_DIR}/utils/constants.sh"
 source "${LIB_DIR}/utils/has-command.sh"
+source "${LIB_DIR}/utils/picker.sh"
 
 # _pane_jumper_has_popup: true when tmux is new enough for display-popup (3.2+).
 _pane_jumper_has_popup() {
@@ -70,18 +71,20 @@ pane_jumper() {
     return 0
   fi
 
-  local pane_list
-  pane_list=$(_pane_jumper_list)
-  [[ -z "${pane_list}" ]] && return 0
-
   local width height preview_width
   width=$(get_tmux_option "@tiling_revamped_jump_width" "${TILING_DEFAULT_JUMP_WIDTH}")
   height=$(get_tmux_option "@tiling_revamped_jump_height" "${TILING_DEFAULT_JUMP_HEIGHT}")
   preview_width=$(get_tmux_option "@tiling_revamped_jump_preview_width" "${TILING_DEFAULT_JUMP_PREVIEW_WIDTH}")
 
+  local pane_list
+  pane_list=$(_pane_jumper_list)
+  [[ -z "${pane_list}" ]] && return 0
+
+  picker_open_popup "pane-jump" "${width}" "${height}" && return 0
+
   local selected
   selected=$(printf '%s\n' "${pane_list}" \
-    | fzf --tmux "center,${width},${height}" \
+    | picker_fzf "center,${width},${height}" \
         --prompt="Jump to pane: " \
         --preview="tmux capture-pane -p -t {2}" \
         --preview-window="right:${preview_width}" 2>/dev/null)

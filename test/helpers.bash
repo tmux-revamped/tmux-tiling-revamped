@@ -70,6 +70,7 @@ setup_test_environment() {
   unset _TILING_REVAMPED_APP_RULES_LOADED
   unset _TILING_REVAMPED_FOCUS_HISTORY_LOADED
   unset _TILING_REVAMPED_PANE_JUMPER_LOADED
+  unset _TILING_REVAMPED_PICKER_LOADED
 }
 
 cleanup_test_environment() {
@@ -322,6 +323,10 @@ command() {
 # waiting for input. The mock drains stdin and returns MOCK_FZF_SELECTION
 # (empty by default, meaning "no selection").
 fzf() {
+  if [[ "${1:-}" == "--version" ]]; then
+    printf '%s\n' "${MOCK_FZF_VERSION:-0.54.0 (mock)}"
+    return 0
+  fi
   cat >/dev/null 2>&1
   [[ -n "${MOCK_FZF_SELECTION:-}" ]] && printf '%s\n' "${MOCK_FZF_SELECTION}"
   return 0

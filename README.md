@@ -256,7 +256,7 @@ All panes at full height, side by side at equal widths.
 | tmux | 3.2+ | [github.com/tmux/tmux](https://github.com/tmux/tmux) |
 | bash | 4.0+ | Ships with Linux. macOS: `brew install bash` |
 | TPM | latest | [github.com/tmux-plugins/tpm](https://github.com/tmux-plugins/tpm) |
-| fzf | 0.44.0+ | Optional. Enables layout picker, fuzzy mark/preset selection |
+| fzf | any | Optional. Enables the layout picker, pane jumper, swap picker, project launcher and fuzzy mark/preset selection. fzf 0.53.0+ opens them with `--tmux`; older releases run inside a `display-popup` |
 
 ### Install
 
@@ -435,7 +435,7 @@ Interactive fzf-based layout picker with ASCII diagram previews.
 
 The picker shows ASCII diagrams in a preview panel on the right side. Each layout displays a representative configuration. The current layout is shown in the header.
 
-Requirements: fzf >= 0.44.0.
+Requirements: fzf. Release 0.53.0 or newer opens the picker with `fzf --tmux`; an older fzf runs inside a `display-popup`.
 
 ### Layout Cycling
 

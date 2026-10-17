@@ -150,3 +150,16 @@ teardown() {
   run pane_jumper
   [[ "${output}" == *"selected:work:2.1 %5 vim editor"* ]]
 }
+
+@test "pane-jumper.sh - an fzf without --tmux runs the jumper in a popup" {
+  # Arrange
+  export MOCK_HAS_FZF="1"
+  export MOCK_FZF_VERSION="0.52.0"
+  export MOCK_TMUX_LOG="${TEST_TMPDIR}/tmux.log"
+
+  # Act
+  pane_jumper
+
+  # Assert
+  grep -q '^display-popup -E -w 70% -h 60% TILING_REVAMPED_IN_POPUP=1 .*tiling\.sh pane-jump$' "${MOCK_TMUX_LOG}"
+}

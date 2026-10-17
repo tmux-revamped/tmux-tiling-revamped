@@ -145,3 +145,15 @@ teardown() {
   run swap_pick
   [[ "${status}" -eq 1 ]]
 }
+
+@test "swap-pick.sh - an fzf without --tmux runs the picker in a popup" {
+  # Arrange
+  export MOCK_FZF_VERSION="0.52.0"
+  export MOCK_TMUX_LOG="${TEST_TMPDIR}/tmux.log"
+
+  # Act
+  swap_pick
+
+  # Assert
+  grep -q '^display-popup -E -w 60% -h 30% TILING_REVAMPED_IN_POPUP=1 .*tiling\.sh swap-pick$' "${MOCK_TMUX_LOG}"
+}

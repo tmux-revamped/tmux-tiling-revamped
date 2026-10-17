@@ -9,6 +9,7 @@ LIB_DIR="${SCRIPT_DIR}/.."
 source "${LIB_DIR}/tmux/tmux-config.sh"
 source "${LIB_DIR}/utils/has-command.sh"
 source "${LIB_DIR}/utils/error-logger.sh"
+source "${LIB_DIR}/utils/picker.sh"
 
 # swap_pick: open fzf popup listing all panes with their command and directory.
 # The user selects a pane to swap with the currently focused pane.
@@ -31,9 +32,11 @@ swap_pick() {
 
   [[ -z "${pane_list}" ]] && return 0
 
+  picker_open_popup "swap-pick" "${TILING_SWAP_PICK_WIDTH}" "${TILING_SWAP_PICK_HEIGHT}" && return 0
+
   local selected
   selected=$(echo "${pane_list}" \
-    | fzf --tmux "center,60%,30%" --prompt="Swap with: " 2>/dev/null)
+    | picker_fzf "center,${TILING_SWAP_PICK_WIDTH},${TILING_SWAP_PICK_HEIGHT}" --prompt="Swap with: " 2>/dev/null)
 
   [[ -z "${selected}" ]] && return 0
 

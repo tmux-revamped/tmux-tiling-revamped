@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Directional swap moves the pane. It asked tmux for the targets `{U}`, `{D}`,
   `{L}` and `{R}`, which tmux does not know, so the lookup failed and nothing
   was swapped. It now uses `{up-of}`, `{down-of}`, `{left-of}` and `{right-of}`.
+- The layout picker, pane jumper, swap picker and project launcher check for
+  fzf 0.53.0, the first release with `--tmux`. The picker used to accept
+  0.44.0 and the other three never checked, so fzf 0.44 to 0.52 failed on the
+  unknown flag. An older fzf now runs inside a `display-popup` instead.
 
 ## [2.3.0] - 2026-09-23
 

@@ -236,7 +236,7 @@ teardown() {
 }
 
 @test "pick-layout.sh - _fzf_supports_tmux_popup accepts a new fzf version" {
-  fzf() { echo "0.50.0 (brew)"; }
+  fzf() { echo "0.53.0 (brew)"; }
   export -f fzf
   run _fzf_supports_tmux_popup
   [ "${status}" -eq 0 ]
@@ -256,11 +256,44 @@ teardown() {
   [ "${status}" -ne 0 ]
 }
 
-@test "pick-layout.sh - picker errors when fzf is too old" {
+@test "pick-layout.sh - _fzf_supports_tmux_popup rejects fzf releases before --tmux existed" {
+  # Arrange
+  fzf() { echo "0.52.1 (brew)"; }
+  export -f fzf
+
+  # Act
+  run _fzf_supports_tmux_popup
+
+  # Assert
+  [ "${status}" -ne 0 ]
+}
+
+@test "pick-layout.sh - pick_layout opens a popup when fzf has no --tmux" {
+  # Arrange
   _fzf_supports_tmux_popup() { return 1; }
   export -f _fzf_supports_tmux_popup
+  export MOCK_TMUX_LOG="${TEST_TMPDIR}/tmux.log"
+
+  # Act
+  pick_layout
+
+  # Assert
+  grep -q '^display-popup -E -w 60% -h 40% TILING_REVAMPED_IN_POPUP=1 .*tiling\.sh pick$' "${MOCK_TMUX_LOG}"
+}
+
+@test "pick-layout.sh - picker inside the popup runs fzf without --tmux" {
+  # Arrange
+  export TILING_REVAMPED_IN_POPUP="1"
+  local args_file="${TEST_TMPDIR}/fzf-args"
+  fzf() { printf '%s\n' "$@" > "${args_file}"; echo "grid"; }
+  export -f fzf
+
+  # Act
   run _pick_with_fzf_tmux
-  [ "${status}" -eq 1 ]
+
+  # Assert
+  [[ "${output}" == "grid" ]] || false
+  ! grep -qx -- '--tmux' "${args_file}"
 }
 
 @test "pick-layout.sh - picker returns the selection and adds a current header" {

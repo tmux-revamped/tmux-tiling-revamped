@@ -3,7 +3,7 @@
 # pick-layout.sh: Interactive fzf-based layout picker for tmux-tiling-revamped.
 #
 # Requirements:
-#   - fzf >= 0.44.0 (for --tmux popup and --preview support)
+#   - fzf >= 0.53.0 for the --tmux popup; older fzf runs inside display-popup
 #
 # Features:
 #   - ASCII diagram preview for each layout (loaded from exported variables)
@@ -22,6 +22,7 @@ source "${LIB_DIR}/tmux/tmux-config.sh"
 source "${LIB_DIR}/utils/constants.sh"
 source "${LIB_DIR}/utils/has-command.sh"
 source "${LIB_DIR}/utils/error-logger.sh"
+source "${LIB_DIR}/utils/picker.sh"
 source "${LIB_DIR}/layouts/dwindle.sh"
 source "${LIB_DIR}/layouts/spiral.sh"
 source "${LIB_DIR}/layouts/grid.sh"
@@ -43,14 +44,6 @@ PICK_LAYOUTS=(
   "monocle"
   "deck"
 )
-
-# _fzf_supports_tmux_popup: Check if fzf supports the --tmux flag (>= 0.44.0)
-_fzf_supports_tmux_popup() {
-  local fzf_version
-  fzf_version=$(fzf --version 2>/dev/null | cut -d' ' -f1)
-  [[ -z "${fzf_version}" ]] && return 1
-  printf '%s\n%s\n' "0.44.0" "${fzf_version}" | sort -V -C 2>/dev/null
-}
 
 # _get_layout_list: Generate layout list
 _get_layout_list() {
@@ -74,16 +67,10 @@ _pick_with_fzf_tmux() {
   height=$(get_tmux_option "@tiling_revamped_pick_height" "${TILING_DEFAULT_PICK_HEIGHT}")
   preview_width=$(get_tmux_option "@tiling_revamped_pick_preview_width" "${TILING_DEFAULT_PICK_PREVIEW_WIDTH}")
 
-  if ! _fzf_supports_tmux_popup; then
-    log_error "pick-layout" "fzf >= 0.44.0 required for layout picker"
-    return 1
-  fi
-
   local current
   current=$(get_current_layout)
 
   local fzf_args=(
-    --tmux "center,${width},${height}"
     --prompt="Select layout: "
     --exit-0
     --preview="bash -c 'u=\$(printf \"%s\" \"\$1\" | tr \"[:lower:]\" \"[:upper:]\" | tr \"-\" \"_\"); n=\"TILING_PREVIEW_\${u}\"; echo \"\${!n:-No preview available}\"' -- {}"
@@ -95,7 +82,7 @@ _pick_with_fzf_tmux() {
   )
 
   local selected
-  selected=$(_get_layout_list | fzf "${fzf_args[@]}" 2>/dev/null)
+  selected=$(_get_layout_list | picker_fzf "center,${width},${height}" "${fzf_args[@]}" 2>/dev/null)
 
   local exit_code=$?
   [[ ${exit_code} -eq 130 ]] && return 130
@@ -110,6 +97,11 @@ pick_layout() {
     log_error "pick-layout" "fzf is not installed"
     return 1
   fi
+
+  local width height
+  width=$(get_tmux_option "@tiling_revamped_pick_width" "${TILING_DEFAULT_PICK_WIDTH}")
+  height=$(get_tmux_option "@tiling_revamped_pick_height" "${TILING_DEFAULT_PICK_HEIGHT}")
+  picker_open_popup "pick" "${width}" "${height}" && return 0
 
   local selected
   local pick_exit_code=0

@@ -77,3 +77,16 @@ teardown() {
   run launch_project
   [[ "${status}" -ne 0 ]]
 }
+
+@test "project-launcher.sh - an fzf without --tmux runs the launcher in a popup" {
+  # Arrange
+  export MOCK_FZF_VERSION="0.52.0"
+  export MOCK_TILING_PROJECT_DIR="${TEST_TMPDIR}"
+  export MOCK_TMUX_LOG="${TEST_TMPDIR}/tmux.log"
+
+  # Act
+  launch_project
+
+  # Assert
+  grep -q '^display-popup -E -w 60% -h 40% TILING_REVAMPED_IN_POPUP=1 .*tiling\.sh project$' "${MOCK_TMUX_LOG}"
+}
