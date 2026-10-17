@@ -34,6 +34,15 @@ key_for() {
     | awk '{print $2}'
 }
 
+binding_line() {
+  command tmux -S "${TILING_SOCKET}" list-keys 2>/dev/null \
+    | awk -v table="${1}" -v key="${2}" '{
+        i = 2
+        if ($i == "-r") { i++ }
+        if ($i == "-T" && $(i + 1) == table && $(i + 2) == key) { print }
+      }'
+}
+
 count_tiling_binds() {
   command tmux -S "${TILING_SOCKET}" list-keys 2>/dev/null \
     | grep -c 'tiling.sh'
@@ -81,9 +90,9 @@ count_tiling_binds() {
   "${BASH}" "${PLUGIN}"
 
   # Assert
-  bound=$(command tmux -S "${TILING_SOCKET}" list-keys -T prefix d)
+  bound=$(binding_line prefix d)
   [[ "${bound}" == *"detach-client"* ]] || false
-  bound=$(command tmux -S "${TILING_SOCKET}" list-keys -T prefix "?")
+  bound=$(binding_line prefix "?")
   [[ "${bound}" == *"list-keys"* ]]
 }
 
@@ -107,7 +116,7 @@ count_tiling_binds() {
   "${BASH}" "${PLUGIN}"
 
   # Assert
-  run command tmux -S "${TILING_SOCKET}" list-keys -T root M-D
+  run binding_line root M-D
   [[ "${output}" == *"layout dwindle"* ]] || false
   [[ "${output}" != *"M-M-D"* ]]
 }
@@ -269,7 +278,7 @@ wait_for_file() {
   local bound="${BATS_TEST_TMPDIR}/bound.conf"
   stage_plugin_with_stub "${root}" "${marker}"
   "${BASH}" "${root}/tmux-tiling-revamped.tmux"
-  command tmux -S "${TILING_SOCKET}" list-keys -T prefix M-D \
+  binding_line prefix M-D \
     | sed -E 's/^bind-key +-T prefix +M-D +//' > "${bound}"
 
   # Act
@@ -288,7 +297,7 @@ wait_for_file() {
   "${BASH}" "${PLUGIN}"
 
   # Assert
-  bound=$(command tmux -S "${TILING_SOCKET}" list-keys -T prefix M-K)
+  bound=$(binding_line prefix M-K)
   [[ "${bound}" == *"mark '%%%'"* ]]
 }
 
