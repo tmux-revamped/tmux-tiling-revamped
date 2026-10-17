@@ -734,6 +734,24 @@ get_pane_height() {
   [[ "$(command tmux -S "${TMUX_SOCKET}" show-option -wqv "@tiling_revamped_layout_history")" == "dwindle:brvc" ]]
 }
 
+@test "integration: a hook from a background window leaves the active window alone" {
+  # Arrange
+  local background active_layout
+  background=$(command tmux -S "${TMUX_SOCKET}" display-message -p '#{window_id}')
+  command tmux -S "${TMUX_SOCKET}" new-window 2>/dev/null
+  create_panes 3
+  command tmux -S "${TMUX_SOCKET}" set-option -g "@tiling_revamped_auto_apply" "1" 2>/dev/null
+  run_tiling layout main-vertical
+  command tmux -S "${TMUX_SOCKET}" select-layout even-vertical 2>/dev/null
+  active_layout=$(command tmux -S "${TMUX_SOCKET}" display-message -p '#{window_layout}')
+
+  # Act
+  run_tiling hook exit "${background}"
+
+  # Assert
+  [[ "$(command tmux -S "${TMUX_SOCKET}" display-message -p '#{window_layout}')" == "${active_layout}" ]]
+}
+
 # New: swap with biggest
 
 @test "integration: swap-biggest keeps the pane count and is routed" {

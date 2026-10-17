@@ -34,6 +34,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   now kept per window and expires after 10 seconds. It was one server-wide flag,
   so applying a layout in one window suppressed re-tiling in every other, and a
   run killed mid-apply left it set and turned auto-tiling off until restart.
+- A pane closing or splitting in a background window no longer re-tiles the
+  window you are looking at. The hooks now pass the window they fired for, and
+  the handler skips the re-tile when that is not the active window.
 
 ## [2.3.0] - 2026-09-23
 

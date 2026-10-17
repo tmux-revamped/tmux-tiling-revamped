@@ -36,6 +36,7 @@ _tiling_run_shell() {
 }
 
 TILING_RUN="$(_tiling_shell_word "${TILING_CMD}")"
+TILING_HOOK_WINDOW='#{?hook_window,#{hook_window},#{window_id}}'
 
 # Minimum bash version: 4.0 (required for associative arrays, ${var^^}, etc.)
 _check_bash_version() {
@@ -324,13 +325,13 @@ _setup_hooks() {
 
   if [[ "${auto_apply}" == "1" ]]; then
     tmux set-hook -ga "after-split-window[100]" \
-      "$(_tiling_run_shell "hook split")"
+      "$(_tiling_run_shell "hook split ${TILING_HOOK_WINDOW}")"
     tmux set-hook -ga "after-kill-pane[100]" \
-      "$(_tiling_run_shell "hook kill")"
+      "$(_tiling_run_shell "hook kill ${TILING_HOOK_WINDOW}")"
     tmux set-hook -ga "pane-exited[100]" \
-      "$(_tiling_run_shell "hook exit")"
+      "$(_tiling_run_shell "hook exit ${TILING_HOOK_WINDOW}")"
     tmux set-hook -ga "window-resized[100]" \
-      "$(_tiling_run_shell "hook resize")"
+      "$(_tiling_run_shell "hook resize ${TILING_HOOK_WINDOW}")"
   fi
 
   # Default layout for new windows
@@ -338,7 +339,7 @@ _setup_hooks() {
   default_layout=$(_get_option "@tiling_revamped_default_layout" "")
   if [[ -n "${default_layout}" ]]; then
     tmux set-hook -ga "after-new-window[100]" \
-      "$(_tiling_run_shell "hook new-window")"
+      "$(_tiling_run_shell "hook new-window ${TILING_HOOK_WINDOW}")"
   fi
 
   # Smart borders: hide pane chrome on a single-pane window

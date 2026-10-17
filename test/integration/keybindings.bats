@@ -245,3 +245,18 @@ wait_for_file() {
   bound=$(command tmux -S "${TILING_SOCKET}" list-keys -T prefix M)
   [[ "${bound}" == *"mark '%%%'"* ]]
 }
+
+@test "entry point - a re-tile hook passes the window it fired for" {
+  # Arrange
+  local root="${BATS_TEST_TMPDIR}/plugin"
+  local marker="${BATS_TEST_TMPDIR}/hook-window"
+  stage_plugin_with_stub "${root}" "${marker}"
+  "${BASH}" "${root}/tmux-tiling-revamped.tmux"
+
+  # Act
+  command tmux -S "${TILING_SOCKET}" set-hook -R pane-exited
+  wait_for_file "${marker}" || true
+
+  # Assert
+  [[ "$(cat "${marker}" 2>/dev/null)" =~ ^hook\ exit\ @[0-9]+$ ]]
+}

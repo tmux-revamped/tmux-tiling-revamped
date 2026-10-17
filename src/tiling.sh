@@ -97,7 +97,10 @@ source "${PLUGIN_DIR}/src/lib/operations/pane-jumper.sh"
 
 _handle_hook() {
   local event="${1:-}"
-  local TILING_REVAMPED_AUTOMATIC=1
+  local window="${2:-}"
+  local -x TILING_REVAMPED_AUTOMATIC=1
+
+  [[ -n "${window}" && "${window}" != "$(get_current_window)" ]] && return 0
 
   # Handle new-window: apply default layout if configured
   if [[ "${event}" == "new-window" ]]; then
@@ -292,7 +295,7 @@ HELP
       esac
       ;;
     preset-pick) preset_pick ;;
-    hook)       _handle_hook "${1:-}" ;;
+    hook)       _handle_hook "${1:-}" "${2:-}" ;;
     *)
       log_error "tiling" "Unknown command: ${cmd}"
       exit 1
