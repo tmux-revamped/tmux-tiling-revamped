@@ -72,3 +72,27 @@ teardown() {
   tmux() { case "$1" in -V) echo "tmux" ;; *) return 0 ;; esac; }
   run_doctor >/dev/null 2>&1 || true
 }
+
+@test "doctor.sh - run_doctor fails tmux 3.1, below the 3.2 floor" {
+  # Arrange
+  tmux() { case "$1" in -V) echo "tmux 3.1c" ;; *) return 0 ;; esac; }
+  export -f tmux
+
+  # Act
+  run run_doctor
+
+  # Assert
+  [[ "${output}" == *"FAIL  tmux 3.1 (need 3.2+)"* ]]
+}
+
+@test "doctor.sh - run_doctor passes tmux 3.2" {
+  # Arrange
+  tmux() { case "$1" in -V) echo "tmux 3.2a" ;; *) return 0 ;; esac; }
+  export -f tmux
+
+  # Act
+  run run_doctor
+
+  # Assert
+  [[ "${output}" == *"PASS  tmux 3.2"* ]]
+}

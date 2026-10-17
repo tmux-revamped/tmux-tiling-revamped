@@ -27,7 +27,11 @@ run_doctor() {
   tmux_version=$(tmux -V 2>/dev/null | sed 's/[^0-9.]//g')
   if [[ -n "${tmux_version}" ]]; then
     local major="${tmux_version%%.*}"
-    if [[ -n "${major}" ]] && (( major >= 3 )); then
+    local minor="${tmux_version#*.}"
+    minor="${minor%%.*}"
+    [[ "${minor}" =~ ^[0-9]+$ ]] || minor=0
+    [[ "${tmux_version}" == *.* ]] || minor=0
+    if [[ -n "${major}" ]] && { (( major > 3 )) || { (( major == 3 )) && (( minor >= 2 )); }; }; then
       echo "PASS  tmux ${tmux_version}"
     elif [[ -n "${major}" ]]; then
       echo "FAIL  tmux ${tmux_version} (need 3.2+)"

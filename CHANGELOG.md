@@ -50,6 +50,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `@tiling_revamped_min_pane_height`. Nothing called the size guard that read
   them, so no layout ever refused to apply. The guard and the unused
   deprecation helper are removed.
+- `doctor` reports FAIL for tmux 3.0 and 3.1. It compared only the major
+  version, so anything from 3.0 up passed although the plugin needs 3.2.
 
 ## [2.3.0] - 2026-09-23
 
