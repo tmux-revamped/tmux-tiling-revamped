@@ -8,6 +8,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 BEGIN_MARK='<!-- family:begin -->'
 END_MARK='<!-- family:end -->'
+WORK=""
+
+cleanup() {
+  [[ -n "${WORK}" && -d "${WORK}" ]] && rm -rf "${WORK}"
+  return 0
+}
+trap cleanup EXIT
 
 usage() {
   cat <<'USAGE'
@@ -143,22 +150,29 @@ main() {
     return 1
   fi
 
-  local tmp
-  tmp="$(mktemp "${TMPDIR:-/tmp}/family-readme-XXXXXX")"
+  WORK="$(mktemp -d "${TMPDIR:-/tmp}/family-readme-XXXXXX")"
+  local tmp="${WORK}/readme"
+  local section_file="${WORK}/section"
+  printf '%s\n' "${section}" > "${section_file}"
 
   if [[ -n "${current}" ]]; then
-    awk -v b="${BEGIN_MARK}" -v e="${END_MARK}" -v repl="${section}" '
-      index($0, b) { print repl; inside = 1; next }
+    SECTION_FILE="${section_file}" awk -v b="${BEGIN_MARK}" -v e="${END_MARK}" '
+      index($0, b) {
+        while ((getline line < ENVIRON["SECTION_FILE"]) > 0) { print line }
+        close(ENVIRON["SECTION_FILE"])
+        inside = 1
+        next
+      }
       index($0, e) { inside = 0; next }
       !inside { print }
     ' "${readme}" > "${tmp}"
   else
     cat "${readme}" > "${tmp}"
-    printf '\n%s\n' "${section}" >> "${tmp}"
+    printf '\n' >> "${tmp}"
+    cat "${section_file}" >> "${tmp}"
   fi
 
   cat "${tmp}" > "${readme}"
-  rm -f "${tmp}"
   printf '%s: README family section written\n' "$(family_repo_name "${target}")"
 }
 

@@ -51,3 +51,11 @@ owned	family/docs/migration.md
 owned	family/bin/check-runner-drift
 owned	.github/actionlint.yaml
 owned	test/family/check-runner-drift.bats
+owned	test/family/sync.bats
+owned	test/family/sweep.bats
+owned	test/family/doctor.bats
+owned	test/family/gen-readme.bats
+owned	test/family/propagate.bats
+owned	test/family/live-keys.bats
+owned	test/lib/utils/platform-memo.bats
+owned	test/lib/utils/cache-validation.bats

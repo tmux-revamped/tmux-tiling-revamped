@@ -13,7 +13,8 @@ usage() {
 usage: family/bin/propagate --message SUBJECT [options]
 
 Copies every owned file from this member into every other member, bumps the
-contract version, regenerates family/CHECKSUMS, and opens one pull request per
+contract version when an owned file changed since family/CHECKSUMS was last
+recorded, regenerates family/CHECKSUMS, and opens one pull request per
 repository under a shared branch name.
 
   --message SUBJECT   conventional-commit subject for every member commit, required
@@ -35,6 +36,7 @@ DRY_RUN=0
 NO_PUSH=0
 BUMP=1
 WORK=""
+MANIFEST=""
 changed_members=0
 skipped_members=0
 
@@ -45,7 +47,32 @@ cleanup() {
 trap cleanup EXIT
 
 owned_files() {
-  awk '{print $2}' "${ROOT}/family/CHECKSUMS"
+  awk '{print $2}' "${MANIFEST}"
+}
+
+owned_content_changed() {
+  local fresh="${1}"
+  local recorded="${ROOT}/family/CHECKSUMS"
+  [[ -f "${recorded}" ]] || return 0
+  [[ "$(awk '$2 != "family/VERSION"' "${fresh}")" != "$(awk '$2 != "family/VERSION"' "${recorded}")" ]]
+}
+
+settle_version() {
+  local fresh="${1}"
+  local current
+  current="$(family_version "${ROOT}")"
+
+  if ! owned_content_changed "${fresh}"; then
+    printf 'no owned file changed since family/CHECKSUMS was recorded, contract version stays %s\n' "${current}"
+    return 0
+  fi
+  [[ "${BUMP}" -eq 1 ]] || return 0
+
+  if [[ "${DRY_RUN}" -eq 1 ]]; then
+    printf 'contract version would move %s -> %s\n' "${current}" "$((current + 1))"
+    return 0
+  fi
+  bump_version
 }
 
 member_is_current() {
@@ -60,7 +87,7 @@ member_is_current() {
     family_exception_exists "${ROOT}" "${member}" "${path}" && continue
     [[ -f "${other}/${path}" ]] || return 1
     [[ "$(family_hash_file "${other}/${path}")" == "${recorded}" ]] || return 1
-  done < "${ROOT}/family/CHECKSUMS"
+  done < "${MANIFEST}"
 
   [[ "$(family_version "${other}" 2>/dev/null || true)" == "$(family_version "${ROOT}")" ]]
 }
@@ -100,7 +127,7 @@ describe_pending() {
     elif [[ "$(family_hash_file "${other}/${path}")" != "${recorded}" ]]; then
       printf '    replace %s\n' "${path}"
     fi
-  done < "${ROOT}/family/CHECKSUMS"
+  done < "${MANIFEST}"
 }
 
 commit_and_open() {
@@ -206,14 +233,21 @@ main() {
     family_die "--message is required"
   }
 
-  if [[ "${BUMP}" -eq 1 && "${DRY_RUN}" -eq 0 ]]; then
-    bump_version
+  WORK="$(mktemp -d "${TMPDIR:-/tmp}/family-propagate-XXXXXX")"
+  local fresh="${WORK}/CHECKSUMS"
+  "${SCRIPT_DIR}/checksums" --stdout > "${fresh}"
+
+  settle_version "${fresh}"
+
+  if [[ "${DRY_RUN}" -eq 1 ]]; then
+    MANIFEST="${fresh}"
+  else
+    "${SCRIPT_DIR}/checksums" >/dev/null
+    MANIFEST="${ROOT}/family/CHECKSUMS"
   fi
-  "${SCRIPT_DIR}/checksums" >/dev/null
 
   [[ -n "${BRANCH}" ]] || BRANCH="family/v$(family_version "${ROOT}")"
 
-  WORK="$(mktemp -d "${TMPDIR:-/tmp}/family-propagate-XXXXXX")"
   write_pr_body
 
   local member other

@@ -214,9 +214,14 @@ jobs:
       - name: Check every option appears in the docs
         run: |
           slug=$(basename "$PWD" | sed 's/^tmux-//; s/-revamped$//')
+          fail=0
           while IFS= read -r opt; do
-            grep -q -- "$opt" README.md 2>/dev/null || echo "WARN: $opt is not documented in README.md"
+            if ! grep -qF -- "$opt" README.md; then
+              echo "FAIL: $opt is not documented in README.md"
+              fail=1
+            fi
           done < <(grep -rhoE "@${slug}_revamped_[a-z_]+" src/ | sort -u)
+          exit $fail
 
   coverage:
     runs-on: ubuntu-26.04

@@ -56,7 +56,6 @@ fetch_member() {
     report "${member}: could not be cloned from ${base}"
     return 1
   }
-  printf '%s\n' "${dest}"
 }
 
 compare_member() {
@@ -139,7 +138,8 @@ main() {
         continue
       }
     else
-      other="$(fetch_member "${member}" "${base}")" || continue
+      other="${WORK}/${member}"
+      fetch_member "${member}" "${base}" || continue
       family_unshallow_if_needed "${other}" || true
     fi
 

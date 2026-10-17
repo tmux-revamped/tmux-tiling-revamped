@@ -90,7 +90,7 @@ That rule decides defaults. It does not decide what happens when a user's own re
 
 | Question | Answered by |
 |---|---|
-| Do two shipped defaults collide? | The allocation in `family/KEYS.md`. They must not, and `family/bin/lint-keys` fails the build if they do |
+| Do two shipped defaults collide? | The allocation in `family/KEYS.md`. They must not, and `family/bin/live-keys` loads every member into a private tmux server and exits non-zero when two of them bind the same key |
 | A user remapped one action onto another's key. Now what? | The binding registry: collect every binding, write them in one pass, let the key the user set outrank the one the plugin defaulted, leave the loser unbound, and report the clash |
 | A user already bound the key outside the family | The plugin leaves the user binding alone, skips its own, and records the skip |
 

@@ -26,7 +26,8 @@ source "${_CACHE_SCRIPT_DIR}/../tmux/tmux-ops.sh"
 # Default namespace and guard tuning. A plugin overrides CACHE_PREFIX.
 CACHE_PREFIX="${CACHE_PREFIX:-tmux_plugin}"
 # Seconds after which a held lock is treated as a dead worker and ignored.
-CACHE_MAX_RUN="${CACHE_MAX_RUN:-20}"
+CACHE_MAX_RUN_DEFAULT=20
+CACHE_MAX_RUN="${CACHE_MAX_RUN:-${CACHE_MAX_RUN_DEFAULT}}"
 # Sentinel age returned for a key that was never written.
 CACHE_NEVER_AGE=999999999
 
@@ -65,9 +66,11 @@ cache_age() {
 
 # cache_is_fresh KEY MAX_AGE -> 0 when KEY is at most MAX_AGE seconds old.
 cache_is_fresh() {
+  local max_age="${2:-}"
+  [[ "${max_age}" =~ ^[0-9]+$ ]] || return 1
   local age
   age=$(cache_age "${1}")
-  (( age <= ${2} ))
+  (( age <= max_age ))
 }
 
 _cache_clear_lock() {
@@ -81,9 +84,10 @@ cache_should_refresh() {
   local key="${1}" max_age="${2}"
   cache_is_fresh "${key}" "${max_age}" && return 1
   if [[ "$(cache_get "${key}_lock")" == "1" ]]; then
-    local lock_age
+    local lock_age max_run="${CACHE_MAX_RUN}"
+    [[ "${max_run}" =~ ^[0-9]+$ ]] || max_run="${CACHE_MAX_RUN_DEFAULT}"
     lock_age=$(cache_age "${key}_lock")
-    (( lock_age < CACHE_MAX_RUN )) && return 1
+    (( lock_age < max_run )) && return 1
   fi
   return 0
 }

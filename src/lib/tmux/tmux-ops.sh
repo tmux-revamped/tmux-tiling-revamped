@@ -15,7 +15,15 @@ get_tmux_option() {
   local default="${2:-}"
   local value
   value=$(tmux show-option -gqv "${option}" 2>/dev/null)
-  [[ -z "${value}" ]] && echo "${default}" || echo "${value}"
+  if [[ -n "${value}" || -z "${default}" ]]; then
+    echo "${value}"
+    return 0
+  fi
+  if [[ -n "$(tmux show-option -gq "${option}" 2>/dev/null)" ]]; then
+    echo ""
+    return 0
+  fi
+  echo "${default}"
 }
 
 # set_tmux_option OPTION VALUE -> store a global option.

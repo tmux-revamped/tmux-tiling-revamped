@@ -51,18 +51,34 @@ search_with_pattern() {
   local dir="${1}"
   local pattern="${2}"
   shift 2
-  local paths=("$@")
+  local targets=()
 
-  if [[ "${#paths[@]}" -eq 0 ]]; then
-    grep -rlE "${pattern}" "${dir}" --exclude-dir=.git --exclude-dir=coverage 2>/dev/null || true
-    return 0
+  if [[ $# -eq 0 ]]; then
+    targets=("${dir}")
+  else
+    local glob match
+    for glob in "$@"; do
+      # shellcheck disable=SC2086
+      for match in ${dir}/${glob}; do
+        if [[ -e "${match}" ]]; then
+          targets+=("${match}")
+        fi
+      done
+    done
   fi
 
-  local glob
-  for glob in "${paths[@]}"; do
-    # shellcheck disable=SC2086
-    grep -rlE "${pattern}" ${dir}/${glob} 2>/dev/null || true
-  done
+  [[ "${#targets[@]}" -gt 0 ]] || return 0
+
+  local status=0
+  grep -rlE --exclude-dir=.git --exclude-dir=coverage -e "${pattern}" "${targets[@]}" || status=$?
+  [[ "${status}" -le 1 ]] || return 2
+  return 0
+}
+
+pattern_is_valid() {
+  local status=0
+  grep -E -e "${1}" </dev/null >/dev/null 2>&1 || status=$?
+  [[ "${status}" -le 1 ]]
 }
 
 main() {
@@ -116,6 +132,10 @@ main() {
   if [[ -n "${script}" && ! -x "${script}" ]]; then
     family_die "probe is not executable: ${script}"
   fi
+  if [[ -n "${pattern}" ]] && ! pattern_is_valid "${pattern}"; then
+    printf 'error: not a valid extended regular expression: %s\n' "${pattern}" >&2
+    return 2
+  fi
 
   WORK="$(mktemp -d "${TMPDIR:-/tmp}/family-sweep-XXXXXX")"
   [[ -n "${dir}" ]] || dir="$(dirname "${ROOT}")"
@@ -156,9 +176,12 @@ main() {
       continue
     fi
 
-    local hits
-    hits="$(search_with_pattern "${other}" "${pattern}" "${paths[@]+"${paths[@]}"}")"
-    if [[ -n "${hits}" ]]; then
+    local hits search_status=0
+    hits="$(search_with_pattern "${other}" "${pattern}" "${paths[@]+"${paths[@]}"}")" || search_status=$?
+    if [[ "${search_status}" -ne 0 ]]; then
+      unreachable=$((unreachable + 1))
+      printf '%-32s NOT CHECKED, grep exited %s\n' "${member}" "${search_status}"
+    elif [[ -n "${hits}" ]]; then
       affected=$((affected + 1))
       printf '%-32s AFFECTED\n' "${member}"
       printf '%s\n' "${hits}" | sed "s|${other}/|    |"

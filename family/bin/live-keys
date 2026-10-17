@@ -20,7 +20,8 @@ into it, and reports what the family actually binds.
   --members-dir DIR  member checkouts. Defaults to the parent of this repository
   --order ORDER      the order the entry points are sourced in. Default declared
 
-Output, tab separated:
+Output, tab separated, where <key> is <table>:<key> for the prefix, root,
+copy-mode and copy-mode-vi tables:
 
   stock    <key>                      bound by tmux itself before any plugin
   bound    <key>  <member>            claimed by exactly one member
@@ -44,10 +45,28 @@ cleanup() {
 }
 trap cleanup EXIT
 
+LIVE_TABLES="prefix root copy-mode copy-mode-vi"
+
 keys_now() {
-  tmux -S "${SOCKET}" list-keys -T prefix 2>/dev/null |
-    sed -E 's/^bind-key[[:space:]]+(-r[[:space:]]+)?(-T[[:space:]]+[^[:space:]]+[[:space:]]+)?//' |
-    awk '{ key = $1; $1 = ""; sub(/^ +/, ""); print key "\t" $0 }' | LC_ALL=C sort -u
+  local table
+  for table in ${LIVE_TABLES}; do
+    tmux -S "${SOCKET}" list-keys -T "${table}" 2>/dev/null || true
+  done | awk '
+    $1 == "bind-key" {
+      table = ""
+      for (i = 2; i <= NF; i++) {
+        if ($i == "-r" || $i == "-n") { continue }
+        if ($i == "-N") { i++; continue }
+        if ($i == "-T") { table = $(i + 1); i++; continue }
+        break
+      }
+      if (table == "" || i > NF) { next }
+      key = $i
+      $1 = ""
+      for (j = 2; j <= i; j++) { $j = "" }
+      sub(/^ +/, "")
+      print table ":" key "\t" $0
+    }' | LC_ALL=C sort -u
 }
 
 is_declared_overrider() {

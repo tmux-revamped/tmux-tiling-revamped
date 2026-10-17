@@ -19,7 +19,8 @@ Reports conflicts across every family member found on disk.
 
   --members-dir DIR   directory holding the member checkouts.
                       Defaults to the parent of this repository.
-  --live              also diff the report against the running tmux server.
+  --live              also check the keys members claim on the running tmux
+                      server, reading each key option the user has set
 
 Checks:
 
@@ -27,7 +28,6 @@ Checks:
   - two members declaring the same status placeholder
   - two members writing the same tmux option
   - an option outside the @<plugin>_revamped_<name> grammar
-  - a member reading another member's option without declaring it
   - members reporting different family/VERSION values
 
 Exits 0 when clean, 1 when any finding is reported.
@@ -142,7 +142,43 @@ check_contract_versions() {
   awk -F'\t' '$2 == "contract" { print "    " $1 " at " $3 }' "${records}" >&2
 }
 
+live_bound_keys() {
+  tmux list-keys 2>/dev/null | awk '
+    function bare(key) {
+      if (key ~ /^\\.$/) { return substr(key, 2) }
+      if (key ~ /^".+"$/ || key ~ /^\047.+\047$/) { return substr(key, 2, length(key) - 2) }
+      return key
+    }
+    $1 == "bind-key" {
+      table = ""
+      for (i = 2; i <= NF; i++) {
+        if ($i == "-r" || $i == "-n") { continue }
+        if ($i == "-N") { i++; continue }
+        if ($i == "-T") { table = $(i + 1); i++; continue }
+        if (table != "") { print table "\t" bare($i) }
+        break
+      }
+    }' | LC_ALL=C sort -u
+}
+
+live_claimed_keys() {
+  local records="${1}"
+  local member table default option value
+
+  while IFS=$'\t' read -r member table default option; do
+    value=""
+    [[ -n "${option}" ]] && value="$(tmux show-option -gqv "${option}" 2>/dev/null || true)"
+    [[ -n "${value}" ]] || value="${default}"
+    case "${value}" in
+      "" | unset | off) continue ;;
+    esac
+    printf '%s\t%s\t%s\n' "${table}" "${value}" "${member}"
+  done < <(awk -F'\t' '$2 == "key" { print $1 "\t" $3 "\t" $4 "\t" $5 }' "${records}")
+}
+
 check_live_server() {
+  local records="${1}"
+
   command -v tmux >/dev/null 2>&1 || {
     printf 'tmux not on PATH, skipping the live check\n' >&2
     return 0
@@ -152,14 +188,25 @@ check_live_server() {
     return 0
   }
 
-  local duplicates
-  duplicates="$(tmux list-keys -T prefix | awk '{print $NF == "" ? $4 : $4}' | LC_ALL=C sort | uniq -d)"
-  [[ -n "${duplicates}" ]] || return 0
+  local bound="${WORK}/live-bound.tsv"
+  local claimed="${WORK}/live-claimed.tsv"
+  live_bound_keys > "${bound}"
+  live_claimed_keys "${records}" > "${claimed}"
 
-  local key
-  while IFS= read -r key; do
-    report "live server: ${key} is bound more than once in the prefix table"
-  done <<< "${duplicates}"
+  local count table key owners
+  while IFS=$'\t' read -r count table key owners; do
+    [[ "${count}" -gt 1 ]] || continue
+    grep -qxF "${table}"$'\t'"${key}" "${bound}" || continue
+    report "live server: ${key} in the ${table} table is claimed by ${owners}"
+  done < <(
+    awk -F'\t' '{
+      k = $1 "\t" $2
+      if (index(" " seen[k] ",", " " $3 ",") > 0) { next }
+      seen[k] = seen[k] ? seen[k] ", " $3 : $3
+      count[k]++
+    }
+    END { for (k in count) print count[k] "\t" k "\t" seen[k] }' "${claimed}"
+  )
 }
 
 main() {
@@ -205,7 +252,7 @@ main() {
   check_option_collisions "${records}"
   check_namespace "${records}"
   if [[ "${live}" -eq 1 ]]; then
-    check_live_server
+    check_live_server "${records}"
   fi
 
   if [[ "${findings}" -gt 0 ]]; then

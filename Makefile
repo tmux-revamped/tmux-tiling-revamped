@@ -36,8 +36,9 @@ print(data.get('percent_covered', '0'))"); \
 		{ echo "Coverage below $(COVERAGE_MIN)%"; exit 1; }
 
 lint: ## Run shellcheck on all shell files
-	@find . -type f \( -name "*.sh" -o -name "*.tmux" -o -name "*.bash" \) \
-		-not -path "./.git/*" -not -path "./coverage/*" $(LINT_EXCLUDE) | sort | \
+	@{ find . -type f \( -name "*.sh" -o -name "*.tmux" -o -name "*.bash" \) \
+		-not -path "./.git/*" -not -path "./coverage/*" $(LINT_EXCLUDE); \
+		find ./family/bin -type f; } | sort | \
 		xargs $(SHELLCHECK) --severity=warning --shell=bash
 
 clean: ## Remove coverage and temp artifacts
