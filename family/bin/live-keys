@@ -74,6 +74,13 @@ is_declared_overrider() {
     awk '/^### Declared overriders/,0' "${ROOT}/family/KEYS.md" | grep -qF "${1}"
 }
 
+is_declared_root_key() {
+  local member="${1}" key="${2#root:}"
+  [[ "${2}" == root:* ]] || return 1
+  awk '/^## Declared root-table members/ { f = 1; next } /^## / { f = 0 } f' "${ROOT}/family/KEYS.md" 2>/dev/null |
+    grep -F "\`${member}\`" | grep -qF "\`${key}\`"
+}
+
 stock_keys() {
   printf '%s\n' "${STOCK}" | cut -f1 | LC_ALL=C sort -u
 }
@@ -164,7 +171,7 @@ main() {
   local key member
   while IFS=$'\t' read -r key member; do
     stock_keys | grep -qxF "${key}" || continue
-    if is_declared_overrider "${member}"; then
+    if is_declared_overrider "${member}" || is_declared_root_key "${member}" "${key}"; then
       printf 'override\t%s\t%s\n' "${key}" "${member}"
       continue
     fi

@@ -1,100 +1,44 @@
 # Family Collisions
 
-Measured by `family/bin/live-keys` on 2026-09-23: a real tmux server, every member
-loaded in declared order, each key attributed by diffing the binding table after
-that member ran. This supersedes the earlier static scan, which under-counted
-because it could not see a plugin replacing a binding that already existed.
+Measured by `family/bin/live-keys` on 2026-10-17, against tmux 3.8, after the
+allocation in [`family/KEYS.md`](../KEYS.md) was applied: a real tmux server,
+every member loaded in declared order, each key attributed by diffing the
+binding table after that member ran.
 
 ## Summary
 
 | Category | Keys |
 |---|---|
-| Bound by tmux before any plugin loads | 88 |
-| Claimed by exactly one member | 47 |
-| Claimed by more than one member | 26 |
-| Claimed over a stock tmux binding | 42 |
+| Bound by tmux before any plugin loads | 289 |
+| Claimed by exactly one member | 83 |
+| Claimed by more than one member | 0 |
+| Claimed over a stock binding by a declared overrider or root-table member | 15 |
+| Claimed over a stock binding by any other member | 1 |
 
 ## Clashes between members
 
-| Key | Claimed by |
-|---|---|
-| `+` | tmux-pain-control-revamped,tmux-tiling-revamped |
-| `-` | tmux-pain-control-revamped,tmux-tiling-revamped |
-| `.` | tmux-pain-control-revamped,tmux-tiling-revamped |
-| `=` | tmux-pain-control-revamped,tmux-tiling-revamped |
-| `?` | tmux-pomodoro-revamped,tmux-tiling-revamped |
-| `B` | tmux-battery-revamped,tmux-pain-control-revamped,tmux-tiling-revamped |
-| `C` | tmux-cpu-revamped,tmux-fzf-revamped,tmux-pain-control-revamped |
-| `C-r` | tmux-persist-revamped,tmux-tiling-revamped |
-| `K` | tmux-fzf-revamped,tmux-pain-control-revamped |
-| `L` | tmux-fzf-revamped,tmux-pain-control-revamped |
-| `M` | tmux-fzf-revamped,tmux-ram-revamped,tmux-tiling-revamped |
-| `M-n` | tmux-logging-revamped,tmux-music-revamped |
-| `M-p` | tmux-logging-revamped,tmux-music-revamped |
-| `P` | tmux-logging-revamped,tmux-pain-control-revamped,tmux-pomodoro-revamped,tmux-tiling-revamped |
-| `R` | tmux-fzf-revamped,tmux-pain-control-revamped,tmux-pomodoro-revamped |
-| `S` | tmux-pain-control-revamped,tmux-tiling-revamped |
-| `T` | tmux-fzf-revamped,tmux-time-revamped |
-| `V` | tmux-pain-control-revamped,tmux-tiling-revamped |
-| `_` | tmux-pain-control-revamped,tmux-pomodoro-revamped |
-| `b` | tmux-fzf-revamped,tmux-tiling-revamped |
-| `g` | tmux-pain-control-revamped,tmux-tiling-revamped |
-| `j` | tmux-pain-control-revamped,tmux-tiling-revamped |
-| `k` | tmux-fzf-revamped,tmux-pain-control-revamped |
-| `o` | tmux-pomodoro-revamped,tmux-tiling-revamped |
-| `p` | tmux-pomodoro-revamped,tmux-tiling-revamped |
-| `u` | tmux-fzf-revamped,tmux-tiling-revamped |
+None.
 
 ## Keys taken over a stock tmux binding
 
-Some of these are deliberate. `tmux-pain-control-revamped` exists to replace the
-default split and resize bindings, so its entries are the plugin doing its job.
-The rest are a plugin silently removing a tmux default the user may still want.
-
-| Key | Member |
-|---|---|
-| `*` | tmux-pain-control-revamped |
-| `,` | tmux-tiling-revamped |
-| `-` | tmux-pain-control-revamped |
-| `-` | tmux-tiling-revamped |
-| `.` | tmux-pain-control-revamped |
-| `.` | tmux-tiling-revamped |
-| `/` | tmux-fzf-revamped |
-| `<` | tmux-pain-control-revamped |
-| `=` | tmux-pain-control-revamped |
-| `=` | tmux-tiling-revamped |
-| `>` | tmux-pain-control-revamped |
-| `?` | tmux-pomodoro-revamped |
-| `?` | tmux-tiling-revamped |
-| `C` | tmux-cpu-revamped |
-| `C` | tmux-fzf-revamped |
-| `C` | tmux-pain-control-revamped |
-| `D` | tmux-tiling-revamped |
-| `E` | tmux-pain-control-revamped |
-| `L` | tmux-fzf-revamped |
-| `L` | tmux-pain-control-revamped |
-| `M` | tmux-fzf-revamped |
-| `M` | tmux-ram-revamped |
-| `M` | tmux-tiling-revamped |
-| `M-n` | tmux-logging-revamped |
-| `M-n` | tmux-music-revamped |
-| `M-p` | tmux-logging-revamped |
-| `M-p` | tmux-music-revamped |
-| `[` | tmux-tiling-revamped |
-| `\"` | tmux-pain-control-revamped |
-| `\%` | tmux-pain-control-revamped |
-| `]` | tmux-tiling-revamped |
-| `c` | tmux-pain-control-revamped |
-| `d` | tmux-tiling-revamped |
-| `l` | tmux-pain-control-revamped |
-| `m` | tmux-tiling-revamped |
-| `o` | tmux-pomodoro-revamped |
-| `o` | tmux-tiling-revamped |
-| `p` | tmux-pomodoro-revamped |
-| `p` | tmux-tiling-revamped |
-| `r` | tmux-tiling-revamped |
-| `s` | tmux-fzf-revamped |
-| `w` | tmux-fzf-revamped |
+| Key | Member | Why it is allowed |
+|---|---|---|
+| `prefix:*` | tmux-pain-control-revamped | declared overrider, smart split |
+| `prefix:-` | tmux-pain-control-revamped | declared overrider, split |
+| `prefix:"` | tmux-pain-control-revamped | declared overrider, split |
+| `prefix:%` | tmux-pain-control-revamped | declared overrider, split |
+| `prefix:c` | tmux-pain-control-revamped | declared overrider, new window in the current path |
+| `prefix:l` | tmux-pain-control-revamped | declared overrider, pane navigation |
+| `prefix:L` | tmux-pain-control-revamped | declared overrider, resize |
+| `prefix:@` | tmux-pain-control-revamped | declared overrider, join pane |
+| `prefix:=` | tmux-pain-control-revamped | declared overrider, swap with the marked pane |
+| `copy-mode-vi:v` | tmux-sensible-revamped | declared overrider |
+| `copy-mode-vi:Enter` | tmux-sensible-revamped | declared overrider, clipboard copy |
+| `copy-mode-vi:MouseDragEnd1Pane` | tmux-sensible-revamped | declared overrider, clipboard copy |
+| `copy-mode:M-w` | tmux-sensible-revamped | declared overrider, clipboard copy |
+| `copy-mode:MouseDragEnd1Pane` | tmux-sensible-revamped | declared overrider, clipboard copy |
+| `root:MouseDown1Status` | tmux-reorder-revamped | declared root-table member, wraps the stock command |
+| `prefix:Tab` | tmux-extract-revamped | allocated in KEYS.md; stock on tmux 3.8, which binds it to a floating pane |
 
 ## Reproducing
 
@@ -102,5 +46,5 @@ The rest are a plugin silently removing a tmux default the user may still want.
 family/bin/live-keys --members-dir ..
 ```
 
-It exits non-zero while any clash or undeclared steal remains, so it is the gate
-the reallocation has to clear.
+It exits non-zero while any clash or undeclared steal remains. On tmux 3.8 it
+reports the `Tab` steal and exits 1.

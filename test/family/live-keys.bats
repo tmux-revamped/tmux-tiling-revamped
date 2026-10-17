@@ -72,3 +72,29 @@ write_member() {
   [ "${status}" -eq 0 ]
   [[ "${output}" == *"bound"$'\t'"prefix:Up"$'\t'"${FIRST}"* ]]
 }
+
+@test "live-keys - a root key KEYS.md declares for its member is an override" {
+  # Arrange
+  printf 'bind-key -T root MouseDown1Status select-window -t =\n' >"${STUB}/keys/root"
+  write_member tmux-reorder-revamped root 'bind-key -T root MouseDown1Status run-shell reorder'
+
+  # Act
+  run "${LIVE}" --members-dir "${DIR}"
+
+  # Assert
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"override"$'\t'"root:MouseDown1Status"$'\t'"tmux-reorder-revamped"* ]]
+}
+
+@test "live-keys - a declared root key taken by another member still steals" {
+  # Arrange
+  printf 'bind-key -T root MouseDown1Status select-window -t =\n' >"${STUB}/keys/root"
+  write_member "${FIRST}" root 'bind-key -T root MouseDown1Status run-shell first'
+
+  # Act
+  run "${LIVE}" --members-dir "${DIR}"
+
+  # Assert
+  [ "${status}" -eq 1 ]
+  [[ "${output}" == *"steals"$'\t'"root:MouseDown1Status"$'\t'"${FIRST}"* ]]
+}

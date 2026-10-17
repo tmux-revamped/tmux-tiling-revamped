@@ -10,20 +10,25 @@ server and attributes each key by diffing the binding table, so it reports what
 tmux ended up with rather than what the source appears to say. It exits non-zero
 while any clash remains.
 
-## Status as of 2026-09-23
+## Status (as of 2026-10-17)
 
-The allocation is **not yet applied**. What exists today, measured rather than
-read:
+The allocation is **applied**. Every member ships the defaults in the tables
+below as one coordinated major release, and
+[`family/docs/migration.md`](docs/migration.md) maps every old default to its
+new key or to unbound. Measured with `family/bin/live-keys` on tmux 3.8,
+rather than read:
 
 | Category | Keys |
 |---|---|
-| Bound by tmux before any plugin loads | 88 |
-| Claimed by exactly one member | 47 |
-| Claimed by more than one member | 26 |
-| Claimed over a stock tmux binding | 42 |
+| Bound by tmux before any plugin loads, across the prefix, root, copy-mode and copy-mode-vi tables | 289 |
+| Claimed by exactly one member | 83 |
+| Claimed by more than one member | 0 |
+| Claimed over a stock binding by a declared overrider or root-table member | 15 |
+| Claimed over a stock binding by any other member | 1 |
 
-The 26 clashes are listed in [`family/docs/collisions.md`](docs/collisions.md)
-with their claimants. They are the work this document exists to finish.
+The one remaining steal is `Tab`, allocated to `tmux-extract-revamped` below.
+tmux 3.8 binds it by default to a new floating pane, so on 3.8 extract takes
+that key over.
 
 ## Tiers
 
@@ -113,7 +118,7 @@ ships the smallest set that is useful, not every action it can perform.
 | `tmux-time-revamped` | `M-t` | world clock menu | time |
 | `tmux-weather-revamped` | `M-w` | forecast popup | weather |
 | `tmux-git-revamped` | `M-v` | git menu | version control, `g` is taken |
-| `tmux-extract-revamped` | `Tab` | extract from the screen | completion, and unclaimed by tmux |
+| `tmux-extract-revamped` | `Tab` | extract from the screen | completion; tmux 3.8 binds it, see Status |
 | `tmux-persist-revamped` | `C-s`, `C-r` | save, restore | save and restore, and they must work without releasing the modifier |
 
 `tmux-autoreload-revamped`, `tmux-plugin-template`, `tmux-scroll-revamped` and
@@ -126,15 +131,31 @@ root table, which is opt-in under rule 5.
 may take one, and tiling takes nothing outside it apart from the keys it is
 allowed to keep because tmux does not bind them.
 
+| Key | Action | Key | Action |
+|---|---|---|---|
+| `M-A` | autotile | `M-N` | focus forward |
+| `M-B` | balance | `M-O` | cycle layouts |
+| `M-C` | circulate | `M-P` | focus back |
+| `M-D` | dwindle | `M-Q` | jump to any pane |
+| `M-E` | equalize | `M-R` | rotate |
+| `M-F` | flip | `M-S` | spiral |
+| `M-G` | grow the master pane | `M-T` | scratchpad |
+| `M-H` | main-horizontal | `M-U` | undo |
+| `M-I` | help overlay | `M-V` | main-vertical |
+| `M-J` | jump to a marked pane | `M-W` | swap with the biggest pane |
+| `M-K` | mark the pane | `M-X` | shrink the master pane |
+| `M-L` | layout picker | `M-Y` | synchronize panes |
+| `M-M` | promote to master | `M-Z` | redo |
+
+The four directional swaps stay unbound.
+
 ### Declared overriders
 
 `tmux-pain-control-revamped` keeps its split, resize and pane-movement keys,
 which replace tmux's own by design. `tmux-sensible-revamped` keeps `C-n` and
 `C-p`.
 
-## Why the table is filled in but not yet applied
-
-
+## Why the table is assigned by hand
 
 A conflict-free allocation is easy to generate and useless if it is generated.
 Running the obvious greedy assignment over the measured data produces 32 moves
@@ -142,9 +163,8 @@ that resolve every clash and read like `M-i` for the battery popup and `M-a` for
 grow-the-master-pane. That is worse for a daily driver than the conflicts it
 fixes, because a key nobody can remember is a key nobody uses.
 
-The table above is therefore assigned by hand with the mnemonic recorded. It is
-a breaking change for anyone already using these plugins, so it lands as one
-coordinated major release with a migration table mapping every old key to its
-new one. `family/bin/live-keys` keeps reporting the 26 clashes until then, so
-the gap stays visible instead of being quietly rounded off.
-
+The table above is therefore assigned by hand with the mnemonic recorded. It
+was a breaking change for anyone already using these plugins, so it landed as
+one coordinated major release with a migration table mapping every old key to
+its new one. The allocation is applied `(as of 2026-10-17)`, and
+`family/bin/live-keys` is the check that keeps it applied.
