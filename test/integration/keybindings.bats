@@ -183,3 +183,53 @@ count_tiling_binds() {
   [[ "${output}" != *"declare:"* ]]
   [[ "${output}" != *"can only \`return'"* ]]
 }
+
+stage_plugin_with_stub() {
+  local root="${1}" marker="${2}"
+  mkdir -p "${root}/src"
+  cp "${PLUGIN}" "${root}/tmux-tiling-revamped.tmux"
+  printf '#!/bin/sh\nprintf "%%s\\n" "$*" > %q\n' "${marker}" > "${root}/src/tiling.sh"
+  chmod +x "${root}/src/tiling.sh"
+}
+
+wait_for_file() {
+  local attempt
+  for (( attempt = 0; attempt < 30; attempt++ )); do
+    [[ -s "${1}" ]] && return 0
+    sleep 0.1
+  done
+  return 1
+}
+
+@test "entry point - a hook runs from a plugin path containing a space" {
+  # Arrange
+  local root="${BATS_TEST_TMPDIR}/plugin dir"
+  local marker="${BATS_TEST_TMPDIR}/hook-ran"
+  stage_plugin_with_stub "${root}" "${marker}"
+  "${BASH}" "${root}/tmux-tiling-revamped.tmux"
+
+  # Act
+  command tmux -S "${TILING_SOCKET}" set-hook -R after-split-window
+  wait_for_file "${marker}" || true
+
+  # Assert
+  [[ "$(cat "${marker}" 2>/dev/null)" == "hook split"* ]]
+}
+
+@test "entry point - a key binding runs from a plugin path containing a space" {
+  # Arrange
+  local root="${BATS_TEST_TMPDIR}/plugin dir"
+  local marker="${BATS_TEST_TMPDIR}/key-ran"
+  local bound="${BATS_TEST_TMPDIR}/bound.conf"
+  stage_plugin_with_stub "${root}" "${marker}"
+  "${BASH}" "${root}/tmux-tiling-revamped.tmux"
+  command tmux -S "${TILING_SOCKET}" list-keys -T prefix d \
+    | sed -E 's/^bind-key +-T prefix +d +//' > "${bound}"
+
+  # Act
+  command tmux -S "${TILING_SOCKET}" source-file "${bound}"
+  wait_for_file "${marker}" || true
+
+  # Assert
+  [[ "$(cat "${marker}" 2>/dev/null)" == "layout dwindle" ]]
+}

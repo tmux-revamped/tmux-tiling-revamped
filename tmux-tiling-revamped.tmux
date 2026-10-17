@@ -13,6 +13,30 @@
 PLUGIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TILING_CMD="${PLUGIN_DIR}/src/tiling.sh"
 
+_tiling_shell_word() {
+  local quoted hash="#"
+  printf -v quoted '%q' "${1}"
+  printf '%s' "${quoted//"${hash}"/${hash}${hash}}"
+}
+
+_tiling_tmux_string() {
+  local value="${1}" out="" ch i
+  for (( i = 0; i < ${#value}; i++ )); do
+    ch="${value:i:1}"
+    case "${ch}" in
+      '\' | '"' | '$') out="${out}\\${ch}" ;;
+      *) out="${out}${ch}" ;;
+    esac
+  done
+  printf '"%s"' "${out}"
+}
+
+_tiling_run_shell() {
+  printf 'run-shell %s' "$(_tiling_tmux_string "${TILING_RUN} ${1}")"
+}
+
+TILING_RUN="$(_tiling_shell_word "${TILING_CMD}")"
+
 # Minimum bash version: 4.0 (required for associative arrays, ${var^^}, etc.)
 _check_bash_version() {
   if (( BASH_VERSINFO[0] < 4 )); then
@@ -229,56 +253,56 @@ _setup_keybindings() {
   local key_focus_forward;  key_focus_forward=$( _get_option "@tiling_revamped_key_focus_forward"  "]")
   local key_pane_jump;      key_pane_jump=$(     _get_option "@tiling_revamped_key_pane_jump"      "P")
 
-  _bind "${alt_keys}" "${key_dwindle}"        "${TILING_CMD} layout dwindle" "dwindle"
-  _bind "${alt_keys}" "${key_spiral}"         "${TILING_CMD} layout spiral" "spiral"
-  _bind "${alt_keys}" "${key_balance}"        "${TILING_CMD} balance" "balance"
-  _bind "${alt_keys}" "${key_equalize}"       "${TILING_CMD} equalize" "equalize"
-  _bind "${alt_keys}" "${key_promote}"        "${TILING_CMD} promote" "promote"
-  _bind "${alt_keys}" "${key_rotate}"         "${TILING_CMD} rotate" "rotate"
-  _bind "${alt_keys}" "${key_flip}"           "${TILING_CMD} flip" "flip"
-  _bind "${alt_keys}" "${key_circulate}"      "${TILING_CMD} circulate" "circulate"
-  _bind "${alt_keys}" "${key_autotile}"       "${TILING_CMD} autosplit" "autotile"
-  _bind "${alt_keys}" "${key_cycle}"          "${TILING_CMD} cycle" "cycle"
-  _bind "${alt_keys}" "${key_main_vertical}"  "${TILING_CMD} layout main-vertical" "main_vertical"
-  _bind "${alt_keys}" "${key_main_horizontal}" "${TILING_CMD} layout main-horizontal" "main_horizontal"
-  _bind "${alt_keys}" "${key_master_grow}"    "${TILING_CMD} resize-master grow" "master_grow"
-  _bind "${alt_keys}" "${key_master_shrink}"  "${TILING_CMD} resize-master shrink" "master_shrink"
-  _bind "${alt_keys}" "${key_sync}"           "${TILING_CMD} sync" "sync"
+  _bind "${alt_keys}" "${key_dwindle}"        "${TILING_RUN} layout dwindle" "dwindle"
+  _bind "${alt_keys}" "${key_spiral}"         "${TILING_RUN} layout spiral" "spiral"
+  _bind "${alt_keys}" "${key_balance}"        "${TILING_RUN} balance" "balance"
+  _bind "${alt_keys}" "${key_equalize}"       "${TILING_RUN} equalize" "equalize"
+  _bind "${alt_keys}" "${key_promote}"        "${TILING_RUN} promote" "promote"
+  _bind "${alt_keys}" "${key_rotate}"         "${TILING_RUN} rotate" "rotate"
+  _bind "${alt_keys}" "${key_flip}"           "${TILING_RUN} flip" "flip"
+  _bind "${alt_keys}" "${key_circulate}"      "${TILING_RUN} circulate" "circulate"
+  _bind "${alt_keys}" "${key_autotile}"       "${TILING_RUN} autosplit" "autotile"
+  _bind "${alt_keys}" "${key_cycle}"          "${TILING_RUN} cycle" "cycle"
+  _bind "${alt_keys}" "${key_main_vertical}"  "${TILING_RUN} layout main-vertical" "main_vertical"
+  _bind "${alt_keys}" "${key_main_horizontal}" "${TILING_RUN} layout main-horizontal" "main_horizontal"
+  _bind "${alt_keys}" "${key_master_grow}"    "${TILING_RUN} resize-master grow" "master_grow"
+  _bind "${alt_keys}" "${key_master_shrink}"  "${TILING_RUN} resize-master shrink" "master_shrink"
+  _bind "${alt_keys}" "${key_sync}"           "${TILING_RUN} sync" "sync"
 
   # Mark uses command-prompt, so always prefix-based (empty key = disabled)
   [[ -n "${key_mark}" ]] && _register_binding "mark" "$(_key_priority mark)" \
     prefix "${key_mark}" "${key_mark}" command-prompt \
-    -p "Mark name:" "run-shell '${TILING_CMD} mark %%'"
-  _bind "${alt_keys}" "${key_jump}" "${TILING_CMD} jump" "jump"
-  _bind "${alt_keys}" "${key_scratchpad}" "${TILING_CMD} scratchpad" "scratchpad"
+    -p "Mark name:" "$(_tiling_run_shell "mark '%%'")"
+  _bind "${alt_keys}" "${key_jump}" "${TILING_RUN} jump" "jump"
+  _bind "${alt_keys}" "${key_scratchpad}" "${TILING_RUN} scratchpad" "scratchpad"
 
   # Directional swap bindings (empty key = disabled)
-  [[ -n "${key_swap_up}" ]]    && _bind "${alt_keys}" "${key_swap_up}"    "${TILING_CMD} swap U" "swap_up"
-  [[ -n "${key_swap_down}" ]]  && _bind "${alt_keys}" "${key_swap_down}"  "${TILING_CMD} swap D" "swap_down"
-  [[ -n "${key_swap_left}" ]]  && _bind "${alt_keys}" "${key_swap_left}"  "${TILING_CMD} swap L" "swap_left"
-  [[ -n "${key_swap_right}" ]] && _bind "${alt_keys}" "${key_swap_right}" "${TILING_CMD} swap R" "swap_right"
+  [[ -n "${key_swap_up}" ]]    && _bind "${alt_keys}" "${key_swap_up}"    "${TILING_RUN} swap U" "swap_up"
+  [[ -n "${key_swap_down}" ]]  && _bind "${alt_keys}" "${key_swap_down}"  "${TILING_RUN} swap D" "swap_down"
+  [[ -n "${key_swap_left}" ]]  && _bind "${alt_keys}" "${key_swap_left}"  "${TILING_RUN} swap L" "swap_left"
+  [[ -n "${key_swap_right}" ]] && _bind "${alt_keys}" "${key_swap_right}" "${TILING_RUN} swap R" "swap_right"
 
   # Layout picker binding (empty key = disabled)
-  [[ -n "${key_pick_layout}" ]] && _bind "${alt_keys}" "${key_pick_layout}" "${TILING_CMD} pick" "pick_layout"
+  [[ -n "${key_pick_layout}" ]] && _bind "${alt_keys}" "${key_pick_layout}" "${TILING_RUN} pick" "pick_layout"
 
   # Undo binding (empty key = disabled)
-  [[ -n "${key_undo}" ]] && _bind "${alt_keys}" "${key_undo}" "${TILING_CMD} undo" "undo"
+  [[ -n "${key_undo}" ]] && _bind "${alt_keys}" "${key_undo}" "${TILING_RUN} undo" "undo"
 
   # Redo binding (empty key = disabled)
-  [[ -n "${key_redo}" ]] && _bind "${alt_keys}" "${key_redo}" "${TILING_CMD} redo" "redo"
+  [[ -n "${key_redo}" ]] && _bind "${alt_keys}" "${key_redo}" "${TILING_RUN} redo" "redo"
 
   # Help overlay binding (empty key = disabled)
-  [[ -n "${key_help}" ]] && _bind "${alt_keys}" "${key_help}" "${TILING_CMD} help-overlay" "help"
+  [[ -n "${key_help}" ]] && _bind "${alt_keys}" "${key_help}" "${TILING_RUN} help-overlay" "help"
 
   # Swap-with-biggest binding (empty key = disabled)
-  [[ -n "${key_swap_biggest}" ]] && _bind "${alt_keys}" "${key_swap_biggest}" "${TILING_CMD} swap-biggest" "swap_biggest"
+  [[ -n "${key_swap_biggest}" ]] && _bind "${alt_keys}" "${key_swap_biggest}" "${TILING_RUN} swap-biggest" "swap_biggest"
 
   # Focus-history navigation bindings (empty key = disabled)
-  [[ -n "${key_focus_back}" ]] && _bind "${alt_keys}" "${key_focus_back}" "${TILING_CMD} focus-back" "focus_back"
-  [[ -n "${key_focus_forward}" ]] && _bind "${alt_keys}" "${key_focus_forward}" "${TILING_CMD} focus-forward" "focus_forward"
+  [[ -n "${key_focus_back}" ]] && _bind "${alt_keys}" "${key_focus_back}" "${TILING_RUN} focus-back" "focus_back"
+  [[ -n "${key_focus_forward}" ]] && _bind "${alt_keys}" "${key_focus_forward}" "${TILING_RUN} focus-forward" "focus_forward"
 
   # Global pane jumper binding (empty key = disabled)
-  [[ -n "${key_pane_jump}" ]] && _bind "${alt_keys}" "${key_pane_jump}" "${TILING_CMD} pane-jump" "pane_jump"
+  [[ -n "${key_pane_jump}" ]] && _bind "${alt_keys}" "${key_pane_jump}" "${TILING_RUN} pane-jump" "pane_jump"
 }
 
 _setup_hooks() {
@@ -300,13 +324,13 @@ _setup_hooks() {
 
   if [[ "${auto_apply}" == "1" ]]; then
     tmux set-hook -ga "after-split-window[100]" \
-      "run-shell '${TILING_CMD} hook split'"
+      "$(_tiling_run_shell "hook split")"
     tmux set-hook -ga "after-kill-pane[100]" \
-      "run-shell '${TILING_CMD} hook kill'"
+      "$(_tiling_run_shell "hook kill")"
     tmux set-hook -ga "pane-exited[100]" \
-      "run-shell '${TILING_CMD} hook exit'"
+      "$(_tiling_run_shell "hook exit")"
     tmux set-hook -ga "window-resized[100]" \
-      "run-shell '${TILING_CMD} hook resize'"
+      "$(_tiling_run_shell "hook resize")"
   fi
 
   # Default layout for new windows
@@ -314,7 +338,7 @@ _setup_hooks() {
   default_layout=$(_get_option "@tiling_revamped_default_layout" "")
   if [[ -n "${default_layout}" ]]; then
     tmux set-hook -ga "after-new-window[100]" \
-      "run-shell '${TILING_CMD} hook new-window'"
+      "$(_tiling_run_shell "hook new-window")"
   fi
 
   # Smart borders: hide pane chrome on a single-pane window
@@ -323,11 +347,11 @@ _setup_hooks() {
 
   if [[ "${smart_borders}" == "1" ]]; then
     tmux set-hook -ga "after-split-window[110]" \
-      "run-shell '${TILING_CMD} smart-borders'"
+      "$(_tiling_run_shell "smart-borders")"
     tmux set-hook -ga "after-kill-pane[110]" \
-      "run-shell '${TILING_CMD} smart-borders'"
+      "$(_tiling_run_shell "smart-borders")"
     tmux set-hook -ga "pane-exited[110]" \
-      "run-shell '${TILING_CMD} smart-borders'"
+      "$(_tiling_run_shell "smart-borders")"
   fi
 
   # App-aware tiling rules: assign an action to each newly created pane
@@ -335,7 +359,7 @@ _setup_hooks() {
   app_rules=$(_get_option "@tiling_revamped_app_rules" "")
   if [[ -n "${app_rules}" ]]; then
     tmux set-hook -ga "after-split-window[130]" \
-      "run-shell '${TILING_CMD} app-rules'"
+      "$(_tiling_run_shell "app-rules")"
   fi
 
   # Focus history: record every pane focus for back/forward navigation
@@ -343,7 +367,7 @@ _setup_hooks() {
   focus_history=$(_get_option "@tiling_revamped_focus_history" "0")
   if [[ "${focus_history}" == "1" ]]; then
     tmux set-hook -ga "pane-focus-in[130]" \
-      "run-shell '${TILING_CMD} focus-record'"
+      "$(_tiling_run_shell "focus-record")"
   fi
 
   local focus_resize
@@ -351,7 +375,7 @@ _setup_hooks() {
 
   if [[ "${focus_resize}" == "1" ]]; then
     tmux set-hook -ga "pane-focus-in[100]" \
-      "run-shell '${TILING_CMD} focus-resize'"
+      "$(_tiling_run_shell "focus-resize")"
   fi
 }
 
@@ -391,11 +415,11 @@ _setup_workspaces() {
     if [[ "${alt_keys}" == "1" ]]; then
       # Alt+N switches to workspace N
       _register_binding "workspace ${i}" 1 root "M-${key}" \
-        -n "M-${key}" run-shell "${TILING_CMD} workspace ${i}"
+        -n "M-${key}" run-shell "${TILING_RUN} workspace ${i}"
       # Alt+Shift+N moves pane to workspace N
       [[ -n "${shift_key}" ]] && \
         _register_binding "move-to-workspace ${i}" 1 root "M-${shift_key}" \
-          -n "M-${shift_key}" run-shell "${TILING_CMD} move-to-workspace ${i}"
+          -n "M-${shift_key}" run-shell "${TILING_RUN} move-to-workspace ${i}"
     else
       # Prefix+N is already used by tmux for window selection.
       # In prefix mode, use Shift+N for workspace switch and
@@ -408,10 +432,10 @@ _setup_workspaces() {
   local shift_zero="${shiftnum:9:1}"
   if [[ "${alt_keys}" == "1" ]]; then
     _register_binding "workspace 10" 1 root "M-0" \
-      -n "M-0" run-shell "${TILING_CMD} workspace 10"
+      -n "M-0" run-shell "${TILING_RUN} workspace 10"
     [[ -n "${shift_zero}" ]] && \
       _register_binding "move-to-workspace 10" 1 root "M-${shift_zero}" \
-        -n "M-${shift_zero}" run-shell "${TILING_CMD} move-to-workspace 10"
+        -n "M-${shift_zero}" run-shell "${TILING_RUN} move-to-workspace 10"
   fi
 
   # Back-and-forth toggle between the current and last window (empty = disabled)
@@ -419,7 +443,7 @@ _setup_workspaces() {
   key_back_and_forth=$(_get_option "@tiling_revamped_key_back_and_forth" "Tab")
   if [[ -n "${key_back_and_forth}" ]] && [[ "${alt_keys}" == "1" ]]; then
     _register_binding "back_and_forth" "$(_key_priority back_and_forth)" root "M-${key_back_and_forth}" \
-      -n "M-${key_back_and_forth}" run-shell "${TILING_CMD} back-and-forth"
+      -n "M-${key_back_and_forth}" run-shell "${TILING_RUN} back-and-forth"
   fi
 }
 
@@ -435,7 +459,7 @@ _setup_project_launcher() {
   key_project=$(_get_option "@tiling_revamped_key_project" "")
   [[ -z "${key_project}" ]] && return 0
 
-  _bind "${alt_keys}" "${key_project}" "${TILING_CMD} project" "project"
+  _bind "${alt_keys}" "${key_project}" "${TILING_RUN} project" "project"
 }
 
 _setup_pick_layout_binding() {
@@ -452,7 +476,7 @@ _setup_pick_layout_binding() {
     -n "M-${key_pick_layout_alt}" \
     if-shell "${is_vim}" \
     "send-keys M-${key_pick_layout_alt}" \
-    "run-shell '${TILING_CMD} pick'"
+    "$(_tiling_run_shell "pick")"
 }
 
 chmod +x "${TILING_CMD}" 2>/dev/null || true
