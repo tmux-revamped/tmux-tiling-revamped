@@ -3,8 +3,7 @@
 [[ -n "${_TILING_REVAMPED_TMUX_CONFIG_LOADED:-}" ]] && return 0
 _TILING_REVAMPED_TMUX_CONFIG_LOADED=1
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LIB_DIR="${SCRIPT_DIR}/.."
+LIB_DIR="${TILING_REVAMPED_LIB_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 
 source "${LIB_DIR}/tmux/tmux-ops.sh"
 

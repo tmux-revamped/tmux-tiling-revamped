@@ -183,3 +183,16 @@ teardown() {
   # Assert
   [[ -e "${marker}" ]]
 }
+
+@test "tmux-config.sh - a module reuses the lib dir the dispatcher resolved" {
+  # Arrange
+  unset _TILING_REVAMPED_TMUX_CONFIG_LOADED
+  local TILING_REVAMPED_LIB_DIR
+  TILING_REVAMPED_LIB_DIR="$(cd "${BATS_TEST_DIRNAME}/../../../src/lib" && pwd)"
+
+  # Act
+  source "${BATS_TEST_DIRNAME}/../../../src/lib/tmux/tmux-config.sh"
+
+  # Assert
+  [[ "${LIB_DIR}" == "${TILING_REVAMPED_LIB_DIR}" ]]
+}

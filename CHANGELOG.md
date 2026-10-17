@@ -53,6 +53,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `doctor` reports FAIL for tmux 3.0 and 3.1. It compared only the major
   version, so anything from 3.0 up passed although the plugin needs 3.2.
 
+### Changed
+
+- Every key press and hook runs faster. Each library module resolved its own
+  directory through a subshell, about forty per call; the dispatcher now
+  resolves the library directory once and the modules reuse it.
+
 ## [2.3.0] - 2026-09-23
 
 ### Fixed

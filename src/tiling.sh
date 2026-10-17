@@ -46,6 +46,7 @@
 #   tiling.sh hook    split|kill|exit|resize|focus|new-window
 
 PLUGIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+TILING_REVAMPED_LIB_DIR="${PLUGIN_DIR}/src/lib"
 
 source "${PLUGIN_DIR}/src/lib/utils/constants.sh"
 export PLUGIN_LOG_NS="tiling-revamped"
