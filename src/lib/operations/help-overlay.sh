@@ -40,32 +40,32 @@ _help_lines() {
     [[ -z "${key}" ]] && continue
     printf '%-7s %s\n' "${key}" "${label}"
   done <<'ACTIONS'
-Dwindle layout|dwindle|@tiling_revamped_key_dwindle|d
-Spiral layout|spiral|@tiling_revamped_key_spiral|D
-Main-vertical layout|main_vertical|@tiling_revamped_key_main_vertical|v
-Main-horizontal layout|main_horizontal|@tiling_revamped_key_main_horizontal|V
-Balance panes|balance|@tiling_revamped_key_balance|b
-Equalize panes|equalize|@tiling_revamped_key_equalize|B
-Promote to master|promote|@tiling_revamped_key_promote|m
-Rotate layout|rotate|@tiling_revamped_key_rotate|.
-Flip layout|flip|@tiling_revamped_key_flip|,
-Circulate panes|circulate|@tiling_revamped_key_circulate|C-r
-Autosplit|autotile|@tiling_revamped_key_autotile|C-d
-Cycle layout|cycle|@tiling_revamped_key_cycle|o
-Grow master|master_grow|@tiling_revamped_key_master_grow|+
-Shrink master|master_shrink|@tiling_revamped_key_master_shrink|-
-Toggle sync|sync|@tiling_revamped_key_sync|S
-Mark pane|mark|@tiling_revamped_key_mark|M
-Jump to mark|jump|@tiling_revamped_key_jump|j
-Scratchpad|scratchpad|@tiling_revamped_key_scratchpad|g
-Layout picker|pick_layout|@tiling_revamped_key_pick_layout|p
-Swap with biggest|swap_biggest|@tiling_revamped_key_swap_biggest|=
-Undo layout|undo|@tiling_revamped_key_undo|u
-Redo layout|redo|@tiling_revamped_key_redo|r
-Jump to any pane|pane_jump|@tiling_revamped_key_pane_jump|P
-Focus back|focus_back|@tiling_revamped_key_focus_back|[
-Focus forward|focus_forward|@tiling_revamped_key_focus_forward|]
-This overlay|help|@tiling_revamped_key_help|?
+Dwindle layout|dwindle|@tiling_revamped_key_dwindle|M-D
+Spiral layout|spiral|@tiling_revamped_key_spiral|M-S
+Main-vertical layout|main_vertical|@tiling_revamped_key_main_vertical|M-V
+Main-horizontal layout|main_horizontal|@tiling_revamped_key_main_horizontal|M-H
+Balance panes|balance|@tiling_revamped_key_balance|M-B
+Equalize panes|equalize|@tiling_revamped_key_equalize|M-E
+Promote to master|promote|@tiling_revamped_key_promote|M-M
+Rotate layout|rotate|@tiling_revamped_key_rotate|M-R
+Flip layout|flip|@tiling_revamped_key_flip|M-F
+Circulate panes|circulate|@tiling_revamped_key_circulate|M-C
+Autosplit|autotile|@tiling_revamped_key_autotile|M-A
+Cycle layout|cycle|@tiling_revamped_key_cycle|M-O
+Grow master|master_grow|@tiling_revamped_key_master_grow|M-G
+Shrink master|master_shrink|@tiling_revamped_key_master_shrink|M-X
+Toggle sync|sync|@tiling_revamped_key_sync|M-Y
+Mark pane|mark|@tiling_revamped_key_mark|M-K
+Jump to mark|jump|@tiling_revamped_key_jump|M-J
+Scratchpad|scratchpad|@tiling_revamped_key_scratchpad|M-T
+Layout picker|pick_layout|@tiling_revamped_key_pick_layout|M-L
+Swap with biggest|swap_biggest|@tiling_revamped_key_swap_biggest|M-W
+Undo layout|undo|@tiling_revamped_key_undo|M-U
+Redo layout|redo|@tiling_revamped_key_redo|M-Z
+Jump to any pane|pane_jump|@tiling_revamped_key_pane_jump|M-Q
+Focus back|focus_back|@tiling_revamped_key_focus_back|M-P
+Focus forward|focus_forward|@tiling_revamped_key_focus_forward|M-N
+This overlay|help|@tiling_revamped_key_help|M-I
 ACTIONS
 }
 

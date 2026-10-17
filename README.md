@@ -9,7 +9,7 @@
 
 [![Tests](https://github.com/tmux-revamped/tmux-tiling-revamped/actions/workflows/tests.yml/badge.svg)](https://github.com/tmux-revamped/tmux-tiling-revamped/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/github/license/tmux-revamped/tmux-tiling-revamped?style=flat-square)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.3.0-blue?style=flat-square)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-3.0.0-blue?style=flat-square)](CHANGELOG.md)
 [![tmux](https://img.shields.io/badge/tmux-3.2%2B-green?style=flat-square)](https://github.com/tmux/tmux)
 [![bash](https://img.shields.io/badge/bash-4.0%2B-blue?style=flat-square)](https://www.gnu.org/software/bash/)
 
@@ -270,49 +270,52 @@ Press `prefix + I` to install via TPM.
 
 ### Verify
 
-Open tmux, create a few panes, then press `prefix + d`. All panes rearrange into a dwindle layout.
+Open tmux, create a few panes, then press `prefix + M-D`, Alt and Shift with `d`. All panes rearrange into a dwindle layout.
 
 ## Default Keybindings
 
-All keybindings use the tmux prefix. Every key is configurable via `@tiling_revamped_key_*` options.
+All keybindings use the tmux prefix. Every default is `M-` plus an uppercase
+letter, Alt and Shift with the letter, a range the tmux-revamped family reserves
+for this plugin and stock tmux leaves unbound, so no default replaces a tmux key
+or another family plugin's key. Every key is configurable via
+`@tiling_revamped_key_*` options.
 
 Two features must never resolve to the same key. When they do, the key you set
 wins over the one this plugin defaulted, the losing action stays unbound, and
 the resolution is reported on start and left in `@tiling_revamped_conflicts`.
 
-One combination collides out of the box: with `@tiling_revamped_alt_keys` and
-`@tiling_revamped_navigator` both on, the navigator's `M-j` takes the key that
-jump-to-mark would otherwise hold. Move `@tiling_revamped_key_jump` to a free
-key to keep both.
+With `@tiling_revamped_alt_keys` on, a key that already starts with `M-` binds
+as itself in the root table, so the defaults become prefixless `M-D`, `M-S` and
+so on, and a plain key such as `d` binds as `M-d`.
 
-| Key | Action | Command |
-|:----|:-------|:--------|
-| `d` | Apply dwindle layout | `layout dwindle` |
-| `D` | Apply spiral layout | `layout spiral` |
-| `v` | Apply main-vertical layout | `layout main-vertical` |
-| `V` | Apply main-horizontal layout | `layout main-horizontal` |
-| `b` | Balance panes | `balance` |
-| `B` | Equalize panes | `equalize` |
-| `m` | Promote focused pane to master | `promote` |
-| `.` | Rotate layout 90 degrees | `rotate` |
-| `,` | Flip layout horizontally | `flip` |
-| `C-r` | Circulate panes | `circulate` |
-| `C-d` | Smart split along longest axis | `autosplit` |
-| `o` | Cycle to next layout | `cycle` |
-| `+` | Grow master pane | `resize-master grow` |
-| `-` | Shrink master pane | `resize-master shrink` |
-| `S` | Toggle synchronize panes | `sync` |
-| `M` | Mark pane with a name | `mark <name>` |
-| `j` | Jump to marked pane | `jump` |
-| `g` | Toggle scratchpad popup | `scratchpad` |
-| `p` | Open layout picker | `pick` |
-| `u` | Undo last layout change | `undo` |
-| `r` | Redo last undone layout | `redo` |
-| `=` | Swap focused pane with the largest | `swap-biggest` |
-| `?` | Show keybinding overlay | `help-overlay` |
-| `P` | Jump to any pane across sessions | `pane-jump` |
-| `[` | Focus previously focused pane | `focus-back` |
-| `]` | Focus forward in focus history | `focus-forward` |
+| Key | Action | Command | Mnemonic |
+|:----|:-------|:--------|:---------|
+| `M-A` | Smart split along longest axis | `autosplit` | A for autosplit |
+| `M-B` | Balance panes | `balance` | B for balance |
+| `M-C` | Circulate panes | `circulate` | C for circulate |
+| `M-D` | Apply dwindle layout | `layout dwindle` | D for dwindle |
+| `M-E` | Equalize panes | `equalize` | E for equalize |
+| `M-F` | Flip layout horizontally | `flip` | F for flip |
+| `M-G` | Grow master pane | `resize-master grow` | G for grow |
+| `M-H` | Apply main-horizontal layout | `layout main-horizontal` | H for horizontal |
+| `M-I` | Show keybinding overlay | `help-overlay` | I for info |
+| `M-J` | Jump to marked pane | `jump` | J for jump |
+| `M-K` | Mark pane with a name | `mark <name>` | K for mark, M is master |
+| `M-L` | Open layout picker | `pick` | L for layout |
+| `M-M` | Promote focused pane to master | `promote` | M for master |
+| `M-N` | Focus forward in focus history | `focus-forward` | N for next |
+| `M-O` | Cycle to next layout | `cycle` | O, the old cycle key |
+| `M-P` | Focus previously focused pane | `focus-back` | P for previous |
+| `M-Q` | Jump to any pane across sessions | `pane-jump` | Q for query every pane |
+| `M-R` | Rotate layout 90 degrees | `rotate` | R for rotate |
+| `M-S` | Apply spiral layout | `layout spiral` | S for spiral |
+| `M-T` | Toggle scratchpad popup | `scratchpad` | T for terminal |
+| `M-U` | Undo last layout change | `undo` | U for undo |
+| `M-V` | Apply main-vertical layout | `layout main-vertical` | V for vertical |
+| `M-W` | Swap focused pane with the largest | `swap-biggest` | W for widest |
+| `M-X` | Shrink master pane | `resize-master shrink` | X to cut the master down |
+| `M-Y` | Toggle synchronize panes | `sync` | Y for sync |
+| `M-Z` | Redo last undone layout | `redo` | Z, the redo key of most editors |
 
 ## Configuration
 
@@ -378,33 +381,33 @@ The plugin manages these options itself. Do not set them, except presets, which 
 ### Custom Keybindings
 
 ```tmux
-set -g @tiling_revamped_key_dwindle         "d"
-set -g @tiling_revamped_key_spiral          "D"
-set -g @tiling_revamped_key_main_vertical   "v"
-set -g @tiling_revamped_key_main_horizontal "V"
-set -g @tiling_revamped_key_balance         "b"
-set -g @tiling_revamped_key_equalize        "B"
-set -g @tiling_revamped_key_promote         "m"
-set -g @tiling_revamped_key_rotate          "."
-set -g @tiling_revamped_key_flip            ","
-set -g @tiling_revamped_key_circulate       "C-r"
-set -g @tiling_revamped_key_autotile        "C-d"
-set -g @tiling_revamped_key_cycle           "o"
-set -g @tiling_revamped_key_master_grow     "+"
-set -g @tiling_revamped_key_master_shrink   "-"
-set -g @tiling_revamped_key_sync            "S"
-set -g @tiling_revamped_key_mark            "M"
-set -g @tiling_revamped_key_jump            "j"
-set -g @tiling_revamped_key_scratchpad      "g"
-set -g @tiling_revamped_key_pick_layout     "p"
-set -g @tiling_revamped_key_undo            "u"
-set -g @tiling_revamped_key_redo            "r"
-set -g @tiling_revamped_key_help            "?"
-set -g @tiling_revamped_key_swap_biggest    "="
+set -g @tiling_revamped_key_dwindle         "M-D"
+set -g @tiling_revamped_key_spiral          "M-S"
+set -g @tiling_revamped_key_main_vertical   "M-V"
+set -g @tiling_revamped_key_main_horizontal "M-H"
+set -g @tiling_revamped_key_balance         "M-B"
+set -g @tiling_revamped_key_equalize        "M-E"
+set -g @tiling_revamped_key_promote         "M-M"
+set -g @tiling_revamped_key_rotate          "M-R"
+set -g @tiling_revamped_key_flip            "M-F"
+set -g @tiling_revamped_key_circulate       "M-C"
+set -g @tiling_revamped_key_autotile        "M-A"
+set -g @tiling_revamped_key_cycle           "M-O"
+set -g @tiling_revamped_key_master_grow     "M-G"
+set -g @tiling_revamped_key_master_shrink   "M-X"
+set -g @tiling_revamped_key_sync            "M-Y"
+set -g @tiling_revamped_key_mark            "M-K"
+set -g @tiling_revamped_key_jump            "M-J"
+set -g @tiling_revamped_key_scratchpad      "M-T"
+set -g @tiling_revamped_key_pick_layout     "M-L"
+set -g @tiling_revamped_key_undo            "M-U"
+set -g @tiling_revamped_key_redo            "M-Z"
+set -g @tiling_revamped_key_help            "M-I"
+set -g @tiling_revamped_key_swap_biggest    "M-W"
 set -g @tiling_revamped_key_back_and_forth  "Tab"
-set -g @tiling_revamped_key_pane_jump       "P"
-set -g @tiling_revamped_key_focus_back      "["
-set -g @tiling_revamped_key_focus_forward   "]"
+set -g @tiling_revamped_key_pane_jump       "M-Q"
+set -g @tiling_revamped_key_focus_back      "M-P"
+set -g @tiling_revamped_key_focus_forward   "M-N"
 set -g @tiling_revamped_key_project         ""
 
 # Report a key that two features both resolve to (1 = message on start)
@@ -421,30 +424,12 @@ Set any key to `""` (empty string) to disable that binding entirely.
 
 ### Avoiding Key Conflicts in Prefix Mode
 
-These default keys replace a binding that stock tmux puts in the prefix table.
-The stock action is unreachable while the plugin holds the key. Each suggested
-alternative is unbound in stock tmux and unused by this plugin's defaults.
-
-| Default Key | Stock tmux binding it replaces | Suggested Alternative |
-|:------------|:-------------------------------|:----------------------|
-| `d` (dwindle) | `detach-client` | `A` |
-| `D` (spiral) | `choose-client`, pick a client to detach | `Y` |
-| `m` (promote) | `select-pane -m`, mark the pane | `K` |
-| `M` (mark) | `select-pane -M`, clear the marked pane | `N` |
-| `.` (rotate) | `move-window` prompt | `R` |
-| `,` (flip) | `rename-window` prompt | `F` |
-| `-` (master shrink) | `delete-buffer` | `_` |
-| `o` (cycle) | select the next pane | `O` |
-| `p` (pick layout) | `previous-window` | `a` |
-| `r` (redo) | `refresh-client` | `U` |
-| `=` (swap biggest) | `choose-buffer` | `X` |
-| `?` (help) | `list-keys` | `I` |
-| `[` (focus back) | `copy-mode` | `e` |
-| `]` (focus forward) | `paste-buffer` | `y` |
-| `g` (scratchpad) | the floating-pane `g` key table in tmux 3.8 | `G` |
-
-`b`, `B`, `v`, `V`, `u`, `j`, `S`, `P`, `+`, `C-r` and `C-d` are unbound in
-stock tmux, so their defaults replace nothing.
+No default replaces a stock tmux binding: stock tmux binds no `M-` plus
+uppercase letter. Before 3.0.0 the defaults took `d`, `D`, `m`, `M`, `.`, `,`,
+`-`, `o`, `p`, `r`, `=`, `?`, `[`, `]` and `g` from tmux. To get one back as the
+old tiling key, set its option, for example
+`set -g @tiling_revamped_key_dwindle "d"`, and the stock action on that key is
+replaced again.
 
 ### Layout Picker
 
@@ -518,7 +503,7 @@ The glyph map covers all eight layouts. An unset layout prints nothing, and an u
 
 ### Help Overlay
 
-Press `?` to open a popup listing the layout, pane, mark, scratchpad, undo, pane jumper and focus-history bindings, each with the key it holds after conflict resolution. The popup does not list the workspace, navigator, directional swap or project launcher keys. The overlay needs tmux 3.2 or newer for `display-popup`; on older tmux it prints a short message instead.
+Press `M-I` to open a popup listing the layout, pane, mark, scratchpad, undo, pane jumper and focus-history bindings, each with the key it holds after conflict resolution. The popup does not list the workspace, navigator, directional swap or project launcher keys. The overlay needs tmux 3.2 or newer for `display-popup`; on older tmux it prints a short message instead.
 
 ## CLI
 

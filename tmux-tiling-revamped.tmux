@@ -175,7 +175,9 @@ _bind() {
   [[ -n "${key}" ]] || return 0
   local priority; priority=$(_key_priority "${owner}")
   if [[ "${alt_keys}" == "1" ]]; then
-    _register_binding "${owner}" "${priority}" root "M-${key}" -n "M-${key}" run-shell "${cmd}"
+    local root_key="M-${key}"
+    [[ "${key}" == M-* ]] && root_key="${key}"
+    _register_binding "${owner}" "${priority}" root "${root_key}" -n "${root_key}" run-shell "${cmd}"
   else
     _register_binding "${owner}" "${priority}" prefix "${key}" "${key}" run-shell "${cmd}"
   fi
@@ -223,36 +225,36 @@ _setup_keybindings() {
   local alt_keys
   alt_keys=$(_get_option "@tiling_revamped_alt_keys" "0")
 
-  local key_dwindle;        key_dwindle=$(       _get_option "@tiling_revamped_key_dwindle"         "d")
-  local key_spiral;         key_spiral=$(        _get_option "@tiling_revamped_key_spiral"          "D")
-  local key_balance;        key_balance=$(       _get_option "@tiling_revamped_key_balance"         "b")
-  local key_equalize;       key_equalize=$(      _get_option "@tiling_revamped_key_equalize"        "B")
-  local key_promote;        key_promote=$(       _get_option "@tiling_revamped_key_promote"         "m")
-  local key_rotate;         key_rotate=$(        _get_option "@tiling_revamped_key_rotate"          ".")
-  local key_flip;           key_flip=$(          _get_option "@tiling_revamped_key_flip"            ",")
-  local key_circulate;      key_circulate=$(     _get_option "@tiling_revamped_key_circulate"       "C-r")
-  local key_autotile;       key_autotile=$(      _get_option "@tiling_revamped_key_autotile"        "C-d")
-  local key_cycle;          key_cycle=$(         _get_option "@tiling_revamped_key_cycle"           "o")
-  local key_mark;           key_mark=$(          _get_option "@tiling_revamped_key_mark"            "M")
-  local key_jump;           key_jump=$(          _get_option "@tiling_revamped_key_jump"            "j")
-  local key_scratchpad;     key_scratchpad=$(    _get_option "@tiling_revamped_key_scratchpad"      "g")
-  local key_main_vertical;  key_main_vertical=$( _get_option "@tiling_revamped_key_main_vertical"   "v")
-  local key_main_horizontal;key_main_horizontal=$(_get_option "@tiling_revamped_key_main_horizontal" "V")
-  local key_master_grow;    key_master_grow=$(   _get_option "@tiling_revamped_key_master_grow"     "+")
-  local key_master_shrink;  key_master_shrink=$( _get_option "@tiling_revamped_key_master_shrink"   "-")
-  local key_sync;           key_sync=$(          _get_option "@tiling_revamped_key_sync"            "S")
+  local key_dwindle;        key_dwindle=$(       _get_option "@tiling_revamped_key_dwindle"         "M-D")
+  local key_spiral;         key_spiral=$(        _get_option "@tiling_revamped_key_spiral"          "M-S")
+  local key_balance;        key_balance=$(       _get_option "@tiling_revamped_key_balance"         "M-B")
+  local key_equalize;       key_equalize=$(      _get_option "@tiling_revamped_key_equalize"        "M-E")
+  local key_promote;        key_promote=$(       _get_option "@tiling_revamped_key_promote"         "M-M")
+  local key_rotate;         key_rotate=$(        _get_option "@tiling_revamped_key_rotate"          "M-R")
+  local key_flip;           key_flip=$(          _get_option "@tiling_revamped_key_flip"            "M-F")
+  local key_circulate;      key_circulate=$(     _get_option "@tiling_revamped_key_circulate"       "M-C")
+  local key_autotile;       key_autotile=$(      _get_option "@tiling_revamped_key_autotile"        "M-A")
+  local key_cycle;          key_cycle=$(         _get_option "@tiling_revamped_key_cycle"           "M-O")
+  local key_mark;           key_mark=$(          _get_option "@tiling_revamped_key_mark"            "M-K")
+  local key_jump;           key_jump=$(          _get_option "@tiling_revamped_key_jump"            "M-J")
+  local key_scratchpad;     key_scratchpad=$(    _get_option "@tiling_revamped_key_scratchpad"      "M-T")
+  local key_main_vertical;  key_main_vertical=$( _get_option "@tiling_revamped_key_main_vertical"   "M-V")
+  local key_main_horizontal;key_main_horizontal=$(_get_option "@tiling_revamped_key_main_horizontal" "M-H")
+  local key_master_grow;    key_master_grow=$(   _get_option "@tiling_revamped_key_master_grow"     "M-G")
+  local key_master_shrink;  key_master_shrink=$( _get_option "@tiling_revamped_key_master_shrink"   "M-X")
+  local key_sync;           key_sync=$(          _get_option "@tiling_revamped_key_sync"            "M-Y")
   local key_swap_up;        key_swap_up=$(       _get_option "@tiling_revamped_key_swap_up"         "")
   local key_swap_down;      key_swap_down=$(     _get_option "@tiling_revamped_key_swap_down"       "")
   local key_swap_left;      key_swap_left=$(     _get_option "@tiling_revamped_key_swap_left"       "")
   local key_swap_right;     key_swap_right=$(    _get_option "@tiling_revamped_key_swap_right"      "")
-  local key_pick_layout;    key_pick_layout=$(   _get_option "@tiling_revamped_key_pick_layout"    "p")
-  local key_undo;           key_undo=$(          _get_option "@tiling_revamped_key_undo"            "u")
-  local key_redo;           key_redo=$(          _get_option "@tiling_revamped_key_redo"            "r")
-  local key_help;           key_help=$(          _get_option "@tiling_revamped_key_help"            "?")
-  local key_swap_biggest;   key_swap_biggest=$(  _get_option "@tiling_revamped_key_swap_biggest"    "=")
-  local key_focus_back;     key_focus_back=$(    _get_option "@tiling_revamped_key_focus_back"     "[")
-  local key_focus_forward;  key_focus_forward=$( _get_option "@tiling_revamped_key_focus_forward"  "]")
-  local key_pane_jump;      key_pane_jump=$(     _get_option "@tiling_revamped_key_pane_jump"      "P")
+  local key_pick_layout;    key_pick_layout=$(   _get_option "@tiling_revamped_key_pick_layout"    "M-L")
+  local key_undo;           key_undo=$(          _get_option "@tiling_revamped_key_undo"            "M-U")
+  local key_redo;           key_redo=$(          _get_option "@tiling_revamped_key_redo"            "M-Z")
+  local key_help;           key_help=$(          _get_option "@tiling_revamped_key_help"            "M-I")
+  local key_swap_biggest;   key_swap_biggest=$(  _get_option "@tiling_revamped_key_swap_biggest"    "M-W")
+  local key_focus_back;     key_focus_back=$(    _get_option "@tiling_revamped_key_focus_back"     "M-P")
+  local key_focus_forward;  key_focus_forward=$( _get_option "@tiling_revamped_key_focus_forward"  "M-N")
+  local key_pane_jump;      key_pane_jump=$(     _get_option "@tiling_revamped_key_pane_jump"      "M-Q")
 
   _bind "${alt_keys}" "${key_dwindle}"        "${TILING_RUN} layout dwindle" "dwindle"
   _bind "${alt_keys}" "${key_spiral}"         "${TILING_RUN} layout spiral" "spiral"

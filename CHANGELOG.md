@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-10-17
+
 ### Fixed
 
 - Key bindings and hooks work when the plugin lives in a directory whose path
@@ -55,6 +57,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Breaking:** every default key moved to `M-` plus an uppercase letter, a
+  range stock tmux leaves unbound and the tmux-revamped family reserves for
+  this plugin, so no default replaces a tmux key or another family plugin's
+  key. Old -> new: dwindle `d` -> `M-D`, spiral `D` -> `M-S`, balance `b` ->
+  `M-B`, equalize `B` -> `M-E`, promote `m` -> `M-M`, rotate `.` -> `M-R`, flip
+  `,` -> `M-F`, circulate `C-r` -> `M-C`, autotile `C-d` -> `M-A`, cycle `o` ->
+  `M-O`, mark `M` -> `M-K`, jump `j` -> `M-J`, scratchpad `g` -> `M-T`,
+  main-vertical `v` -> `M-V`, main-horizontal `V` -> `M-H`, master grow `+` ->
+  `M-G`, master shrink `-` -> `M-X`, sync `S` -> `M-Y`, layout picker `p` ->
+  `M-L`, undo `u` -> `M-U`, redo `r` -> `M-Z`, help `?` -> `M-I`, swap with
+  biggest `=` -> `M-W`, focus back `[` -> `M-P`, focus forward `]` -> `M-N`,
+  pane jumper `P` -> `M-Q`. Set `@tiling_revamped_key_<action>` to the old key
+  to keep it, for example `set -g @tiling_revamped_key_dwindle "d"`.
+- With `@tiling_revamped_alt_keys 1`, a key that already starts with `M-` binds
+  as itself in the root table rather than as `M-M-<key>`.
 - Every key press and hook runs faster. Each library module resolved its own
   directory through a subshell, about forty per call; the dispatcher now
   resolves the library directory once and the modules reuse it.

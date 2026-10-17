@@ -49,14 +49,14 @@ count_tiling_binds() {
 @test "entry point - default keybindings are registered when no options are set" {
   "${BASH}" "${PLUGIN}"
 
-  [[ "$(key_for 'layout dwindle')" == "d" ]]
-  [[ "$(key_for 'layout spiral')" == "D" ]]
-  [[ "$(key_for 'balance')" == "b" ]]
-  [[ "$(key_for 'circulate')" == "C-r" ]]
-  [[ "$(key_for 'cycle')" == "o" ]]
-  [[ "$(key_for 'scratchpad')" == "g" ]]
-  [[ "$(key_for 'pick')" == "p" ]]
-  [[ "$(key_for 'undo')" == "u" ]]
+  [[ "$(key_for 'layout dwindle')" == "M-D" ]]
+  [[ "$(key_for 'layout spiral')" == "M-S" ]]
+  [[ "$(key_for 'balance')" == "M-B" ]]
+  [[ "$(key_for 'circulate')" == "M-C" ]]
+  [[ "$(key_for 'cycle')" == "M-O" ]]
+  [[ "$(key_for 'scratchpad')" == "M-T" ]]
+  [[ "$(key_for 'pick')" == "M-L" ]]
+  [[ "$(key_for 'undo')" == "M-U" ]]
 }
 
 @test "entry point - a custom key overrides the default" {
@@ -66,12 +66,65 @@ count_tiling_binds() {
   [[ "$(key_for 'layout dwindle')" == "x" ]]
 }
 
+@test "entry point - no default binds a key outside the M- uppercase range" {
+  # Arrange
+  local outside
+
+  # Act
+  "${BASH}" "${PLUGIN}"
+
+  # Assert
+  outside=$(command tmux -S "${TILING_SOCKET}" list-keys 2>/dev/null \
+    | grep 'tiling.sh' \
+    | grep -vE '^bind-key +(-r +)?-T prefix +M-[A-Z] ')
+  [[ -z "${outside}" ]]
+}
+
+@test "entry point - stock tmux keys keep their stock commands" {
+  # Arrange
+  local bound
+
+  # Act
+  "${BASH}" "${PLUGIN}"
+
+  # Assert
+  bound=$(command tmux -S "${TILING_SOCKET}" list-keys -T prefix d)
+  [[ "${bound}" == *"detach-client"* ]] || false
+  bound=$(command tmux -S "${TILING_SOCKET}" list-keys -T prefix "?")
+  [[ "${bound}" == *"list-keys"* ]]
+}
+
+@test "entry point - directional swap is unbound by default" {
+  # Arrange
+  local swaps
+
+  # Act
+  "${BASH}" "${PLUGIN}"
+
+  # Assert
+  swaps=$(command tmux -S "${TILING_SOCKET}" list-keys 2>/dev/null | grep -c 'tiling.sh swap ' || true)
+  [[ "${swaps}" -eq 0 ]]
+}
+
+@test "entry point - alt keys bind an M- default as itself in the root table" {
+  # Arrange
+  command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_alt_keys "1"
+
+  # Act
+  "${BASH}" "${PLUGIN}"
+
+  # Assert
+  run command tmux -S "${TILING_SOCKET}" list-keys -T root M-D
+  [[ "${output}" == *"layout dwindle"* ]] || false
+  [[ "${output}" != *"M-M-D"* ]]
+}
+
 @test "entry point - blank key disables a standard binding only" {
   command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_key_dwindle ""
   "${BASH}" "${PLUGIN}"
 
   [[ -z "$(key_for 'layout dwindle')" ]]
-  [[ "$(key_for 'layout spiral')" == "D" ]]
+  [[ "$(key_for 'layout spiral')" == "M-S" ]]
 }
 
 @test "entry point - blank pick_layout key disables the layout picker" {
@@ -114,15 +167,15 @@ count_tiling_binds() {
 }
 
 @test "entry point - a set key wins over another feature's default on the same key" {
-  command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_key_pick_layout "P"
+  command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_key_pick_layout "M-Q"
   "${BASH}" "${PLUGIN}"
 
-  [[ "$(key_for 'pick')" == "P" ]]
+  [[ "$(key_for 'pick')" == "M-Q" ]]
   [[ -z "$(key_for 'pane-jump')" ]]
 }
 
 @test "entry point - a resolved conflict names both features" {
-  command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_key_pick_layout "P"
+  command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_key_pick_layout "M-Q"
   "${BASH}" "${PLUGIN}"
 
   local reported
@@ -140,12 +193,12 @@ count_tiling_binds() {
 }
 
 @test "entry point - a key conflict binds the slot exactly once" {
-  command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_key_pick_layout "P"
+  command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_key_pick_layout "M-Q"
   "${BASH}" "${PLUGIN}"
 
   local bound
   bound=$(command tmux -S "${TILING_SOCKET}" list-keys -T prefix 2>/dev/null \
-    | grep -cE '^bind-key +(-r )?-T prefix +P ')
+    | grep -cE '^bind-key +(-r )?-T prefix +M-Q ')
   [[ "${bound}" -eq 1 ]]
 }
 
@@ -159,12 +212,12 @@ count_tiling_binds() {
 }
 
 @test "entry point - conflict warnings are suppressible" {
-  command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_key_pick_layout "P"
+  command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_key_pick_layout "M-Q"
   command tmux -S "${TILING_SOCKET}" set -g @tiling_revamped_warn_conflicts "0"
   run "${BASH}" "${PLUGIN}"
 
   [[ "${status}" -eq 0 ]]
-  [[ "$(key_for 'pick')" == "P" ]]
+  [[ "$(key_for 'pick')" == "M-Q" ]]
 }
 
 @test "entry point - no associative array is declared at file scope" {
@@ -223,8 +276,8 @@ wait_for_file() {
   local bound="${BATS_TEST_TMPDIR}/bound.conf"
   stage_plugin_with_stub "${root}" "${marker}"
   "${BASH}" "${root}/tmux-tiling-revamped.tmux"
-  command tmux -S "${TILING_SOCKET}" list-keys -T prefix d \
-    | sed -E 's/^bind-key +-T prefix +d +//' > "${bound}"
+  command tmux -S "${TILING_SOCKET}" list-keys -T prefix M-D \
+    | sed -E 's/^bind-key +-T prefix +M-D +//' > "${bound}"
 
   # Act
   command tmux -S "${TILING_SOCKET}" source-file "${bound}"
@@ -242,7 +295,7 @@ wait_for_file() {
   "${BASH}" "${PLUGIN}"
 
   # Assert
-  bound=$(command tmux -S "${TILING_SOCKET}" list-keys -T prefix M)
+  bound=$(command tmux -S "${TILING_SOCKET}" list-keys -T prefix M-K)
   [[ "${bound}" == *"mark '%%%'"* ]]
 }
 

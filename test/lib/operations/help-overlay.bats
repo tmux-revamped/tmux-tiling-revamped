@@ -37,6 +37,18 @@ teardown() {
   [[ "${output}" == *"Swap with biggest"* ]]
 }
 
+@test "help-overlay.sh - _help_lines shows the M- uppercase defaults" {
+  # Arrange
+  local lines
+
+  # Act
+  lines=$(_help_lines)
+
+  # Assert
+  [[ "${lines}" == *"M-D     Dwindle layout"* ]] || false
+  [[ "${lines}" == *"M-I     This overlay"* ]]
+}
+
 @test "help-overlay.sh - _help_lines renders the resolved key, not the default" {
   get_tmux_option() {
     [[ "$1" == "@tiling_revamped_key_dwindle" ]] && { echo "X"; return 0; }
@@ -45,7 +57,7 @@ teardown() {
   export -f get_tmux_option
   run _help_lines
   [[ "${output}" == *"X"*"Dwindle layout"* ]]
-  [[ "${output}" != *"d       Dwindle layout"* ]]
+  [[ "${output}" != *"M-D     Dwindle layout"* ]]
 }
 
 @test "help-overlay.sh - _help_lines omits a binding whose key resolves empty" {
@@ -152,7 +164,7 @@ teardown() {
   export -f get_tmux_option
   run _help_lines
   [[ "${output}" == *"Z"*"Dwindle layout"* ]]
-  [[ "${output}" != *"d       Dwindle layout"* ]]
+  [[ "${output}" != *"M-D     Dwindle layout"* ]]
 }
 
 @test "help-overlay.sh - _help_lines omits a feature the map left unbound" {
