@@ -33,10 +33,11 @@ A path not named in [`family/OWNERSHIP`](family/OWNERSHIP) is `free`. Ownership 
 | The pipeline | The workflow set under `.github/workflows/`, `owned` |
 | Release automation | semantic-release driven by conventional commits. No hand-edited version |
 | Tests | bats suite reaching 100% line coverage on Linux and macOS, with every exclusion carrying a reason |
+| Test harness | `test/helpers.bash` and `test/tmux_helpers.bash`, `owned`. A member's own mocks and source guard resets go in `test/helpers_local.bash` and `test/tmux_helpers_local.bash`, which the shared files source when present, with guard resets inside a `setup_test_environment_local` function |
 | Platforms | Ubuntu x86-64, Ubuntu arm64, macOS Intel, macOS Apple Silicon, each on the newest generally available image |
 | Documentation | `README.md`, `shaped`, with the option, key, placeholder and dependency tables generated from the manifest |
 | A changelog | `CHANGELOG.md`, `shaped`, in the format semantic-release generates |
-| A licence | `LICENSE` |
+| A licence | `LICENSE`, `owned` |
 
 Some of these are reached over the course of the program rather than on the day this document lands. [`family/OWNERSHIP`](family/OWNERSHIP) names what is enforced today, and grows as each requirement becomes true in every member. A requirement listed here and absent from `OWNERSHIP` is a target, not yet a gate.
 

@@ -5,10 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Before asking, please check:
-        - [README](https://github.com/tmux-revamped/tmux-tiling-revamped#readme)
-        - [Existing issues](https://github.com/tmux-revamped/tmux-tiling-revamped/issues?q=is%3Aissue)
-        - Run `tiling.sh help` for a command reference
+        Before asking, please check this plugin's README and its existing issues.
 
   - type: textarea
     id: question

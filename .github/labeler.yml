@@ -1,3 +1,7 @@
+source:
+  - changed-files:
+      - any-glob-to-any-file: 'src/**'
+
 layouts:
   - changed-files:
       - any-glob-to-any-file: 'src/lib/layouts/**'

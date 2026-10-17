@@ -11,19 +11,14 @@ teardown() {
   cleanup_test_environment
 }
 
-@test "has-command.sh - has_command function exists" {
+@test "has-command.sh - has_command is defined" {
   function_exists has_command
 }
 
-@test "has-command.sh - has_command returns 0 for existing command" {
-  has_command "bash"
+@test "has-command.sh - has_command is true for an existing command" {
+  has_command bash
 }
 
-@test "has-command.sh - has_command returns 1 for nonexistent command" {
-  ! has_command "this_command_definitely_does_not_exist_xyz"
-}
-
-@test "has-command.sh - has_command works with common tools" {
-  has_command "ls"
-  has_command "cat"
+@test "has-command.sh - has_command is false for a missing command" {
+  ! has_command this-command-should-not-exist-abcxyz
 }

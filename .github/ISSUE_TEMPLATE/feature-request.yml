@@ -25,20 +25,6 @@ body:
       description: Other approaches you thought about and why they are less ideal.
 
   - type: dropdown
-    id: area
-    attributes:
-      label: Area affected
-      options:
-        - Layout (new or existing)
-        - Operation
-        - Feature (marks, scratchpad, presets, etc.)
-        - Keybindings
-        - Configuration
-        - Documentation
-        - CI/CD
-        - Other
-
-  - type: dropdown
     id: contribute
     attributes:
       label: Willing to submit a PR?

@@ -7,7 +7,7 @@ body:
     attributes:
       label: Section affected
       description: Which part of the README, CHANGELOG, or CONTRIBUTING is wrong?
-      placeholder: "README > Configuration > Behavior table"
+      placeholder: "README > Configuration"
     validations:
       required: true
 

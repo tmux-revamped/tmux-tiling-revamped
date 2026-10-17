@@ -1,12 +1,11 @@
 name: Bug Report
-description: Report a bug in tmux-tiling-revamped
+description: Report a bug in this plugin
 labels: ["bug"]
 body:
   - type: markdown
     attributes:
       value: |
         Thank you for reporting a bug. Please fill in the details below.
-        Run `tiling.sh doctor` and paste the output in the diagnostics field.
 
   - type: input
     id: tmux-version
@@ -48,38 +47,11 @@ body:
     validations:
       required: true
 
-  - type: dropdown
-    id: layout
-    attributes:
-      label: Layout affected
-      options:
-        - dwindle
-        - spiral
-        - grid
-        - main-center
-        - main-vertical
-        - main-horizontal
-        - monocle
-        - deck
-        - All layouts
-        - Not layout-specific
-
-  - type: input
-    id: pane-count
-    attributes:
-      label: Number of panes
-      placeholder: "3"
-
   - type: textarea
     id: steps
     attributes:
       label: Steps to reproduce
       description: Minimal steps to trigger the bug.
-      placeholder: |
-        1. Open tmux
-        2. Create 3 panes
-        3. Press prefix + d
-        4. Observe...
     validations:
       required: true
 
@@ -101,12 +73,12 @@ body:
     id: doctor
     attributes:
       label: Diagnostics
-      description: Output of `~/.tmux/plugins/tmux-tiling-revamped/src/tiling.sh doctor`
+      description: Output of the plugin's doctor command, if it has one
       render: shell
 
   - type: textarea
     id: config
     attributes:
       label: Relevant tmux.conf
-      description: The tiling-revamped section of your tmux.conf
+      description: The section of your tmux.conf that configures this plugin
       render: tmux

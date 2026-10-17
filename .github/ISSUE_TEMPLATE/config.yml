@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
-  - name: README
-    url: https://github.com/tmux-revamped/tmux-tiling-revamped#readme
-    about: Check the documentation before opening an issue
+  - name: Documentation
+    url: https://github.com/tmux-revamped
+    about: Every plugin's README documents its options and keys; check it before opening an issue

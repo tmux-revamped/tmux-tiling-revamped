@@ -2,7 +2,6 @@
 * @gufranco
 
 # Critical paths require explicit review
-tmux-tiling-revamped.tmux @gufranco
-src/lib/layouts/dwindle.sh @gufranco
-src/tiling.sh @gufranco
+*.tmux @gufranco
+src/ @gufranco
 .github/workflows/ @gufranco
