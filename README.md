@@ -7,7 +7,7 @@
 <br>
 <br>
 
-[![CI](https://github.com/tmux-revamped/tmux-tiling-revamped/actions/workflows/ci.yml/badge.svg)](https://github.com/tmux-revamped/tmux-tiling-revamped/actions/workflows/ci.yml)
+[![Tests](https://github.com/tmux-revamped/tmux-tiling-revamped/actions/workflows/tests.yml/badge.svg)](https://github.com/tmux-revamped/tmux-tiling-revamped/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/github/license/tmux-revamped/tmux-tiling-revamped?style=flat-square)](LICENSE)
 [![Version](https://img.shields.io/badge/version-2.3.0-blue?style=flat-square)](CHANGELOG.md)
 [![tmux](https://img.shields.io/badge/tmux-3.2%2B-green?style=flat-square)](https://github.com/tmux/tmux)
@@ -17,7 +17,7 @@
 
 ---
 
-**8** layouts  ·  **16** BSP orientations  ·  **19** operations  ·  **36+** commands  ·  **691** tests  ·  **zero** dependencies
+**8** layouts  ·  **16** BSP orientations  ·  **19** operations  ·  **36+** commands  ·  **zero** dependencies
 
 <table>
 <tr>
@@ -57,7 +57,7 @@ Interactive popup with ASCII diagram previews for all 8 layouts. Shows current l
 
 ### Balanced Distribution
 
-Main-center distributes extra panes evenly between left and right columns. All layouts verified balanced at pane counts 1-10 with 48 dedicated tests.
+Main-center distributes extra panes evenly between left and right columns. A balance test suite checks every layout at pane counts 1 to 10.
 
 </td>
 <td width="50%" valign="top">
@@ -347,7 +347,7 @@ All options use the `@tiling_revamped_` prefix.
 | `@tiling_revamped_border_status` | `top` | Border status restored when a second pane appears |
 | `@tiling_revamped_help_width` | `50%` | Help overlay popup width |
 | `@tiling_revamped_help_height` | `60%` | Help overlay popup height |
-| `@tiling_revamped_enable_logging` | `0` | Write debug logs to `~/.tmux/tiling-logs/` |
+| `@tiling_revamped_enable_logging` | `0` | Write debug logs to `~/.tmux/tiling-revamped-logs/tiling-revamped.log` |
 
 ### Custom Keybindings
 
@@ -395,20 +395,30 @@ Set any key to `""` (empty string) to disable that binding entirely.
 
 ### Avoiding Key Conflicts in Prefix Mode
 
-Several default keys conflict with common tmux bindings.
+These default keys replace a binding that stock tmux puts in the prefix table.
+The stock action is unreachable while the plugin holds the key. Each suggested
+alternative is unbound in stock tmux and unused by this plugin's defaults.
 
-| Default Key | Conflicts With | Suggested Alternative |
-|:------------|:---------------|:----------------------|
-| `b` (balance) | `prefix + b` lists paste buffers | `=` |
-| `M` (mark) | `prefix + M` is often used for scrollback | `N` |
-| `j` (jump) | `prefix + j` navigates panes down | `G` |
-| `+` (master grow) | `prefix + +` maximizes pane (zoom) | `}` |
-| `-` (master shrink) | `prefix + -` splits vertically | `{` |
-| `S` (sync) | `prefix + S` is commonly bound to sync-panes | `""` (disable) |
-| `.` (rotate) | `prefix + .` moves pane to another window | `R` |
-| `,` (flip) | `prefix + ,` renames window | `F` |
-| `C-r` (circulate) | `prefix + C-r` is not commonly bound | `C-n` |
-| `p` (pick layout) | `prefix + p` is previous-window | `P` |
+| Default Key | Stock tmux binding it replaces | Suggested Alternative |
+|:------------|:-------------------------------|:----------------------|
+| `d` (dwindle) | `detach-client` | `A` |
+| `D` (spiral) | `choose-client`, pick a client to detach | `Y` |
+| `m` (promote) | `select-pane -m`, mark the pane | `K` |
+| `M` (mark) | `select-pane -M`, clear the marked pane | `N` |
+| `.` (rotate) | `move-window` prompt | `R` |
+| `,` (flip) | `rename-window` prompt | `F` |
+| `-` (master shrink) | `delete-buffer` | `_` |
+| `o` (cycle) | select the next pane | `O` |
+| `p` (pick layout) | `previous-window` | `a` |
+| `r` (redo) | `refresh-client` | `U` |
+| `=` (swap biggest) | `choose-buffer` | `X` |
+| `?` (help) | `list-keys` | `I` |
+| `[` (focus back) | `copy-mode` | `e` |
+| `]` (focus forward) | `paste-buffer` | `y` |
+| `g` (scratchpad) | the floating-pane `g` key table in tmux 3.8 | `G` |
+
+`b`, `B`, `v`, `V`, `u`, `j`, `S`, `P`, `+`, `C-r` and `C-d` are unbound in
+stock tmux, so their defaults replace nothing.
 
 ### Layout Picker
 
@@ -482,7 +492,7 @@ The glyph map covers all eight layouts. An unset layout prints nothing, and an u
 
 ### Help Overlay
 
-Press `?` to open a popup listing every resolved keybinding, reflecting your custom keys rather than the defaults. The overlay needs tmux 3.2 or newer for `display-popup`; on older tmux it prints a short message instead.
+Press `?` to open a popup listing the layout, pane, mark, scratchpad, undo, pane jumper and focus-history bindings, each with the key it holds after conflict resolution. The popup does not list the workspace, navigator, directional swap or project launcher keys. The overlay needs tmux 3.2 or newer for `display-popup`; on older tmux it prints a short message instead.
 
 ## CLI
 
@@ -615,12 +625,14 @@ src/
       constants.sh            # Option names and defaults
       error-logger.sh         # Rotating log file
       has-command.sh           # Command existence check
+      picker.sh               # fzf --tmux version gate and popup fallback
 test/
   helpers.bash                # Mock tmux for unit tests
   tmux_helpers.bash           # Real tmux server for integration tests
-  integration.bats            # 64 end-to-end scenarios
-  balance.bats                # 48 balance invariant tests
-  lib/                        # 40 unit test files mirroring src/lib/
+  integration.bats            # End-to-end scenarios
+  balance.bats                # Balance invariant tests
+  docs.bats                   # README options are read by the code
+  lib/                        # Unit tests mirroring src/lib/
 ```
 
 </details>
@@ -633,7 +645,7 @@ test/
 | `make test-unit` | Run unit tests only |
 | `make lint` | ShellCheck all shell files |
 | `make clean` | Remove temp test artifacts |
-| `bats --recursive test/` | Run all 528 tests recursively |
+| `bats --recursive test/` | Run every test recursively |
 
 ## License
 
