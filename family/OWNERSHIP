@@ -80,3 +80,4 @@ owned	src/lib/utils/publish.sh
 owned	test/lib/utils/publish.bats
 owned	src/lib/utils/ticker.sh
 owned	test/lib/utils/ticker.bats
+owned	test/family/audit.bats

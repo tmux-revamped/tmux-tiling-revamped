@@ -29,6 +29,7 @@ A path not named in [`family/OWNERSHIP`](family/OWNERSHIP) is `free`. Ownership 
 | This contract | `FAMILY.md` at the repository root, `owned` |
 | The family tooling | `family/`, `owned` |
 | The shared library | `src/lib/core/`, `owned` |
+| An executable entry point | Every `*.tmux` at the root is executable and tracked by git as mode `100755`. TPM executes the file directly and discards everything it prints, so without the bit the plugin never loads and nothing reports it. `family/bin/audit` enforces this |
 | A manifest | `manifest.json` at the root, `shaped`, declaring every option, key, status placeholder and external command |
 | The pipeline | The workflow set under `.github/workflows/`, `owned` |
 | Release automation | semantic-release driven by conventional commits. No hand-edited version |
@@ -140,6 +141,7 @@ reports them as absent.
 | bash 3.2 | Ubuntu runners carry bash 5, and the macOS jobs resolve whatever is first on `PATH` | `/bin/bash` on macOS, run directly |
 | A blocking entry point | Nothing in CI reads the entry point's stdout and waits on it | Run the entry point under a command substitution and time it |
 | A leaked test fixture | The run ends and the runner is destroyed | A long-lived developer machine, hours later |
+| An entry point without the executable bit | The suite and `family/bin/live-keys` load the entry point through `bash`, which needs no executable bit, while TPM executes the file and discards the permission error | The mode git records, which `family/bin/audit` reads |
 
 When a defect belongs to one of these, run the probe locally and say so in the
 pull request. Reporting a member as clean on the strength of a green pipeline

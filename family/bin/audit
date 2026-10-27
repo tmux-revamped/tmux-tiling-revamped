@@ -22,6 +22,7 @@ Verifies this member against the family contract, offline.
   - every shaped file satisfies its structural rules
   - family/VERSION is a positive integer
   - this repository appears in family/MEMBERS
+  - every *.tmux entry point at the root is executable and tracked as 100755
 
 Exits 0 when clean, 1 when any finding is reported.
 USAGE
@@ -124,6 +125,23 @@ check_shaped_files() {
   done < <(family_shaped_paths "${ROOT}" | grep -v '^MISSING:')
 }
 
+check_entry_point() {
+  local path="${1}" mode
+  [[ -x "${ROOT}/${path}" ]] ||
+    report "${path}" "not executable, TPM runs the entry point directly and discards the permission error"
+  mode="$(git -C "${ROOT}" ls-files --stage -- "${path}" 2>/dev/null | awk '{print $1}')"
+  [[ -z "${mode}" || "${mode}" == "100755" ]] && return 0
+  report "${path}" "tracked as mode ${mode}, so every clone gets a plugin that never loads, run git update-index --chmod=+x ${path}"
+}
+
+check_entry_points() {
+  local entry
+  for entry in "${ROOT}"/*.tmux; do
+    [[ -f "${entry}" ]] || continue
+    check_entry_point "${entry##*/}"
+  done
+}
+
 main() {
   if [[ $# -gt 0 ]]; then
     usage
@@ -137,6 +155,7 @@ main() {
   check_owned_hashes
   [[ -f "${CHECKSUM_FILE}" ]] && check_manifest_complete
   check_shaped_files
+  check_entry_points
 
   if [[ "${findings}" -gt 0 ]]; then
     printf '\n%s: %s finding(s)\n' "${REPO}" "${findings}" >&2
