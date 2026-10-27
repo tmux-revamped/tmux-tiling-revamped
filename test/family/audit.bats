@@ -4,7 +4,7 @@ setup() {
   SOURCE_ROOT="$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)"
   FIXTURE="${BATS_TEST_TMPDIR}/$(basename "${SOURCE_ROOT}")"
   mkdir -p "${FIXTURE}"
-  tar -C "${SOURCE_ROOT}" --exclude=./.git --exclude=./coverage -cf - . | tar -C "${FIXTURE}" -xf -
+  tar -C "${SOURCE_ROOT}" --exclude=./.git --exclude=./coverage -cf - . | tar -C "${FIXTURE}" --no-same-owner -xf -
   rm -f "${FIXTURE}"/*.tmux
   git -C "${FIXTURE}" init --quiet
 }
@@ -119,6 +119,19 @@ write_source_line() {
   # Assert
   [ "${status}" -eq 0 ]
   [[ "${output}" != *"probe.tmux"* ]]
+}
+
+@test "audit - reports an entry point whose mode git cannot read" {
+  # Arrange
+  write_entry_point 755
+  export GIT_DIR="${BATS_TEST_TMPDIR}/no-such-git-dir"
+
+  # Act
+  run "${FIXTURE}/family/bin/audit"
+
+  # Assert
+  [ "${status}" -eq 1 ]
+  [[ "${output}" == *"probe.tmux: git could not read the mode it records: fatal:"* ]]
 }
 
 @test "audit - accepts a member with no entry point at the root" {

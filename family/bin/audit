@@ -134,7 +134,11 @@ check_entry_point() {
   local path="${1}" mode
   [[ -x "${ROOT}/${path}" ]] ||
     report "${path}" "not executable, TPM runs the entry point directly and discards the permission error"
-  mode="$(git -C "${ROOT}" ls-files --stage -- "${path}" 2>/dev/null | awk '{print $1}')"
+  [[ -e "${ROOT}/.git" ]] || return 0
+  mode="$(git -C "${ROOT}" ls-files --stage -- "${path}" 2>/dev/null | awk '{print $1}')" || {
+    report "${path}" "git could not read the mode it records: $(git -C "${ROOT}" ls-files -- "${path}" 2>&1 | head -1)"
+    return 0
+  }
   [[ -z "${mode}" || "${mode}" == "100755" ]] && return 0
   report "${path}" "tracked as mode ${mode}, so every clone gets a plugin that never loads, run git update-index --chmod=+x ${path}"
 }
