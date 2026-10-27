@@ -22,6 +22,45 @@ write_exception_under() {
   printf 'diverged\n' >"${FIXTURE}/LICENSE"
 }
 
+write_source_line() {
+  mkdir -p "${FIXTURE}/src"
+  printf '#!/usr/bin/env bash\n%s\n' "${1}" >"${FIXTURE}/src/probe.sh"
+}
+
+@test "audit - reports a substitution whose replacement is an unquoted expansion" {
+  # Arrange
+  write_source_line 'value="${value//${placeholder}/${command}}"'
+
+  # Act
+  run "${FIXTURE}/family/bin/audit"
+
+  # Assert
+  [ "${status}" -eq 1 ]
+  [[ "${output}" == *"src/probe.sh:2: a substitution replacement starts with an unquoted expansion"* ]]
+}
+
+@test "audit - accepts a substitution whose replacement is quoted" {
+  # Arrange
+  write_source_line 'value=${value//"{icon}"/"${icon}"}'
+
+  # Act
+  run "${FIXTURE}/family/bin/audit"
+
+  # Assert
+  [[ "${output}" != *"src/probe.sh"* ]]
+}
+
+@test "audit - accepts the hash doubling that only ever writes two hashes" {
+  # Arrange
+  write_source_line 'quoted="${quoted//"${hash}"/${hash}${hash}}"'
+
+  # Act
+  run "${FIXTURE}/family/bin/audit"
+
+  # Assert
+  [[ "${output}" != *"src/probe.sh"* ]]
+}
+
 @test "audit - an active exception excuses an owned file that differs" {
   # Arrange
   write_exception_under "Active exceptions"

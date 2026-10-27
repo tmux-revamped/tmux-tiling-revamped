@@ -141,6 +141,7 @@ reports them as absent.
 | bash 3.2 | Ubuntu runners carry bash 5, and the macOS jobs resolve whatever is first on `PATH` | `/bin/bash` on macOS, run directly |
 | A blocking entry point | Nothing in CI reads the entry point's stdout and waits on it | Run the entry point under a command substitution and time it |
 | A leaked test fixture | The run ends and the runner is destroyed | A long-lived developer machine, hours later |
+| A substitution replacement holding `&` or a backslash | Runner checkout paths and test fixtures rarely contain either. Bash 5.2 and later expand an unquoted `&` in a replacement to the matched text, and bash 3.2 handles a backslash in it differently from bash 4 and later | `family/bin/audit` rejects an unquoted expansion as a replacement; write `var=${var//pattern/"${value}"}`, as an assignment, because bash 3.2 keeps the quotes when the whole expansion is itself inside double quotes |
 | An entry point without the executable bit | The suite and `family/bin/live-keys` load the entry point through `bash`, which needs no executable bit, while TPM executes the file and discards the permission error | The mode git records, which `family/bin/audit` reads |
 
 When a defect belongs to one of these, run the probe locally and say so in the

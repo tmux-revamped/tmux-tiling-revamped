@@ -8,6 +8,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 REPO="$(family_repo_name "${ROOT}")"
 CHECKSUM_FILE="${ROOT}/family/CHECKSUMS"
+SUBSTITUTION_RE='\$\{[A-Za-z_][A-Za-z0-9_]*(\[[^]]*\])?(//?|/#|/%)'
+UNQUOTED_REPLACEMENT_RE='[^/#%"]/\$[{(]'
+HASH_DOUBLING_RE='/\$\{(hash|HASH)\}(\$\{(hash|HASH)\})?\}'
 
 findings=0
 
@@ -23,6 +26,8 @@ Verifies this member against the family contract, offline.
   - family/VERSION is a positive integer
   - this repository appears in family/MEMBERS
   - every *.tmux entry point at the root is executable and tracked as 100755
+  - no pattern substitution in src/ or an entry point takes an unquoted
+    expansion as its replacement
 
 Exits 0 when clean, 1 when any finding is reported.
 USAGE
@@ -134,6 +139,23 @@ check_entry_point() {
   report "${path}" "tracked as mode ${mode}, so every clone gets a plugin that never loads, run git update-index --chmod=+x ${path}"
 }
 
+shell_sources() {
+  (
+    cd "${ROOT}" || exit 1
+    find src -type f -name '*.sh' 2>/dev/null
+    find . -maxdepth 1 -type f -name '*.tmux' | sed 's|^\./||'
+  ) | LC_ALL=C sort
+}
+
+check_substitutions() {
+  local path hit
+  while IFS= read -r path; do
+    while IFS= read -r hit; do
+      report "${path}:${hit%%:*}" "a substitution replacement starts with an unquoted expansion, which bash 5.2 rewrites at every & and bash 3.2 at every backslash, write it as var=\${var//pattern/\"\${value}\"}"
+    done < <(grep -nE "${SUBSTITUTION_RE}" "${ROOT}/${path}" | grep -E "${UNQUOTED_REPLACEMENT_RE}" | grep -vE "${HASH_DOUBLING_RE}")
+  done < <(shell_sources)
+}
+
 check_entry_points() {
   local entry
   for entry in "${ROOT}"/*.tmux; do
@@ -156,6 +178,7 @@ main() {
   [[ -f "${CHECKSUM_FILE}" ]] && check_manifest_complete
   check_shaped_files
   check_entry_points
+  check_substitutions
 
   if [[ "${findings}" -gt 0 ]]; then
     printf '\n%s: %s finding(s)\n' "${REPO}" "${findings}" >&2
