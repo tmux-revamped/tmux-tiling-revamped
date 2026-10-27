@@ -94,3 +94,47 @@ teardown() {
   # Assert
   grep -q '^display-popup -E -w 60% -h 40% TILING_REVAMPED_IN_POPUP=1 .*tiling\.sh project$' "${MOCK_TMUX_LOG}"
 }
+
+use_find_and_capture_fzf_input() {
+  export FZF_INPUT="${TEST_TMPDIR}/fzf-input"
+  has_command() { [[ "${1}" == "fzf" ]]; }
+  fzf() {
+    if [[ "${1:-}" == "--version" ]]; then
+      printf '0.54.0\n'
+      return 0
+    fi
+    cat >"${FZF_INPUT}"
+    printf 'alpha\n'
+  }
+}
+
+@test "project-launcher.sh - a project directory with sed metacharacters lists its projects" {
+  # Arrange
+  use_find_and_capture_fzf_input
+  local pdir="${TEST_TMPDIR}/a|b[c]"
+  mkdir -p "${pdir}/alpha"
+  export MOCK_TILING_PROJECT_DIR="${pdir}"
+  export MOCK_TMUX_LOG="${TEST_TMPDIR}/tmux.log"
+
+  # Act
+  launch_project
+
+  # Assert
+  [ "$(cat "${FZF_INPUT}")" = "alpha" ]
+  grep -qxF "new-window -n alpha -c ${pdir}/alpha" "${MOCK_TMUX_LOG}"
+}
+
+@test "project-launcher.sh - a tilde expands to a home path holding an ampersand" {
+  # Arrange
+  use_find_and_capture_fzf_input
+  export HOME="${TEST_TMPDIR}/R&D"
+  mkdir -p "${HOME}/work/alpha"
+  export MOCK_TILING_PROJECT_DIR="~/work"
+  export MOCK_TMUX_LOG="${TEST_TMPDIR}/tmux.log"
+
+  # Act
+  launch_project
+
+  # Assert
+  grep -qxF "new-window -n alpha -c ${TEST_TMPDIR}/R&D/work/alpha" "${MOCK_TMUX_LOG}"
+}

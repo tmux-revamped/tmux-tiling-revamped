@@ -10,6 +10,13 @@ source "${LIB_DIR}/utils/has-command.sh"
 source "${LIB_DIR}/utils/error-logger.sh"
 source "${LIB_DIR}/utils/picker.sh"
 
+_strip_prefix() {
+  local prefix="${1}" line
+  while IFS= read -r line; do
+    printf '%s\n' "${line#"${prefix}"}"
+  done
+}
+
 launch_project() {
   if ! has_command fzf; then
     log_error "project-launcher" "fzf is not installed"
@@ -24,7 +31,7 @@ launch_project() {
     return 1
   fi
 
-  project_dir="${project_dir/#\~/${HOME}}"
+  project_dir=${project_dir/#"~"/"${HOME}"}
 
   if [[ ! -d "${project_dir}" ]]; then
     log_error "project-launcher" "Project directory not found: ${project_dir}"
@@ -43,7 +50,7 @@ launch_project() {
       | picker_fzf "${spec}" --prompt="Project: " 2>/dev/null)
   else
     selected=$(find "${project_dir}" -mindepth 1 -maxdepth "${depth}" -type d 2>/dev/null \
-      | sed "s|^${project_dir}/||" \
+      | _strip_prefix "${project_dir}/" \
       | sort \
       | picker_fzf "${spec}" --prompt="Project: " 2>/dev/null)
   fi
@@ -57,4 +64,5 @@ launch_project() {
   tmux new-window -n "${window_name}" -c "${full_path}" 2>/dev/null || return 1
 }
 
+export -f _strip_prefix
 export -f launch_project
