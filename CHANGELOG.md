@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The help overlay prints a key, action or conflict holding a single quote on
+  every bash. The escape was built with a pattern substitution whose
+  replacement held a backslash, which bash 3.2, the `/bin/bash` on macOS,
+  processes differently from bash 4 and later, so the popup command broke.
+- The project launcher lists projects when `@tiling_revamped_project_dir`
+  contains a `|`, a `[` or another `sed` metacharacter. The directory prefix was
+  stripped with a `sed` expression built from the path; it is now removed as
+  plain text.
+- A `~` in `@tiling_revamped_project_dir` expands to a home directory that
+  contains an `&`. On bash 5.2 and later an unquoted `&` in a substitution's
+  replacement stands for the matched text, so the tilde came back unexpanded.
+
 ## [3.0.0] - 2026-10-17
 
 ### Fixed
