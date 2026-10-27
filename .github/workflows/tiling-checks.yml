@@ -52,7 +52,7 @@ jobs:
         run: |
           fail=0
           for cmd in balance equalize rotate flip promote circulate autosplit focus-resize resize-master sync swap cycle pick undo workspace move-to-workspace project swap-pick validate info doctor restore-layouts help; do
-            if ! grep -qE "tiling\.sh ${cmd}( |$)|\`${cmd}\`" README.md; then
+            if ! grep -qE "tiling\.sh ${cmd}( |$)|\`${cmd}[\` ]" README.md; then
               echo "FAIL: command '$cmd' not found in README"
               fail=1
             fi
