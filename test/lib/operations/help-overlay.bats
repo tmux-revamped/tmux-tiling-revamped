@@ -201,3 +201,52 @@ teardown() {
   [[ "${output}" == *"j       Jump to mark"* ]]
   [[ "${output}" == *"P       Jump to any pane"* ]]
 }
+
+@test "help-overlay.sh - _shell_quote wraps a plain value in single quotes" {
+  # Arrange
+  local q="'"
+
+  # Act
+  run _shell_quote "Dwindle layout"
+
+  # Assert
+  [ "${output}" = "${q}Dwindle layout${q}" ]
+}
+
+@test "help-overlay.sh - _shell_quote escapes an embedded single quote" {
+  # Arrange
+  local q="'"
+
+  # Act
+  run _shell_quote "it${q}s here"
+
+  # Assert
+  [ "${output}" = "${q}it${q}\\${q}${q}s here${q}" ]
+}
+
+@test "help-overlay.sh - the popup prints a conflict holding a single quote verbatim" {
+  # Arrange
+  local q="'" capture="${TEST_TMPDIR}/popup-cmd"
+  tmux() {
+    case "${1}" in
+      -V) printf 'tmux 3.4\n' ;;
+      display-popup) printf '%s' "${!#}" >"${capture}" ;;
+    esac
+    return 0
+  }
+  get_tmux_option() {
+    if [[ "${1}" == "@tiling_revamped_conflicts" ]]; then
+      printf '%s\n' "it${q}s taken"
+      return 0
+    fi
+    printf '%s\n' "${2:-}"
+  }
+  export -f tmux get_tmux_option
+
+  # Act
+  show_help
+
+  # Assert
+  run sh -c "$(cat "${capture}")" </dev/null
+  [[ "${output}" == *"Key conflicts: it${q}s taken"* ]]
+}

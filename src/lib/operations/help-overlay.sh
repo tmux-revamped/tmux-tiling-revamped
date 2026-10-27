@@ -81,6 +81,15 @@ _popup_supported() {
   return 1
 }
 
+_shell_quote() {
+  local rest="${1}" out=""
+  while [[ "${rest}" == *\'* ]]; do
+    out="${out}${rest%%\'*}'\\''"
+    rest="${rest#*\'}"
+  done
+  printf "'%s%s'" "${out}" "${rest}"
+}
+
 show_help() {
   if ! _popup_supported; then
     tmux display-message "tmux-tiling-revamped: help overlay needs tmux 3.2+" 2>/dev/null
@@ -96,14 +105,16 @@ show_help() {
   conflicts=$(get_tmux_option "@tiling_revamped_conflicts" "")
   [[ -n "${conflicts}" ]] && body+=$'\n\nKey conflicts: '"${conflicts}"
 
-  local escaped="${body//\'/\'\\\'\'}"
+  local escaped
+  escaped="$(_shell_quote "${body}")"
   local popup_cmd
-  popup_cmd="printf '%s\n' 'tmux-tiling-revamped keybindings'; printf '%s\n' '${escaped}'; printf '\nPress any key to close\n'; read -r _"
+  popup_cmd="printf '%s\n' 'tmux-tiling-revamped keybindings'; printf '%s\n' ${escaped}; printf '\nPress any key to close\n'; read -r _"
 
   tmux display-popup -E -w "${width}" -h "${height}" "${popup_cmd}" 2>/dev/null || true
 }
 
 export -f _resolved_key
 export -f _help_lines
+export -f _shell_quote
 export -f _popup_supported
 export -f show_help
