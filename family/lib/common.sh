@@ -108,7 +108,8 @@ family_exception_exists() {
 	local path="${3}"
 	local file="${root}/family/EXCEPTIONS.md"
 	[[ -f "${file}" ]] || return 1
-	grep -qF "### ${repo}: ${path}" "${file}"
+	awk '/^## Active exceptions/ { active = 1; next } /^## / { active = 0 } active' "${file}" |
+		grep -qF "### ${repo}: ${path}"
 }
 
 family_repo_name() {

@@ -15,6 +15,36 @@ write_entry_point() {
   git -C "${FIXTURE}" add -- probe.tmux
 }
 
+write_exception_under() {
+  local section="${1}" name
+  name="$(basename "${FIXTURE}")"
+  printf '# Family Exceptions\n\n## %s\n\n### %s: LICENSE\n\n## Other\n' "${section}" "${name}" >"${FIXTURE}/family/EXCEPTIONS.md"
+  printf 'diverged\n' >"${FIXTURE}/LICENSE"
+}
+
+@test "audit - an active exception excuses an owned file that differs" {
+  # Arrange
+  write_exception_under "Active exceptions"
+
+  # Act
+  run "${FIXTURE}/family/bin/audit"
+
+  # Assert
+  [[ "${output}" != *"LICENSE: content differs"* ]]
+}
+
+@test "audit - a retired exception no longer excuses an owned file that differs" {
+  # Arrange
+  write_exception_under "Retired exceptions"
+
+  # Act
+  run "${FIXTURE}/family/bin/audit"
+
+  # Assert
+  [ "${status}" -eq 1 ]
+  [[ "${output}" == *"LICENSE: content differs from the family copy"* ]]
+}
+
 @test "audit - reports an entry point git tracks without the executable bit" {
   # Arrange
   write_entry_point 755
