@@ -6,9 +6,12 @@
 
 [English](README.md) &nbsp;|&nbsp; [日本語](README.ja.md) &nbsp;|&nbsp; 简体中文 &nbsp;|&nbsp; [繁體中文（香港）](README.zh-HK.md)
 
-[![Tests](https://github.com/tmux-revamped/tmux-tiling-revamped/actions/workflows/tests.yml/badge.svg)](https://github.com/tmux-revamped/tmux-tiling-revamped/actions/workflows/tests.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-3.0.1-blue.svg)](CHANGELOG.md)
+[![family](https://img.shields.io/github/actions/workflow/status/tmux-revamped/tmux-tiling-revamped/family.yml?branch=main&style=flat-square&label=family)](https://github.com/tmux-revamped/tmux-tiling-revamped/actions/workflows/family.yml)
+[![tests](https://img.shields.io/github/actions/workflow/status/tmux-revamped/tmux-tiling-revamped/tests.yml?branch=main&style=flat-square&label=tests)](https://github.com/tmux-revamped/tmux-tiling-revamped/actions/workflows/tests.yml)
+[![tiling checks](https://img.shields.io/github/actions/workflow/status/tmux-revamped/tmux-tiling-revamped/tiling-checks.yml?branch=main&style=flat-square&label=tiling%20checks)](https://github.com/tmux-revamped/tmux-tiling-revamped/actions/workflows/tiling-checks.yml)
+[![release](https://img.shields.io/github/v/release/tmux-revamped/tmux-tiling-revamped?style=flat-square&label=release)](https://github.com/tmux-revamped/tmux-tiling-revamped/releases/latest)
+[![openssf scorecard](https://img.shields.io/ossf-scorecard/github.com/tmux-revamped/tmux-tiling-revamped?style=flat-square&label=openssf%20scorecard)](https://scorecard.dev/viewer/?uri=github.com/tmux-revamped/tmux-tiling-revamped)
+[![license](https://img.shields.io/github/license/tmux-revamped/tmux-tiling-revamped?style=flat-square&label=license)](LICENSE)
 
 <p align="center">
   <a href="#功能">功能</a> &nbsp;|&nbsp;
