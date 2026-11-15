@@ -58,9 +58,9 @@ scan_key_table() {
   context="$({ grep -rhE -A4 "${option}" "${root}/src" "${root}"/*.tmux 2>/dev/null || true; } | head -20)"
 
   case "${context}" in
-    *'bind-key -n'* | *'bind -n'*) emit root ;;
-    *'-T copy-mode'*) emit copy-mode ;;
-    *) emit prefix ;;
+  *'bind-key -n'* | *'bind -n'*) emit root ;;
+  *'-T copy-mode'*) emit copy-mode ;;
+  *) emit prefix ;;
   esac
 }
 
@@ -160,12 +160,12 @@ main() {
   local root
 
   case "${1:-}" in
-    -h | --help)
-      usage
-      return 0
-      ;;
-    '') root="$(cd "${SCRIPT_DIR}/../.." && pwd)" ;;
-    *) root="$(cd "${1}" && pwd)" ;;
+  -h | --help)
+    usage
+    return 0
+    ;;
+  '') root="$(cd "${SCRIPT_DIR}/../.." && pwd)" ;;
+  *) root="$(cd "${1}" && pwd)" ;;
   esac
 
   emit "repo"$'\t'"$(family_repo_name "${root}")"

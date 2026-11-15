@@ -30,15 +30,15 @@ notify_enabled() {
 notify_send() {
   local title="${1}" message="${2}"
   case "$(notify_backend)" in
-    osascript)
-      osascript -e 'on run argv' \
-        -e 'display notification (item 2 of argv) with title (item 1 of argv)' \
-        -e 'end run' "${title}" "${message}" >/dev/null 2>&1
-      ;;
-    notify-send)
-      notify-send -- "${title}" "${message}" >/dev/null 2>&1
-      ;;
-    *) : ;;
+  osascript)
+    osascript -e 'on run argv' \
+      -e 'display notification (item 2 of argv) with title (item 1 of argv)' \
+      -e 'end run' "${title}" "${message}" >/dev/null 2>&1
+    ;;
+  notify-send)
+    notify-send -- "${title}" "${message}" >/dev/null 2>&1
+    ;;
+  *) : ;;
   esac
   return 0
 }

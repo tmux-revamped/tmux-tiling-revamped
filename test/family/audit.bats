@@ -30,6 +30,14 @@ write_agent_guide() {
   done
 }
 
+own_and_change() {
+  mkdir -p "$(dirname "${FIXTURE}/${1}")"
+  printf 'recorded by the family\n' >"${FIXTURE}/${1}"
+  printf 'owned\t%s\n' "${1}" >>"${FIXTURE}/family/OWNERSHIP"
+  "${FIXTURE}/family/bin/checksums" >/dev/null
+  printf 'changed by a bot\n' >>"${FIXTURE}/${1}"
+}
+
 write_source_line() {
   mkdir -p "${FIXTURE}/src"
   printf '#!/usr/bin/env bash\n%s\n' "${1}" >"${FIXTURE}/src/probe.sh"
@@ -225,4 +233,92 @@ write_source_line() {
   # Assert
   [ "${status}" -eq 1 ]
   [[ "${output}" == *"AGENTS.md: named in family/OWNERSHIP but absent from this member"* ]]
+}
+
+@test "audit --bot - accepts a bot's change to an owned workflow" {
+  # Arrange
+  own_and_change .github/workflows/probe.yml
+
+  # Act
+  run "${FIXTURE}/family/bin/audit" --bot
+
+  # Assert
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *".github/workflows/probe.yml: changed by a bot, bot-merge records its checksum"* ]]
+}
+
+@test "audit --bot - accepts a bot's change to the release tooling's lockfile" {
+  # Arrange
+  own_and_change pnpm-lock.yaml
+
+  # Act
+  run "${FIXTURE}/family/bin/audit" --bot
+
+  # Assert
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"pnpm-lock.yaml: changed by a bot, bot-merge records its checksum"* ]]
+}
+
+@test "audit - reports a changed owned workflow without --bot" {
+  # Arrange
+  own_and_change .github/workflows/probe.yml
+
+  # Act
+  run "${FIXTURE}/family/bin/audit"
+
+  # Assert
+  [ "${status}" -eq 1 ]
+  [[ "${output}" == *".github/workflows/probe.yml: content differs from the family copy"* ]]
+}
+
+@test "audit --bot - reports a changed owned library file" {
+  # Arrange
+  printf 'changed by a bot\n' >>"${FIXTURE}/src/lib/utils/cache.sh"
+
+  # Act
+  run "${FIXTURE}/family/bin/audit" --bot
+
+  # Assert
+  [ "${status}" -eq 1 ]
+  [[ "${output}" == *"src/lib/utils/cache.sh: content differs from the family copy"* ]]
+}
+
+@test "audit - rejects an unknown option with the usage" {
+  # Arrange
+  local option=--everything
+
+  # Act
+  run "${FIXTURE}/family/bin/audit" "${option}"
+
+  # Assert
+  [ "${status}" -eq 2 ]
+  [[ "${output}" == "usage: family/bin/audit [--bot]"* ]]
+}
+
+@test "audit - accepts a shaped changelog whose newest release heading is level one" {
+  # Arrange
+  printf 'shaped\tCHANGELOG.md\n' >>"${FIXTURE}/family/OWNERSHIP"
+  "${FIXTURE}/family/bin/checksums" >/dev/null
+  printf '# Changelog\n\n# [1.1.0](https://example.invalid) (2026-11-15)\n\n## [1.0.0] - 2026-06-19\n' >"${FIXTURE}/CHANGELOG.md"
+
+  # Act
+  run "${FIXTURE}/family/bin/audit"
+
+  # Assert
+  [ "${status}" -eq 0 ]
+  [[ "${output}" != *"CHANGELOG.md"* ]]
+}
+
+@test "audit - reports a shaped changelog with no release heading" {
+  # Arrange
+  printf 'shaped\tCHANGELOG.md\n' >>"${FIXTURE}/family/OWNERSHIP"
+  "${FIXTURE}/family/bin/checksums" >/dev/null
+  printf '# Changelog\n\n## Unreleased\n' >"${FIXTURE}/CHANGELOG.md"
+
+  # Act
+  run "${FIXTURE}/family/bin/audit"
+
+  # Assert
+  [ "${status}" -eq 1 ]
+  [[ "${output}" == *"CHANGELOG.md: no versioned section heading"* ]]
 }

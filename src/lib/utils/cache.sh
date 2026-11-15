@@ -39,7 +39,7 @@ cache_age() {
   fi
   local now
   now=$(_cache_now)
-  echo "$(( now - ts ))"
+  echo "$((now - ts))"
 }
 
 cache_is_fresh() {
@@ -47,7 +47,7 @@ cache_is_fresh() {
   [[ "${max_age}" =~ ^[0-9]+$ ]] || return 1
   local age
   age=$(cache_age "${1}")
-  (( age <= max_age ))
+  ((age <= max_age))
 }
 
 _cache_clear_lock() {
@@ -61,7 +61,7 @@ cache_should_refresh() {
     local lock_age max_run="${CACHE_MAX_RUN}"
     [[ "${max_run}" =~ ^[0-9]+$ ]] || max_run="${CACHE_MAX_RUN_DEFAULT}"
     lock_age=$(cache_age "${key}_lock")
-    (( lock_age < max_run )) && return 1
+    ((lock_age < max_run)) && return 1
   fi
   return 0
 }

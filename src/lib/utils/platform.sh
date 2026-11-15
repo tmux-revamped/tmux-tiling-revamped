@@ -47,9 +47,9 @@ is_linux() {
 is_bsd() {
   _platform_detect_os
   case "${_PLATFORM_OS_CACHE}" in
-    *BSD) return 0 ;;
-    DragonFly) return 0 ;;
-    *) return 1 ;;
+  *BSD) return 0 ;;
+  DragonFly) return 0 ;;
+  *) return 1 ;;
   esac
 }
 

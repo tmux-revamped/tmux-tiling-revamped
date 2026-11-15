@@ -16,7 +16,7 @@ setup() {
       printf '%s\n' "${PUBLISH_CLIENTS:-}"
       return 0
     fi
-    printf '%s\n' "$@" > "${PUBLISH_LOG}"
+    printf '%s\n' "$@" >"${PUBLISH_LOG}"
   }
 }
 
@@ -194,8 +194,8 @@ logged_words() {
 @test "publish - chars counts in the shell without spawning a pipeline" {
   # Arrange
   export TR_LOG="${TEST_TMPDIR}/tr.log"
-  tr() { printf 'tr\n' >> "${TR_LOG}"; }
-  wc() { printf 'wc\n' >> "${TR_LOG}"; }
+  tr() { printf 'tr\n' >>"${TR_LOG}"; }
+  wc() { printf 'wc\n' >>"${TR_LOG}"; }
 
   # Act
   run publish_chars "45°C"

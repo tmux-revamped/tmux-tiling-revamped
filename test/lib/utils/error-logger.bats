@@ -46,13 +46,18 @@ teardown() {
 }
 
 @test "error-logger.sh - _rotate_log trims an oversized log" {
+  # Arrange
   tmux set-option -gq @test_rev_enable_logging 1
   export PLUGIN_MAX_LOG_SIZE=10
   export PLUGIN_MAX_LOG_LINES=2
   mkdir -p "${PLUGIN_LOG_DIR}"
-  printf 'l1\nl2\nl3\nl4\nl5\n' > "${PLUGIN_LOG_FILE}"
+  printf 'l1\nl2\nl3\nl4\nl5\n' >"${PLUGIN_LOG_FILE}"
+
+  # Act
   log_error comp "trigger"
+
+  # Assert
   local lines
-  lines=$(wc -l < "${PLUGIN_LOG_FILE}" | tr -d ' ')
+  lines=$(wc -l <"${PLUGIN_LOG_FILE}" | tr -d ' ')
   [[ "${lines}" -le 2 ]]
 }

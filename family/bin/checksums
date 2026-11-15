@@ -24,11 +24,11 @@ generate() {
 
   while IFS= read -r path; do
     case "${path}" in
-      MISSING:*)
-        printf 'error: ownership names a path that does not exist: %s\n' "${path#MISSING:}" >&2
-        missing=1
-        continue
-        ;;
+    MISSING:*)
+      printf 'error: ownership names a path that does not exist: %s\n' "${path#MISSING:}" >&2
+      missing=1
+      continue
+      ;;
     esac
     [[ "${path}" == "family/CHECKSUMS" ]] && continue
     printf '%s  %s\n' "$(family_hash_file "${ROOT}/${path}")" "${path}"
@@ -42,18 +42,18 @@ main() {
 
   while [[ $# -gt 0 ]]; do
     case "${1}" in
-      --stdout)
-        to_stdout=1
-        shift
-        ;;
-      -h | --help)
-        usage
-        return 0
-        ;;
-      *)
-        usage >&2
-        return 2
-        ;;
+    --stdout)
+      to_stdout=1
+      shift
+      ;;
+    -h | --help)
+      usage
+      return 0
+      ;;
+    *)
+      usage >&2
+      return 2
+      ;;
     esac
   done
 
@@ -65,7 +65,7 @@ main() {
     return 0
   fi
 
-  printf '%s\n' "${manifest}" > "${CHECKSUM_FILE}"
+  printf '%s\n' "${manifest}" >"${CHECKSUM_FILE}"
   printf 'wrote %s entries to family/CHECKSUMS\n' "$(printf '%s\n' "${manifest}" | wc -l | tr -d ' ')"
 }
 

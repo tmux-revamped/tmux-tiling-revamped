@@ -90,34 +90,34 @@ main() {
 
   while [[ $# -gt 0 ]]; do
     case "${1}" in
-      --pattern)
-        pattern="${2:-}"
-        shift 2
-        ;;
-      --script)
-        script="${2:-}"
-        shift 2
-        ;;
-      --paths)
-        paths+=("${2:-}")
-        shift 2
-        ;;
-      --members-dir)
-        dir="${2:-}"
-        shift 2
-        ;;
-      --label)
-        label="${2:-}"
-        shift 2
-        ;;
-      -h | --help)
-        usage
-        return 0
-        ;;
-      *)
-        usage >&2
-        return 2
-        ;;
+    --pattern)
+      pattern="${2:-}"
+      shift 2
+      ;;
+    --script)
+      script="${2:-}"
+      shift 2
+      ;;
+    --paths)
+      paths+=("${2:-}")
+      shift 2
+      ;;
+    --members-dir)
+      dir="${2:-}"
+      shift 2
+      ;;
+    --label)
+      label="${2:-}"
+      shift 2
+      ;;
+    -h | --help)
+      usage
+      return 0
+      ;;
+    *)
+      usage >&2
+      return 2
+      ;;
     esac
   done
 
@@ -158,20 +158,20 @@ main() {
       status=$?
       set -e
       case "${status}" in
-        0)
-          affected=$((affected + 1))
-          printf '%-32s AFFECTED\n' "${member}"
-          sed 's/^/    /' "${WORK}/probe.out"
-          ;;
-        1)
-          clean=$((clean + 1))
-          printf '%-32s clean\n' "${member}"
-          ;;
-        *)
-          unreachable=$((unreachable + 1))
-          printf '%-32s NOT CHECKED, probe exited %s\n' "${member}" "${status}"
-          sed 's/^/    /' "${WORK}/probe.out"
-          ;;
+      0)
+        affected=$((affected + 1))
+        printf '%-32s AFFECTED\n' "${member}"
+        sed 's/^/    /' "${WORK}/probe.out"
+        ;;
+      1)
+        clean=$((clean + 1))
+        printf '%-32s clean\n' "${member}"
+        ;;
+      *)
+        unreachable=$((unreachable + 1))
+        printf '%-32s NOT CHECKED, probe exited %s\n' "${member}" "${status}"
+        sed 's/^/    /' "${WORK}/probe.out"
+        ;;
       esac
       continue
     fi

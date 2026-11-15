@@ -79,27 +79,30 @@ main() {
   local target="${ROOT}"
   while [[ $# -gt 0 ]]; do
     case "${1}" in
-      --images)
-        IMAGES_FILE="${2:-}"
-        shift 2
-        ;;
-      -h | --help)
-        usage
-        return 0
-        ;;
-      -*)
-        usage >&2
-        return 2
-        ;;
-      *)
-        target="${1}"
-        shift
-        ;;
+    --images)
+      IMAGES_FILE="${2:-}"
+      shift 2
+      ;;
+    -h | --help)
+      usage
+      return 0
+      ;;
+    -*)
+      usage >&2
+      return 2
+      ;;
+    *)
+      target="${1}"
+      shift
+      ;;
     esac
   done
 
   local images available pinned
-  images="$(read_images)" || { printf 'error: could not read the runner-images list\n' >&2; return 2; }
+  images="$(read_images)" || {
+    printf 'error: could not read the runner-images list\n' >&2
+    return 2
+  }
   available="$(available_labels <<<"${images}" || true)"
   if [[ -z "${available}" ]]; then
     printf 'error: the runner-images list holds no recognisable runner label\n' >&2

@@ -38,7 +38,7 @@ ticker_seconds_to_next_minute() {
   local second
   second="$(_ticker_second_of_minute)"
   [[ "${second}" =~ ^[0-9]+$ ]] || second=0
-  printf '%s' "$(( 61 - 10#${second} ))"
+  printf '%s' "$((61 - 10#${second}))"
 }
 
 ticker_interval() {

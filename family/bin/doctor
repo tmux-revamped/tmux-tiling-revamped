@@ -125,7 +125,7 @@ check_namespace() {
   while IFS=$'\t' read -r member option; do
     slug="$(member_slug "${member}")"
     case "${option}" in
-      "@${slug}_revamped_"*) continue ;;
+    "@${slug}_revamped_"*) continue ;;
     esac
     report "namespace: ${member} uses ${option}, expected @${slug}_revamped_<name>"
   done < <(awk -F'\t' '$2 == "option" { print $1 "\t" $3 }' "${records}")
@@ -170,7 +170,7 @@ live_claimed_keys() {
     [[ -n "${option}" ]] && value="$(tmux show-option -gqv "${option}" 2>/dev/null || true)"
     [[ -n "${value}" ]] || value="${default}"
     case "${value}" in
-      "" | unset | off) continue ;;
+    "" | unset | off) continue ;;
     esac
     printf '%s\t%s\t%s\n' "${table}" "${value}" "${member}"
   done < <(awk -F'\t' '$2 == "key" { print $1 "\t" $3 "\t" $4 "\t" $5 }' "${records}")
@@ -190,8 +190,8 @@ check_live_server() {
 
   local bound="${WORK}/live-bound.tsv"
   local claimed="${WORK}/live-claimed.tsv"
-  live_bound_keys > "${bound}"
-  live_claimed_keys "${records}" > "${claimed}"
+  live_bound_keys >"${bound}"
+  live_claimed_keys "${records}" >"${claimed}"
 
   local count table key owners
   while IFS=$'\t' read -r count table key owners; do
@@ -215,22 +215,22 @@ main() {
 
   while [[ $# -gt 0 ]]; do
     case "${1}" in
-      --members-dir)
-        dir="${2:-}"
-        shift 2
-        ;;
-      --live)
-        live=1
-        shift
-        ;;
-      -h | --help)
-        usage
-        return 0
-        ;;
-      *)
-        usage >&2
-        return 2
-        ;;
+    --members-dir)
+      dir="${2:-}"
+      shift 2
+      ;;
+    --live)
+      live=1
+      shift
+      ;;
+    -h | --help)
+      usage
+      return 0
+      ;;
+    *)
+      usage >&2
+      return 2
+      ;;
     esac
   done
 
@@ -239,7 +239,7 @@ main() {
 
   WORK="$(mktemp -d "${TMPDIR:-/tmp}/family-doctor-XXXXXX")"
   local records="${WORK}/records.tsv"
-  collect "${dir}" > "${records}"
+  collect "${dir}" >"${records}"
 
   local members
   members="$(awk -F'\t' '$2 == "repo" { print $1 }' "${records}" | LC_ALL=C sort -u | wc -l | tr -d ' ')"

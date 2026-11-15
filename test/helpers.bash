@@ -40,61 +40,61 @@ tmux() {
   local verb="$1"
   shift || true
   case "${verb}" in
-    set-option)
-      local unset_flag=0
-      local args=()
-      while [ $# -gt 0 ]; do
-        case "$1" in
-          -gqu|-gu|-u) unset_flag=1 ;;
-          -g|-q|-w|-p|-gq|-wq|-pq|-ga|-wqv|-gqv) ;;
-          -t) shift ;;
-          *) args+=("$1") ;;
-        esac
-        shift
-      done
-      local name="${args[0]:-}"
-      [ -z "${name}" ] && return 0
-      local file
-      file="$(_mock_opt_file "${name}")"
-      if [ "${unset_flag}" -eq 1 ]; then
-        rm -f "${file}"
-      else
-        printf '%s' "${args[1]:-}" > "${file}"
-      fi
-      return 0
-      ;;
-    show-option)
-      local name=""
-      while [ $# -gt 0 ]; do
-        case "$1" in
-          -t) shift ;;
-          -*) ;;
-          *) name="$1" ;;
-        esac
-        shift
-      done
-      local file
-      file="$(_mock_opt_file "${name}")"
-      [ -f "${file}" ] && cat "${file}"
-      return 0
-      ;;
-    if-shell)
-      [ "${1:-}" = "-F" ] || return 0
-      _mock_if_option_equals "${2:-}" || return 0
-      _mock_run_commands "${3:-}"
-      return 0
-      ;;
-    *)
-      return 0
-      ;;
+  set-option)
+    local unset_flag=0
+    local args=()
+    while [ $# -gt 0 ]; do
+      case "$1" in
+      -gqu | -gu | -u) unset_flag=1 ;;
+      -g | -q | -w | -p | -gq | -wq | -pq | -ga | -wqv | -gqv) ;;
+      -t) shift ;;
+      *) args+=("$1") ;;
+      esac
+      shift
+    done
+    local name="${args[0]:-}"
+    [ -z "${name}" ] && return 0
+    local file
+    file="$(_mock_opt_file "${name}")"
+    if [ "${unset_flag}" -eq 1 ]; then
+      rm -f "${file}"
+    else
+      printf '%s' "${args[1]:-}" >"${file}"
+    fi
+    return 0
+    ;;
+  show-option)
+    local name=""
+    while [ $# -gt 0 ]; do
+      case "$1" in
+      -t) shift ;;
+      -*) ;;
+      *) name="$1" ;;
+      esac
+      shift
+    done
+    local file
+    file="$(_mock_opt_file "${name}")"
+    [ -f "${file}" ] && cat "${file}"
+    return 0
+    ;;
+  if-shell)
+    [ "${1:-}" = "-F" ] || return 0
+    _mock_if_option_equals "${2:-}" || return 0
+    _mock_run_commands "${3:-}"
+    return 0
+    ;;
+  *)
+    return 0
+    ;;
   esac
 }
 
 _mock_if_option_equals() {
   local open='#{==:#{' name expected file current=""
   case "${1}" in
-    "${open}"*) ;;
-    *) return 1 ;;
+  "${open}"*) ;;
+  *) return 1 ;;
   esac
   name="${1#"${open}"}"
   name="${name%%\}*}"
@@ -115,16 +115,16 @@ _mock_run_commands() {
     else
       rest="${rest#* ; }"
     fi
-    read -r -a words <<< "${part}"
+    read -r -a words <<<"${part}"
     tmux "${words[@]}"
   done
 }
 
 date() {
   case "$1" in
-    +%s) echo "${MOCK_EPOCH:-1000000}" ;;
-    '+%Y-%m-%d %H:%M:%S') echo "${MOCK_TIMESTAMP:-2026-01-15 14:30:00}" ;;
-    *) command date "$@" ;;
+  +%s) echo "${MOCK_EPOCH:-1000000}" ;;
+  '+%Y-%m-%d %H:%M:%S') echo "${MOCK_TIMESTAMP:-2026-01-15 14:30:00}" ;;
+  *) command date "$@" ;;
   esac
 }
 

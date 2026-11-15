@@ -81,8 +81,8 @@ use_recording_tmux() {
   tmux() {
     printf '%s\n' "$*" >>"${TMUX_CALLS}"
     case "${1}" in
-      list-panes) printf '%%1: [80x24]\n%%2: [80x24]\n' ;;
-      display-message) printf '42\n' ;;
+    list-panes) printf '%%1: [80x24]\n%%2: [80x24]\n' ;;
+    display-message) printf '42\n' ;;
     esac
     return 0
   }
@@ -226,12 +226,12 @@ use_option_server() {
     printf '%s\n' "$*" >>"${TMUX_CALLS}"
     [ "${1}" = "show-option" ] || return 0
     case "${3}" in
-      @empty)
-        if [ "${2}" = "-gqv" ]; then printf '\n'; else printf '@empty ""\n'; fi
-        ;;
-      @set)
-        if [ "${2}" = "-gqv" ]; then printf 'value\n'; else printf '@set value\n'; fi
-        ;;
+    @empty)
+      if [ "${2}" = "-gqv" ]; then printf '\n'; else printf '@empty ""\n'; fi
+      ;;
+    @set)
+      if [ "${2}" = "-gqv" ]; then printf 'value\n'; else printf '@set value\n'; fi
+      ;;
     esac
     return 0
   }

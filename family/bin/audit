@@ -19,12 +19,17 @@ AGENT_GUIDE_HEADINGS='## Layout
 ## Gaps against FAMILY.md'
 
 findings=0
+BOT=0
 
 usage() {
   cat <<'USAGE'
-usage: family/bin/audit
+usage: family/bin/audit [--bot]
 
 Verifies this member against the family contract, offline.
+
+  --bot   accept a changed owned file that bots update, such as a workflow
+          or the release tooling's lockfile, because bot-merge records its
+          checksum when it merges; every other owned file must still match
 
   - every owned file matches its recorded hash in family/CHECKSUMS
   - family/CHECKSUMS lists every owned file and nothing else
@@ -58,7 +63,7 @@ check_version() {
     return
   }
   case "${version}" in
-    '' | *[!0-9]*) report "family/VERSION" "not a positive integer: ${version}" ;;
+  '' | *[!0-9]*) report "family/VERSION" "not a positive integer: ${version}" ;;
   esac
 }
 
@@ -66,9 +71,12 @@ check_ownership_resolves() {
   local path
   while IFS= read -r path; do
     case "${path}" in
-      MISSING:*) report "${path#MISSING:}" "named in family/OWNERSHIP but absent from this member" ;;
+    MISSING:*) report "${path#MISSING:}" "named in family/OWNERSHIP but absent from this member" ;;
     esac
-  done < <(family_paths_of_class "${ROOT}" owned; family_paths_of_class "${ROOT}" shaped)
+  done < <(
+    family_paths_of_class "${ROOT}" owned
+    family_paths_of_class "${ROOT}" shaped
+  )
 }
 
 check_owned_hashes() {
@@ -88,8 +96,12 @@ check_owned_hashes() {
     computed="$(family_hash_file "${ROOT}/${path}")"
     [[ "${computed}" == "${recorded}" ]] && continue
     family_exception_exists "${ROOT}" "${REPO}" "${path}" && continue
+    if [[ "${BOT}" -eq 1 ]] && family_bot_editable "${path}"; then
+      printf '%s: changed by a bot, bot-merge records its checksum\n' "${path}"
+      continue
+    fi
     report "${path}" "content differs from the family copy, recorded ${recorded:0:12} computed ${computed:0:12}"
-  done < "${CHECKSUM_FILE}"
+  done <"${CHECKSUM_FILE}"
 }
 
 check_manifest_complete() {
@@ -124,7 +136,7 @@ check_shaped_changelog() {
     report "CHANGELOG.md" "missing"
     return
   }
-  grep -qE '^## \[' "${path}" || report "CHANGELOG.md" "no versioned section heading"
+  grep -qE '^##? \[[0-9]' "${path}" || report "CHANGELOG.md" "no versioned section heading"
 }
 
 check_shaped_agent_guide() {
@@ -138,9 +150,9 @@ check_shaped_files() {
   local path
   while IFS= read -r path; do
     case "${path}" in
-      AGENTS.md) check_shaped_agent_guide ;;
-      README.md) check_shaped_readme ;;
-      CHANGELOG.md) check_shaped_changelog ;;
+    AGENTS.md) check_shaped_agent_guide ;;
+    README.md) check_shaped_readme ;;
+    CHANGELOG.md) check_shaped_changelog ;;
     esac
   done < <(family_shaped_paths "${ROOT}" | grep -v '^MISSING:')
 }
@@ -184,11 +196,22 @@ check_entry_points() {
 }
 
 main() {
-  if [[ $# -gt 0 ]]; then
-    usage
-    [[ "${1}" == "-h" || "${1}" == "--help" ]] && return 0
-    return 2
-  fi
+  while [[ $# -gt 0 ]]; do
+    case "${1}" in
+    --bot)
+      BOT=1
+      shift
+      ;;
+    -h | --help)
+      usage
+      return 0
+      ;;
+    *)
+      usage >&2
+      return 2
+      ;;
+    esac
+  done
 
   check_membership
   check_version

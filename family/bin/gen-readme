@@ -103,22 +103,22 @@ main() {
 
   while [[ $# -gt 0 ]]; do
     case "${1}" in
-      --check)
-        check=1
-        shift
-        ;;
-      --members-dir)
-        dir="${2:-}"
-        shift 2
-        ;;
-      -h | --help)
-        usage
-        return 0
-        ;;
-      *)
-        target="${1}"
-        shift
-        ;;
+    --check)
+      check=1
+      shift
+      ;;
+    --members-dir)
+      dir="${2:-}"
+      shift 2
+      ;;
+    -h | --help)
+      usage
+      return 0
+      ;;
+    *)
+      target="${1}"
+      shift
+      ;;
     esac
   done
 
@@ -153,7 +153,7 @@ main() {
   WORK="$(mktemp -d "${TMPDIR:-/tmp}/family-readme-XXXXXX")"
   local tmp="${WORK}/readme"
   local section_file="${WORK}/section"
-  printf '%s\n' "${section}" > "${section_file}"
+  printf '%s\n' "${section}" >"${section_file}"
 
   if [[ -n "${current}" ]]; then
     SECTION_FILE="${section_file}" awk -v b="${BEGIN_MARK}" -v e="${END_MARK}" '
@@ -165,14 +165,14 @@ main() {
       }
       index($0, e) { inside = 0; next }
       !inside { print }
-    ' "${readme}" > "${tmp}"
+    ' "${readme}" >"${tmp}"
   else
-    cat "${readme}" > "${tmp}"
-    printf '\n' >> "${tmp}"
-    cat "${section_file}" >> "${tmp}"
+    cat "${readme}" >"${tmp}"
+    printf '\n' >>"${tmp}"
+    cat "${section_file}" >>"${tmp}"
   fi
 
-  cat "${tmp}" > "${readme}"
+  cat "${tmp}" >"${readme}"
   printf '%s: README family section written\n' "$(family_repo_name "${target}")"
 }
 

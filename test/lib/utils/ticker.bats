@@ -11,7 +11,7 @@ setup() {
   source "${TICKER_LIB}"
   TICK_LOG="${TEST_TMPDIR}/ticks"
   export TICK_LOG
-  _ticker_sleep() { printf 'sleep %s\n' "${1}" >> "${TICK_LOG}"; }
+  _ticker_sleep() { printf 'sleep %s\n' "${1}" >>"${TICK_LOG}"; }
 }
 
 teardown() {
@@ -27,7 +27,7 @@ count_ticks() {
 }
 
 record_tick() {
-  printf 'tick\n' >> "${TICK_LOG}"
+  printf 'tick\n' >>"${TICK_LOG}"
 }
 
 hand_over_after_two() {
@@ -125,20 +125,26 @@ wait_for_file() {
 }
 
 @test "ticker - start spawns the daemon subcommand" {
-  _ticker_spawn() { printf 'spawn %s\n' "${1}" >> "${TICK_LOG}"; }
+  # Arrange
+  _ticker_spawn() { printf 'spawn %s\n' "${1}" >>"${TICK_LOG}"; }
 
+  # Act
   ticker_start "/plugin/src/demo.sh"
 
+  # Assert
   [[ "$(cat "${TICK_LOG}")" == "spawn /plugin/src/demo.sh" ]]
 }
 
 @test "ticker - spawn runs the script with the daemon argument in the background" {
+  # Arrange
   local script="${TEST_TMPDIR}/demo.sh"
-  printf '#!/usr/bin/env bash\nprintf "%%s" "$1" > "%s/spawned"\n' "${TEST_TMPDIR}" > "${script}"
+  printf '#!/usr/bin/env bash\nprintf "%%s" "$1" > "%s/spawned"\n' "${TEST_TMPDIR}" >"${script}"
   chmod +x "${script}"
 
+  # Act
   _ticker_spawn "${script}"
 
+  # Assert
   wait_for_file "${TEST_TMPDIR}/spawned"
   [[ "$(cat "${TEST_TMPDIR}/spawned")" == "daemon" ]]
 }
@@ -146,7 +152,7 @@ wait_for_file() {
 @test "ticker - spawn detaches the daemon from the caller's stdin" {
   # Arrange
   local script="${TEST_TMPDIR}/reader.sh"
-  printf '#!/usr/bin/env bash\ncat > "%s/stdin"\n: > "%s/read"\n' "${TEST_TMPDIR}" "${TEST_TMPDIR}" > "${script}"
+  printf '#!/usr/bin/env bash\ncat > "%s/stdin"\n: > "%s/read"\n' "${TEST_TMPDIR}" "${TEST_TMPDIR}" >"${script}"
   chmod +x "${script}"
 
   # Act
@@ -225,11 +231,11 @@ wait_for_file() {
 stub_ticker_tmux() {
   export TMUX_LOG="${TEST_TMPDIR}/tmux.log"
   _ticker_tmux() {
-    printf '%s\n' "$*" >> "${TMUX_LOG}"
+    printf '%s\n' "$*" >>"${TMUX_LOG}"
     case "${1} ${2:-} ${3:-}" in
-      "show-option -gqv @demo_option_names") printf '%s' "${STUB_NAMES:-}" ;;
-      "show-option -gqv @alpha") printf 'one' ;;
-      "display-message -p "*) printf '%s' "${STUB_VALUES:-}" ;;
+    "show-option -gqv @demo_option_names") printf '%s' "${STUB_NAMES:-}" ;;
+    "show-option -gqv @alpha") printf 'one' ;;
+    "display-message -p "*) printf '%s' "${STUB_VALUES:-}" ;;
     esac
     return 0
   }
@@ -245,13 +251,16 @@ stub_ticker_tmux() {
 }
 
 @test "ticker - a learned option is served from memory" {
+  # Arrange
   stub_ticker_tmux
   TICKER_PREFIX="demo"
   ticker_get_option "@alpha" "" >/dev/null
-  : > "${TMUX_LOG}"
+  : >"${TMUX_LOG}"
 
+  # Act
   run ticker_get_option "@alpha" ""
 
+  # Assert
   [[ "${output}" == "one" ]]
   [ ! -s "${TMUX_LOG}" ]
 }
@@ -346,13 +355,16 @@ stub_ticker_tmux() {
 }
 
 @test "ticker - a write in the main shell joins the publish batch" {
+  # Arrange
   stub_ticker_tmux
-  publish_add_raw() { printf '%s=%s\n' "${1}" "${2}" >> "${TEST_TMPDIR}/batch"; }
+  publish_add_raw() { printf '%s=%s\n' "${1}" "${2}" >>"${TEST_TMPDIR}/batch"; }
   TICKER_MAIN_PID="${BASHPID:-main}"
   [[ -n "${BASHPID:-}" ]] || skip "this bash has no BASHPID"
 
+  # Act
   ticker_set_option "@gamma" "3"
 
+  # Assert
   [[ "$(cat "${TEST_TMPDIR}/batch")" == "@gamma=3" ]]
   [ ! -s "${TMUX_LOG}" ]
 }

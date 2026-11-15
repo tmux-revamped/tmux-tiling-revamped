@@ -135,12 +135,17 @@ teardown() {
 }
 
 @test "cache.sh - _cache_spawn runs the worker in the background" {
+  # Arrange
   unset CACHE_SYNC
   local marker="${TEST_TMPDIR}/ran"
-  _worker() { echo "done" > "$1"; }
+  _worker() { echo "done" >"$1"; }
+
+  # Act
   _cache_spawn percent _worker "${marker}"
+
+  # Assert
   local i
-  for (( i=0; i<50; i++ )); do
+  for ((i = 0; i < 50; i++)); do
     [[ -f "${marker}" ]] && break
     sleep 0.05
   done
@@ -148,14 +153,19 @@ teardown() {
 }
 
 @test "cache.sh - cache_refresh_if_stale backgrounds the worker without sync mode" {
+  # Arrange
   unset CACHE_SYNC
   cache_set percent "old"
   export MOCK_EPOCH=1000010
   local marker="${TEST_TMPDIR}/bg"
-  _worker() { echo hi > "$1"; }
+  _worker() { echo hi >"$1"; }
+
+  # Act
   cache_refresh_if_stale percent 5 _worker "${marker}"
+
+  # Assert
   local i
-  for (( i=0; i<50; i++ )); do
+  for ((i = 0; i < 50; i++)); do
     [[ -f "${marker}" ]] && break
     sleep 0.05
   done

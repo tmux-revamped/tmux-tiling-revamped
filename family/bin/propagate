@@ -87,7 +87,7 @@ member_is_current() {
     family_exception_exists "${ROOT}" "${member}" "${path}" && continue
     [[ -f "${other}/${path}" ]] || return 1
     [[ "$(family_hash_file "${other}/${path}")" == "${recorded}" ]] || return 1
-  done < "${MANIFEST}"
+  done <"${MANIFEST}"
 
   [[ "$(family_version "${other}" 2>/dev/null || true)" == "$(family_version "${ROOT}")" ]]
 }
@@ -127,7 +127,7 @@ describe_pending() {
     elif [[ "$(family_hash_file "${other}/${path}")" != "${recorded}" ]]; then
       printf '    replace %s\n' "${path}"
     fi
-  done < "${MANIFEST}"
+  done <"${MANIFEST}"
 }
 
 commit_and_open() {
@@ -166,7 +166,7 @@ commit_and_open() {
 }
 
 write_pr_body() {
-  cat > "${WORK}/body.md" <<BODY
+  cat >"${WORK}/body.md" <<BODY
 ${MESSAGE}
 
 Propagated from ${REPO} at family contract version $(family_version "${ROOT}").
@@ -186,45 +186,45 @@ bump_version() {
   local current next
   current="$(family_version "${ROOT}")"
   next=$((current + 1))
-  printf '%s\n' "${next}" > "${ROOT}/family/VERSION"
+  printf '%s\n' "${next}" >"${ROOT}/family/VERSION"
   printf 'contract version %s -> %s\n' "${current}" "${next}"
 }
 
 main() {
   while [[ $# -gt 0 ]]; do
     case "${1}" in
-      --message)
-        MESSAGE="${2:-}"
-        shift 2
-        ;;
-      --members-dir)
-        MEMBERS_DIR="${2:-}"
-        shift 2
-        ;;
-      --branch)
-        BRANCH="${2:-}"
-        shift 2
-        ;;
-      --dry-run)
-        DRY_RUN=1
-        shift
-        ;;
-      --no-push)
-        NO_PUSH=1
-        shift
-        ;;
-      --no-bump)
-        BUMP=0
-        shift
-        ;;
-      -h | --help)
-        usage
-        return 0
-        ;;
-      *)
-        usage >&2
-        return 2
-        ;;
+    --message)
+      MESSAGE="${2:-}"
+      shift 2
+      ;;
+    --members-dir)
+      MEMBERS_DIR="${2:-}"
+      shift 2
+      ;;
+    --branch)
+      BRANCH="${2:-}"
+      shift 2
+      ;;
+    --dry-run)
+      DRY_RUN=1
+      shift
+      ;;
+    --no-push)
+      NO_PUSH=1
+      shift
+      ;;
+    --no-bump)
+      BUMP=0
+      shift
+      ;;
+    -h | --help)
+      usage
+      return 0
+      ;;
+    *)
+      usage >&2
+      return 2
+      ;;
     esac
   done
 
@@ -235,7 +235,7 @@ main() {
 
   WORK="$(mktemp -d "${TMPDIR:-/tmp}/family-propagate-XXXXXX")"
   local fresh="${WORK}/CHECKSUMS"
-  "${SCRIPT_DIR}/checksums" --stdout > "${fresh}"
+  "${SCRIPT_DIR}/checksums" --stdout >"${fresh}"
 
   settle_version "${fresh}"
 

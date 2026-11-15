@@ -17,15 +17,15 @@ _logging_enabled() {
 _rotate_log() {
   [[ -f "${PLUGIN_LOG_FILE}" ]] || return 0
   local size
-  size=$(stat -f%z "${PLUGIN_LOG_FILE}" 2>/dev/null \
-    || stat -c%s "${PLUGIN_LOG_FILE}" 2>/dev/null \
-    || echo 0)
+  size=$(stat -f%z "${PLUGIN_LOG_FILE}" 2>/dev/null ||
+    stat -c%s "${PLUGIN_LOG_FILE}" 2>/dev/null ||
+    echo 0)
   [[ "${size}" =~ ^[0-9]+$ ]] || return 0
-  if (( size > PLUGIN_MAX_LOG_SIZE )); then
+  if ((size > PLUGIN_MAX_LOG_SIZE)); then
     tail -n "${PLUGIN_MAX_LOG_LINES}" "${PLUGIN_LOG_FILE}" \
-      > "${PLUGIN_LOG_FILE}.rotated" 2>/dev/null \
-      && mv "${PLUGIN_LOG_FILE}.rotated" "${PLUGIN_LOG_FILE}" 2>/dev/null \
-      || true
+      >"${PLUGIN_LOG_FILE}.rotated" 2>/dev/null &&
+      mv "${PLUGIN_LOG_FILE}.rotated" "${PLUGIN_LOG_FILE}" 2>/dev/null ||
+      true
   fi
 }
 
@@ -43,7 +43,7 @@ log_error() {
   timestamp=$(date '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo "")
   [[ -z "${timestamp}" ]] && return 0
 
-  echo "[${timestamp}] [${component}] ${message}" >> "${PLUGIN_LOG_FILE}" 2>/dev/null || true
+  echo "[${timestamp}] [${component}] ${message}" >>"${PLUGIN_LOG_FILE}" 2>/dev/null || true
   _rotate_log
 }
 
