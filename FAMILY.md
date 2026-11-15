@@ -98,6 +98,15 @@ That rule decides defaults. It does not decide what happens when a user's own re
 
 An earlier design used the registry's precedence as the answer to the first row. It is not: precedence resolves a collision after the fact, and the rule is that the collision must not exist. The registry stays, because the second and third rows are real and nothing else answers them, but it is a safety net rather than the allocation policy.
 
+## Notifications
+
+A member whose state can need attention, such as a battery at critical charge or a disk crossing its high threshold, may send a desktop notification. Every one follows the same rules:
+
+- It goes through [`src/lib/utils/notify.sh`](src/lib/utils/notify.sh), which picks `osascript` on macOS and `notify-send` on Linux and passes the title and message as arguments, never inside AppleScript source.
+- It sits behind `@<prefix>_revamped_notify`, and the default is `0`. A fresh install never shows a notification.
+- The same state always shows in the status line or the member's popup, so turning notifications off loses nothing.
+- A missing notifier is not an error. `doctor` reports which one would be used.
+
 ## A bug found in one member is a bug hunted in all of them
 
 This is a requirement, not a habit. Fixing a defect in one member and stopping there is an incomplete fix, and the pull request is not ready.
