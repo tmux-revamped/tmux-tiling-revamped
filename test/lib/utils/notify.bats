@@ -18,6 +18,7 @@ teardown() {
 }
 
 stub_notifier() {
+  unset -f "${1}"
   printf '#!/bin/sh\nfor a in "$@"; do printf "%%s\\n" "$a"; done >>"%s"\n' "${NOTIFY_CALLS}" >"${NOTIFY_BIN}/${1}"
   chmod +x "${NOTIFY_BIN}/${1}"
 }
@@ -26,8 +27,9 @@ hide_system_notifiers() {
   local tool
   NOTIFY_BIN_ONLY="${TEST_TMPDIR}/only"
   mkdir -p "${NOTIFY_BIN_ONLY}"
+  unset -f osascript notify-send
   for tool in uname cat tail head grep tr; do
-    ln -s "$(command -v "${tool}")" "${NOTIFY_BIN_ONLY}/${tool}"
+    ln -s "$(type -P "${tool}")" "${NOTIFY_BIN_ONLY}/${tool}"
   done
   PATH="${NOTIFY_BIN}:${NOTIFY_BIN_ONLY}"
 }
