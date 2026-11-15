@@ -36,15 +36,7 @@ owned	src/lib/utils/cache.sh
 owned	src/lib/utils/has-command.sh
 owned	src/lib/utils/error-logger.sh
 owned	src/lib/tmux/tmux-ops.sh
-owned	.github/workflows/tests.yml
-owned	.github/workflows/pr.yml
-owned	.github/workflows/stale.yml
-owned	.github/dependabot.yml
-owned	.shellcheckrc
-owned	.github/workflows/family.yml
-owned	.github/workflows/security.yml
 owned	test/lib/tmux/tmux-ops.bats
-owned	Makefile
 owned	family/bin/live-keys
 owned	family/KEYS.md
 owned	family/docs/migration.md
@@ -62,8 +54,6 @@ owned	test/lib/utils/cache-validation.bats
 owned	LICENSE
 owned	.github/FUNDING.yml
 owned	.github/CODEOWNERS
-owned	.github/labeler.yml
-owned	.github/PULL_REQUEST_TEMPLATE.md
 owned	.github/ISSUE_TEMPLATE/bug-report.yml
 owned	.github/ISSUE_TEMPLATE/config.yml
 owned	.github/ISSUE_TEMPLATE/docs.yml

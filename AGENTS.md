@@ -59,6 +59,5 @@ As of 2026-11-15:
 - No golden transcripts, `call.sh`, `run-matrix.sh` or `linux-container.sh`.
 - The version is written by hand and released by `tests.yml`; there is no semantic-release, `package.json`, `release.yml` with `recover`, `bot-merge.yml` or Renovate.
 - CI is `tests.yml`, `family.yml` and `security.yml`, not `ci.yml`, and no job starts with `step-security/harden-runner`.
-- The pull request template, `labeler.yml`, `pr.yml` and `stale.yml` are still present.
 - No `.yamllint.yml`, `scripts/check-names.sh` or shfmt; the Makefile has `help`, `test`, `test-unit`, `coverage`, `lint` and `clean`, not the family's targets.
 - It needs bash 4 for associative arrays, so on the macOS `/bin/bash` 3.2 it shows a message and binds nothing.
