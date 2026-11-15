@@ -25,7 +25,7 @@ owned	family/bin/sync
 owned	family/lib/common.sh
 owned	family/docs/baseline.md
 owned	family/docs/collisions.md
-owned	AGENTS.md
+shaped	AGENTS.md
 owned	CLAUDE.md
 owned	family/bin/sweep
 owned	.claude/agents/family-bug-sweep.md

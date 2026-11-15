@@ -11,6 +11,12 @@ CHECKSUM_FILE="${ROOT}/family/CHECKSUMS"
 SUBSTITUTION_RE='\$\{[A-Za-z_][A-Za-z0-9_]*(\[[^]]*\])?(//?|/#|/%)'
 UNQUOTED_REPLACEMENT_RE='[^/#%"]/\$[{(]'
 HASH_DOUBLING_RE='/\$\{(hash|HASH)\}(\$\{(hash|HASH)\})?\}'
+AGENT_GUIDE_HEADINGS='## Layout
+## Names
+## Behaviour
+## Domain rules
+## Release
+## Gaps against FAMILY.md'
 
 findings=0
 
@@ -22,7 +28,8 @@ Verifies this member against the family contract, offline.
 
   - every owned file matches its recorded hash in family/CHECKSUMS
   - family/CHECKSUMS lists every owned file and nothing else
-  - every shaped file satisfies its structural rules
+  - every shaped file satisfies its structural rules, including the
+    agent guide's six headings in the family's order
   - family/VERSION is a positive integer
   - this repository appears in family/MEMBERS
   - every *.tmux entry point at the root is executable and tracked as 100755
@@ -120,10 +127,18 @@ check_shaped_changelog() {
   grep -qE '^## \[' "${path}" || report "CHANGELOG.md" "no versioned section heading"
 }
 
+check_shaped_agent_guide() {
+  local headings
+  headings="$(awk '/^```/ { fence = !fence; next } !fence && /^## / { print }' "${ROOT}/AGENTS.md")"
+  [[ "${headings}" == "${AGENT_GUIDE_HEADINGS}" ]] && return 0
+  report "AGENTS.md" "its level-two headings must be exactly Layout, Names, Behaviour, Domain rules, Release and Gaps against FAMILY.md, in that order"
+}
+
 check_shaped_files() {
   local path
   while IFS= read -r path; do
     case "${path}" in
+      AGENTS.md) check_shaped_agent_guide ;;
       README.md) check_shaped_readme ;;
       CHANGELOG.md) check_shaped_changelog ;;
     esac

@@ -22,6 +22,14 @@ write_exception_under() {
   printf 'diverged\n' >"${FIXTURE}/LICENSE"
 }
 
+write_agent_guide() {
+  local heading
+  printf '# probe\n' >"${FIXTURE}/AGENTS.md"
+  for heading in "$@"; do
+    printf '\n%s\n\nText.\n' "${heading}" >>"${FIXTURE}/AGENTS.md"
+  done
+}
+
 write_source_line() {
   mkdir -p "${FIXTURE}/src"
   printf '#!/usr/bin/env bash\n%s\n' "${1}" >"${FIXTURE}/src/probe.sh"
@@ -145,4 +153,76 @@ write_source_line() {
   # Assert
   [ "${status}" -eq 0 ]
   [[ "${output}" == "${name}: clean, contract version "* ]]
+}
+
+@test "audit - accepts an agent guide with the six headings in order" {
+  # Arrange
+  write_agent_guide '## Layout' '## Names' '## Behaviour' '## Domain rules' '## Release' '## Gaps against FAMILY.md'
+
+  # Act
+  run "${FIXTURE}/family/bin/audit"
+
+  # Assert
+  [ "${status}" -eq 0 ]
+  [[ "${output}" != *"AGENTS.md"* ]]
+}
+
+@test "audit - reports an agent guide missing a heading" {
+  # Arrange
+  write_agent_guide '## Layout' '## Names' '## Behaviour' '## Domain rules' '## Release'
+
+  # Act
+  run "${FIXTURE}/family/bin/audit"
+
+  # Assert
+  [ "${status}" -eq 1 ]
+  [[ "${output}" == *"AGENTS.md: its level-two headings must be exactly Layout, Names, Behaviour, Domain rules, Release and Gaps against FAMILY.md, in that order"* ]]
+}
+
+@test "audit - reports an agent guide whose headings are out of order" {
+  # Arrange
+  write_agent_guide '## Names' '## Layout' '## Behaviour' '## Domain rules' '## Release' '## Gaps against FAMILY.md'
+
+  # Act
+  run "${FIXTURE}/family/bin/audit"
+
+  # Assert
+  [ "${status}" -eq 1 ]
+  [[ "${output}" == *"AGENTS.md: its level-two headings must be exactly"* ]]
+}
+
+@test "audit - reports an agent guide with an extra heading" {
+  # Arrange
+  write_agent_guide '## Layout' '## Names' '## Behaviour' '## Domain rules' '## Release' '## Gaps against FAMILY.md' '## Never'
+
+  # Act
+  run "${FIXTURE}/family/bin/audit"
+
+  # Assert
+  [ "${status}" -eq 1 ]
+  [[ "${output}" == *"AGENTS.md: its level-two headings must be exactly"* ]]
+}
+
+@test "audit - ignores a heading inside a code fence in the agent guide" {
+  # Arrange
+  write_agent_guide '## Layout' '```' '## not a heading' '```' '## Names' '## Behaviour' '## Domain rules' '## Release' '## Gaps against FAMILY.md'
+
+  # Act
+  run "${FIXTURE}/family/bin/audit"
+
+  # Assert
+  [ "${status}" -eq 0 ]
+  [[ "${output}" != *"AGENTS.md"* ]]
+}
+
+@test "audit - reports a missing agent guide" {
+  # Arrange
+  rm -f "${FIXTURE}/AGENTS.md"
+
+  # Act
+  run "${FIXTURE}/family/bin/audit"
+
+  # Assert
+  [ "${status}" -eq 1 ]
+  [[ "${output}" == *"AGENTS.md: named in family/OWNERSHIP but absent from this member"* ]]
 }
