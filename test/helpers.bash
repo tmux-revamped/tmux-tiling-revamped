@@ -19,6 +19,7 @@ setup_test_environment() {
   unset _TMUX_PLUGIN_TMUX_OPS_LOADED
   unset _TMUX_PLUGIN_PUBLISH_LOADED
   unset _TMUX_PLUGIN_TICKER_LOADED
+  unset _TMUX_PLUGIN_NOTIFY_LOADED
 
   if declare -f setup_test_environment_local >/dev/null; then
     setup_test_environment_local
