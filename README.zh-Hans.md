@@ -284,7 +284,6 @@ BSP 布局分三步应用：
 | `make test-unit` | [`test/lib`](test/lib) 下的单元测试 |
 | `make lint` | 对所有 shell 文件运行 warning 级别的 shellcheck |
 | `make coverage` | kcov 行覆盖率，下限 95%，仅 Linux |
-| [`family/bin/audit`](family/bin/audit) | 按系列约定检查本仓库 |
 
 当本 README 提到代码不读取的选项时，[`test/docs.bats`](test/docs.bats) 会失败。贡献说明见 [`CONTRIBUTING.md`](CONTRIBUTING.md)。
 
@@ -296,9 +295,9 @@ BSP 布局分三步应用：
 
 ## tmux-revamped 插件家族
 
-本插件是 tmux-revamped 插件家族的一员。每个成员都带有 [`FAMILY.md`](FAMILY.md) 中的同一份约定、`family/` 下的同一套工具和同一个共享库，并由校验和清单保证逐字节一致。这些成员可以一起安装：任何成员都不会占用其他成员使用的按键或 tmux 选项。
+这个插件是 tmux-revamped 插件家族的一员。每个成员都带有 [`FAMILY.md`](FAMILY.md) 中相同的约定和相同的共享库，并且设计为一起安装：没有成员占用另一个成员占用的按键或 tmux 选项。
 
-在一个成员中发现的缺陷，要在全部成员中排查之后才算修复完成。这项义务写在约定里，而不是靠记忆，`family/bin/sweep` 负责执行它。
+在一个成员中发现的缺陷，要在全部成员中排查之后才算修复完成。
 
 | 成员 | 功能 |
 |---|---|
@@ -318,7 +317,7 @@ BSP 布局分三步应用：
 | [`tmux-network-revamped`](https://github.com/tmux-revamped/tmux-network-revamped) | 在 tmux 状态栏显示网络吞吐量，从不阻塞渲染 |
 | [`tmux-pain-control-revamped`](https://github.com/tmux-revamped/tmux-pain-control-revamped) | tmux 的窗格和窗口管理按键，适配 tmux 版本，兼容 vim，每个 prefix 按键都可禁用 |
 | [`tmux-persist-revamped`](https://github.com/tmux-revamped/tmux-persist-revamped) | 保存 tmux 的所有会话、窗口和窗格，按定时器自动保存，并在重启后全部恢复 |
-| [`tmux-plugin-template`](https://github.com/tmux-revamped/tmux-plugin-template) | tmux-revamped 插件的起点：共享库、bats 测试框架、CI 和系列工具 |
+| [`tmux-plugin-template`](https://github.com/tmux-revamped/tmux-plugin-template) | tmux-revamped 插件的起点：共享库、bats 测试框架和 CI |
 | [`tmux-pomodoro-revamped`](https://github.com/tmux-revamped/tmux-pomodoro-revamped) | tmux 状态栏中的番茄钟计时器，所有状态都保存在 tmux 选项中，不使用临时文件 |
 | [`tmux-ram-revamped`](https://github.com/tmux-revamped/tmux-ram-revamped) | 在 tmux 状态栏显示内存、交换空间和内存压力，在后台采样，渲染从不等待 |
 | [`tmux-reorder-revamped`](https://github.com/tmux-revamped/tmux-reorder-revamped) | 用鼠标在 tmux 状态栏上拖动窗口标签来移动该窗口 |
@@ -327,15 +326,5 @@ BSP 布局分三步应用：
 | [`tmux-tiling-revamped`](https://github.com/tmux-revamped/tmux-tiling-revamped) | **本插件**，tmux 的平铺窗口管理：八种布局，包括 BSP dwindle 和 spiral，并支持撤销布局 |
 | [`tmux-time-revamped`](https://github.com/tmux-revamped/tmux-time-revamped) | 状态栏中的本地时钟和世界时钟，按一天中的时段着色，并提供倒计时和夏令时提醒 |
 | [`tmux-weather-revamped`](https://github.com/tmux-revamped/tmux-weather-revamped) | 在后台从 wttr.in 获取天气并显示在状态栏，状态栏无需等待 |
-
-### 检查安装
-
-所有成员都在磁盘上时，一条命令即可报告它们之间的任何冲突：
-
-```sh
-family/bin/doctor --live
-```
-
-它读取每个成员和正在运行的 tmux 服务器，报告重复的按键、重复的状态占位符、不符合命名规则的选项，以及约定版本落后的成员。
 
 <!-- family:end -->

@@ -1,29 +1,70 @@
 # tmux-revamped: the family standard
 
-The repositories listed in [`family/MEMBERS`](family/MEMBERS) are one family of tmux plugins, called tmux-revamped. Each one does one job inside tmux, and they look, read and behave alike, so a person who knows one already knows how to drive the others, and every member installs beside every other with no clash.
+The repositories in the table below are one family of tmux plugins, called tmux-revamped. Each one does one job inside tmux, and they look, read and behave alike, so a person who knows one already knows how to drive the others, and every member installs beside every other with no clash.
 
 Two files carry the family, and every member implements everything both say:
 
 - [`FAMILY.md`](FAMILY.md), this file, holds everything the members share. It is the same, byte for byte, in every member.
 - [`AGENTS.md`](AGENTS.md) holds only what is exclusive to its own repository: its layout, its names, its behaviour, the rules of its own domain, its release details and its open gaps. Every member's agent guide has the same headings, in this order: Layout, Names, Behaviour, Domain rules, Release, Gaps against FAMILY.md. A rule that would serve more than one member belongs here instead.
 
-Nothing about the family lives anywhere else, so anyone with the repositories has all of it. A coding agent's own instruction file in a member only imports the agent guide.
+Nothing about the family lives anywhere else, so anyone with the repositories has all of it.
 
-There is no central repository. Every plugin is installed by cloning its own repository, so the distribution channel has no room for a shared dependency: a submodule does not survive that clone, and a source archive leaves it out. The contract is replicated in every member instead, and the tooling under [`family/`](family) removes the drift that replication brings.
+There is no central repository. Every plugin is installed by cloning its own repository, so the distribution channel has no room for a shared dependency: a submodule does not survive that clone, and a source archive leaves it out. The contract and the identical files are replicated in every member instead, and every change to them is made in every member in the same task. No member carries family tooling or a family folder: this file is the whole contract.
 
 This file states the standard every member is held to. Where a member does not meet a rule yet, the rule still applies, and the member lists the difference under Gaps against FAMILY.md in its agent guide. That list is the family's progress tracker: it shrinks until it reads `None`, and a feature a gap still affects is never described as finished in the docs.
 
+## Hard rules
+
+Every member holds these without exception. This file is what enforces them: a rule is written here, never handed to a script that checks it.
+
+- **Lean.** A file, a section or a step stays only while something needs it. Nothing restates this file, and nothing exists only to police it.
+- **Nothing beyond the plugin.** A repository holds the plugin, its tests, CI, its docs, [`AGENTS.md`](AGENTS.md), this file, and the coding agent's instruction file, which only imports those two. No family folder, no family tooling, no AI tooling such as agent definitions, prompts or editor assistant settings.
+- **Both platforms.** Every feature works in full on Linux and on macOS, as Platforms describes.
+- **Recorded features.** Every feature has a VHS recording, and every key a recording presses is captioned on screen while it acts, as Screens describes.
+- **Quiet by default.** Desktop notifications are off until the person turns them on.
+- **One key, one owner.** No two members ship the same default key; the allocation is under Key bindings.
+- **Straight to `main`.** People open no pull requests; every change is a conventional commit pushed to `main`, and only bots open pull requests.
+- **In step.** A change to this file or to an identical file lands in every member in the same task.
+
+| Member | What it does | Repository |
+|:-------|:-------------|:-----------|
+| tmux-autoreload-revamped | Edit your tmux config, save, and watch it reload itself, no key, no command | [tmux-revamped/tmux-autoreload-revamped](https://github.com/tmux-revamped/tmux-autoreload-revamped) |
+| tmux-battery-revamped | Battery status for your tmux status bar, without ever blocking the status render | [tmux-revamped/tmux-battery-revamped](https://github.com/tmux-revamped/tmux-battery-revamped) |
+| tmux-bluetooth-revamped | Every connected Bluetooth device and its battery in your tmux status bar, without blocking the render | [tmux-revamped/tmux-bluetooth-revamped](https://github.com/tmux-revamped/tmux-bluetooth-revamped) |
+| tmux-cpu-revamped | CPU load, temperature, and frequency in your tmux status bar, without ever blocking the render | [tmux-revamped/tmux-cpu-revamped](https://github.com/tmux-revamped/tmux-cpu-revamped) |
+| tmux-disk-revamped | Disk usage for your tmux status bar, without ever blocking the status render | [tmux-revamped/tmux-disk-revamped](https://github.com/tmux-revamped/tmux-disk-revamped) |
+| tmux-extract-revamped | Pick a URL, path, hash or any other token off the screen with fzf and type it at the cursor, in pure shell | [tmux-revamped/tmux-extract-revamped](https://github.com/tmux-revamped/tmux-extract-revamped) |
+| tmux-fzf-revamped | Switch to, kill, rename or create tmux sessions, windows and panes from fzf pickers in a popup | [tmux-revamped/tmux-fzf-revamped](https://github.com/tmux-revamped/tmux-fzf-revamped) |
+| tmux-git-revamped | Show the active pane's git branch, changes and provider counts in the tmux status bar without blocking it | [tmux-revamped/tmux-git-revamped](https://github.com/tmux-revamped/tmux-git-revamped) |
+| tmux-gpu-revamped | GPU load, temperature, clock, power and memory in the tmux status bar, from NVIDIA, AMD, Intel and Apple GPUs | [tmux-revamped/tmux-gpu-revamped](https://github.com/tmux-revamped/tmux-gpu-revamped) |
+| tmux-kube-revamped | Current Kubernetes context and namespace in the tmux status bar, parsed from kubeconfig without kubectl | [tmux-revamped/tmux-kube-revamped](https://github.com/tmux-revamped/tmux-kube-revamped) |
+| tmux-launcher-revamped | Launch any TUI app in a popup or a window, scoped to the current pane's directory, with one configurable bindi | [tmux-revamped/tmux-launcher-revamped](https://github.com/tmux-revamped/tmux-launcher-revamped) |
+| tmux-logging-revamped | Capture any pane to a file: live logging, full scrollback, or a one-shot screenshot | [tmux-revamped/tmux-logging-revamped](https://github.com/tmux-revamped/tmux-logging-revamped) |
+| tmux-music-revamped | Now playing in your tmux status bar, without ever blocking the status render | [tmux-revamped/tmux-music-revamped](https://github.com/tmux-revamped/tmux-music-revamped) |
+| tmux-network-revamped | Network throughput in your tmux status bar, without ever blocking the render | [tmux-revamped/tmux-network-revamped](https://github.com/tmux-revamped/tmux-network-revamped) |
+| tmux-pain-control-revamped | Pane and window management bindings for tmux, version aware, vim friendly, every prefix key can be disabled | [tmux-revamped/tmux-pain-control-revamped](https://github.com/tmux-revamped/tmux-pain-control-revamped) |
+| tmux-persist-revamped | Save every tmux session, window and pane, auto-save on a timer, and restore it all after a reboot | [tmux-revamped/tmux-persist-revamped](https://github.com/tmux-revamped/tmux-persist-revamped) |
+| tmux-plugin-template | The starting point for a tmux-revamped plugin: shared library, bats harness and CI | [tmux-revamped/tmux-plugin-template](https://github.com/tmux-revamped/tmux-plugin-template) |
+| tmux-pomodoro-revamped | A Pomodoro timer in the tmux status bar that keeps all of its state in tmux options, with no temp files | [tmux-revamped/tmux-pomodoro-revamped](https://github.com/tmux-revamped/tmux-pomodoro-revamped) |
+| tmux-ram-revamped | RAM, swap and memory pressure in the tmux status bar, sampled in the background so the render never waits | [tmux-revamped/tmux-ram-revamped](https://github.com/tmux-revamped/tmux-ram-revamped) |
+| tmux-reorder-revamped | Drag a window tab along the tmux status bar with the mouse to move that window | [tmux-revamped/tmux-reorder-revamped](https://github.com/tmux-revamped/tmux-reorder-revamped) |
+| tmux-scroll-revamped | Send the mouse wheel to apps that scroll themselves and into tmux copy-mode everywhere else | [tmux-revamped/tmux-scroll-revamped](https://github.com/tmux-revamped/tmux-scroll-revamped) |
+| tmux-sensible-revamped | Sensible tmux defaults, gated by tmux version and terminal, that leave the options you set alone | [tmux-revamped/tmux-sensible-revamped](https://github.com/tmux-revamped/tmux-sensible-revamped) |
+| tmux-tiling-revamped | Tiling window management for tmux: eight layouts including BSP dwindle and spiral, with layout undo | [tmux-revamped/tmux-tiling-revamped](https://github.com/tmux-revamped/tmux-tiling-revamped) |
+| tmux-time-revamped | Local and world clocks for the tmux status bar, colored by time of day, with countdowns and a DST warning | [tmux-revamped/tmux-time-revamped](https://github.com/tmux-revamped/tmux-time-revamped) |
+| tmux-weather-revamped | Weather for the tmux status bar from wttr.in, fetched in the background so the status line never waits | [tmux-revamped/tmux-weather-revamped](https://github.com/tmux-revamped/tmux-weather-revamped) |
+
 ## How a repository joins
 
-Copy the owned files in unchanged, write an agent guide with the same headings as the other members', follow both, allocate every default key in [`family/KEYS.md`](family/KEYS.md) first, and add the repository to [`family/MEMBERS`](family/MEMBERS) in every member in the same task. The template's `make new-member NAME=<name>` scaffolds one with every name and prefix renamed. With the members checked out side by side, this shows any drift in this file:
+Copy this file and the identical files listed under Layout and tooling in unchanged, write an agent guide with the same headings as the other members', follow both, allocate every default key under Key bindings first, and add the repository to the table above and to the loop below in every member in the same task. The template's `make new-member NAME=<name>` scaffolds one with every name and prefix renamed. With the members checked out side by side, this shows any drift in this file:
 
 ```sh
-grep -vE '^[[:space:]]*(#|$)' family/MEMBERS | while IFS= read -r member; do
+for member in tmux-autoreload-revamped tmux-battery-revamped tmux-bluetooth-revamped tmux-cpu-revamped tmux-disk-revamped tmux-extract-revamped tmux-fzf-revamped tmux-git-revamped tmux-gpu-revamped tmux-kube-revamped tmux-launcher-revamped tmux-logging-revamped tmux-music-revamped tmux-network-revamped tmux-pain-control-revamped tmux-persist-revamped tmux-plugin-template tmux-pomodoro-revamped tmux-ram-revamped tmux-reorder-revamped tmux-scroll-revamped tmux-sensible-revamped tmux-tiling-revamped tmux-time-revamped tmux-weather-revamped; do
   cmp FAMILY.md "../${member}/FAMILY.md"
 done
 ```
 
-`family/bin/sync --check` is the full check: it compares every owned file and the contract version.
+The same loop with any identical file in place of `FAMILY.md` checks that file.
 
 A new member also needs, in the same task, a public repository, so Actions minutes and the scheduled runs cost nothing, with Dependabot alerts on and the Renovate GitHub App, which the owner keeps installed on every repository.
 
@@ -68,7 +109,7 @@ The plain page has no colour, no emoji and no bracketed level tags. On a termina
 - `--name value` and `--name=value` both work, and `--` ends the options.
 - A yes or no setting that is asked about interactively has both forms, such as `--verify` and `--no-verify`. As a tmux option it reads `1` for yes and `0` for no.
 - The family's one shared setting is its look, under Terminal interface.
-- No member reads a bare name such as `INTERVAL`, and none takes its internal variables from the environment: a member either assigns each one outright, or its entry point clears every inherited variable with its internal prefix before anything runs. Test-only switches follow the same rule, such as `CPU_REVAMPED_TEST_GUM`. `scripts/check-names.sh` fails lint on any other name.
+- No member reads a bare name such as `INTERVAL`, and none takes its internal variables from the environment: a member either assigns each one outright, or its entry point clears every inherited variable with its internal prefix before anything runs. Test-only switches follow the same rule, such as `CPU_REVAMPED_TEST_GUM`.
 - Anything required and not given is asked for when stdin is a terminal: `Label [default]: ` on stderr, up to three tries for a required value.
 - Without a terminal the tool never waits on a prompt. It stops with the usage hint under Diagnostics.
 - A destructive step, such as deleting a saved session, asks the person to type its name: `Type work to delete, or anything else to stop: `.
@@ -107,6 +148,8 @@ Every README shows the plugin running for real: an animated `screens/hero.gif` u
 - `screens/common.tape` sets one look: the Catppuccin Mocha terminal theme, JetBrainsMono Nerd Font at 24 px, 1600 px wide, with the default `kodougu` theme for the tool.
 - The screens are recorded on macOS; `record.sh` names the missing tool when `vhs`, `tmux` or `magick` is absent.
 - A change that alters what a screen shows records the screens again in the same commit.
+- Every feature has a recording: every placeholder, every option that changes what is shown, every key binding, popup, menu and command appears in at least one tape. `manifest.json` names the tape for each feature. A feature without a recording is a gap, never finished.
+- Every key a tape presses is captioned on screen while it acts, in the form a person types it, such as `prefix C-s`, `Enter` or `q`, so a viewer sees which keys produce each action. The recording's tmux config draws the caption on a second status line, and the tape sets it before each keystroke; a sentence in the README never replaces it.
 
 ## Diagnostics
 
@@ -200,10 +243,10 @@ Every tool that can be installed in more than one version on a supported system 
 - POSIX `sh` without `local`: every global carries the member's internal prefix, and every function-scoped variable carries its function's prefix. Variables are written `${name}`.
 - `shfmt -i 2` formats every script, and `make lint` fails on unformatted code.
 - Release tooling is pnpm, pinned through `packageManager` in `package.json`, running semantic-release. The release job installs it with `pnpm install --frozen-lockfile` and stops on `pnpm audit --audit-level high`.
-- Dependabot updates the GitHub Actions and the release tooling, and Renovate updates the runner labels, `.ruby-version` and the Gemfile, so each update arrives once. Both look for updates three times a day, at 05:00, 13:00 and 21:00 UTC. Every bot pull request merges itself once CI passes: when `ci` finishes on a pull request from a bot, `bot-merge.yml` checks that every check on that commit passed, squash-merges it at that commit with a fixed commit body, then starts `ci` on `main` with `gh workflow run`, since a merge made with `GITHUB_TOKEN` starts no workflow by itself. A bot pull request that changes an owned file updates [`family/CHECKSUMS`](family/CHECKSUMS) in the same merge, and since the bot opens the same pull request in every member, the owned file stays identical everywhere. None is merged by hand.
-- Every action, `actions/*` and `github/*` included, is pinned to a full commit SHA with its version in a trailing comment, and every container image to a digest, because zizmor's default policy requires it and a tag can move. The pin check in `make lint` fails on any other reference.
-- A workflow that runs on `workflow_run`, which zizmor flags, carries `# zizmor: ignore[dangerous-triggers]` only when it never runs code from a pull request with a write token: `release.yml` checks out `main`, and `bot-merge.yml` runs only `main`'s tooling, after checking that the bot changed nothing under [`family/`](family).
-- These files are owned, identical in every member: [`FAMILY.md`](FAMILY.md), everything under [`family/`](family), the coding agent's instruction file, `.editorconfig`, `.yamllint.yml`, [`.shellcheckrc`](.shellcheckrc), [`.github/actionlint.yaml`](.github/actionlint.yaml), [`.github/dependabot.yml`](.github/dependabot.yml), `renovate.json`, `.github/workflows/release.yml`, `.github/workflows/bot-merge.yml`, [`.github/workflows/security.yml`](.github/workflows/security.yml), `Gemfile`, `Gemfile.lock`, `.ruby-version`, `.simplecov`, `.github/scripts/toolset.sh`, `.github/scripts/set-version.sh`, `.github/scripts/ci-state.sh`, `.github/scripts/recover.sh`, `test/ci-state.bats`, `test/recover.bats`, `lib/ui.sh`, `lib/table.awk`, the shared tmux library, `test/bin/gum`, `test/ui-kit.bats`, [`test/helpers.bash`](test/helpers.bash), [`test/tmux_helpers.bash`](test/tmux_helpers.bash), `screens/common.tape`, `screens/record.sh`, `screens/finish.sh`, `scripts/coverage-gate.py`, `scripts/bashcov-run.rb`, `scripts/bashcov-lexer.rb`, `scripts/bashcov-lexer.test.rb`, `scripts/linux-coverage.sh`, `LICENSE`, [`.github/FUNDING.yml`](.github/FUNDING.yml), [`.github/CODEOWNERS`](.github/CODEOWNERS) and the issue templates. [`family/OWNERSHIP`](family/OWNERSHIP) names the ones enforced today.
+- Dependabot updates the GitHub Actions and the release tooling, and Renovate updates the runner labels, `.ruby-version` and the Gemfile, so each update arrives once. Both look for updates three times a day, at 05:00, 13:00 and 21:00 UTC. Every bot pull request merges itself once CI passes: when `ci` finishes on a pull request from a bot, `bot-merge.yml` checks that every check on that commit passed, squash-merges it at that commit with a fixed commit body, then starts `ci` on `main` with `gh workflow run`, since a merge made with `GITHUB_TOKEN` starts no workflow by itself. The bot opens the same pull request in every member, so an identical file stays identical everywhere. None is merged by hand.
+- Every action, `actions/*` and `github/*` included, is pinned to a full commit SHA with its version in a trailing comment, and every container image to a digest, because zizmor's default policy requires it and a tag can move.
+- A workflow that runs on `workflow_run`, which zizmor flags, carries `# zizmor: ignore[dangerous-triggers]` only when it never runs code from a pull request with a write token: `release.yml` checks out `main` or the commit a push `ci` run tested, and `bot-merge.yml` checks out nothing and only calls the GitHub API.
+- These files are identical in every member: [`FAMILY.md`](FAMILY.md), the coding agent's instruction file, `.editorconfig`, `.yamllint.yml`, [`.shellcheckrc`](.shellcheckrc), [`.github/actionlint.yaml`](.github/actionlint.yaml), [`.github/dependabot.yml`](.github/dependabot.yml), `renovate.json`, `.github/workflows/release.yml`, `.github/workflows/bot-merge.yml`, `Gemfile`, `Gemfile.lock`, `.ruby-version`, `.simplecov`, `.github/scripts/toolset.sh`, `.github/scripts/set-version.sh`, `.github/scripts/ci-state.sh`, `.github/scripts/recover.sh`, `test/ci-state.bats`, `test/recover.bats`, `lib/ui.sh`, `lib/table.awk`, the shared tmux library, `test/bin/gum`, `test/ui-kit.bats`, [`test/helpers.bash`](test/helpers.bash), [`test/tmux_helpers.bash`](test/tmux_helpers.bash), `screens/common.tape`, `screens/record.sh`, `screens/finish.sh`, `scripts/coverage-gate.py`, `scripts/bashcov-run.rb`, `scripts/bashcov-lexer.rb`, `scripts/bashcov-lexer.test.rb`, `scripts/linux-coverage.sh`, `LICENSE`, [`.github/FUNDING.yml`](.github/FUNDING.yml), [`.github/CODEOWNERS`](.github/CODEOWNERS) and the issue templates. A member that does not carry one yet lists it under Gaps against FAMILY.md.
 - A script that only CI or the release runs lives in `.github/scripts/`. A script that a `make` target runs lives in `scripts/`, so everything a contributor can run locally sits in one place. `make lint` checks both folders.
 - No member has a pull request template, a labeler or a stale-issue workflow, because only bots open pull requests. The issue templates stay, because people who use the plugins file issues.
 
@@ -220,7 +263,7 @@ Every tool that can be installed in more than one version on a supported system 
 - Tests never write the member's version as a literal; they read it from `lib/core.sh`, so a release does not break them.
 - A wait loop polls from milliseconds upward, never with a fixed `sleep 1`.
 - Every test is three blocks, opened by the bare markers `# Arrange`, `# Act` and `# Assert`.
-- A test that starts background work waits on the process IDs it collected from `$!`, never with a bare `wait`: CI sets `BATS_TEST_TIMEOUT`, and bats runs that timeout as a background watchdog in the test's own shell, so a bare `wait` blocks until the timeout ends the test. `scripts/check-names.sh` fails on a bare `wait` in [`test/`](test).
+- A test that starts background work waits on the process IDs it collected from `$!`, never with a bare `wait`: CI sets `BATS_TEST_TIMEOUT`, and bats runs that timeout as a background watchdog in the test's own shell, so a bare `wait` blocks until the timeout ends the test.
 
 ## Quality
 
@@ -230,9 +273,8 @@ Every tool that can be installed in more than one version on a supported system 
 - Bytes read into a variable pass through `tr -d '\000'` first: bash 5 prints `ignored null byte in input` into the output when a command substitution meets a NUL.
 - Bytes are written with `printf '%b'` and octal escapes in the `\0ddd` form, never with a format string built at run time: BusyBox's `%b` reads only that form.
 - An awk program defines no function named like a gawk built-in, such as `xor`, `and`, `or`, `compl`, `lshift`, `rshift`, `strftime` or `systime`: gawk then refuses the whole program.
-- A pattern substitution never takes an unquoted expansion as its replacement: bash 5.2 rewrites it at every `&` and bash 3.2 at every backslash. [`family/bin/audit`](family/bin/audit) rejects one.
+- A pattern substitution never takes an unquoted expansion as its replacement: bash 5.2 rewrites it at every `&` and bash 3.2 at every backslash.
 - A file's size comes from `stat -c %s -- FILE`, or `stat -f %z -- FILE` where `stat` is BSD's, never `wc -c <file`: Ubuntu's BusyBox `wc` counts in 32 bits.
-- `scripts/check-names.sh` fails `make lint` on a `$(dd ...)` read without `tr -d`, a `} >file` line, a fixed descriptor redirect after `done`, an awk function named like a gawk built-in, a `mkdir` lock, a `wc -c <file` size and a bare `wait` in a test, so these rules hold without anyone remembering them.
 - No comments in source, apart from tool directives and the test markers.
 - Make targets, with the same meaning in every member:
 
@@ -240,7 +282,7 @@ Every tool that can be installed in more than one version on a supported system 
   |:-------|:-----|
   | `make help` | Lists the targets |
   | `make fmt` | Formats every script with `shfmt -i 2` |
-  | `make lint` | `shfmt -i 2 -d`, ShellCheck `-o all`, the name check, `mandoc -T lint`, yamllint and actionlint at zero findings, so the local gate catches what CI's lint job does |
+  | `make lint` | `shfmt -i 2 -d`, ShellCheck `-o all`, `mandoc -T lint`, yamllint and actionlint at zero findings, so the local gate catches what CI's lint job does |
   | `make test` | The suites under the system `sh` |
   | `make test-all` | The suites under every installed shell, both builds of bash and zsh on macOS |
   | `make test-linux` | The suites in the Ubuntu container |
@@ -251,72 +293,88 @@ Every tool that can be installed in more than one version on a supported system 
 
   The template also has `make new-member NAME=<name>`. CI installs shfmt v3.14.1 from its release binary, checked against its SHA-256.
 - Conventional commits pushed straight to `main`; there are no pull requests from people. semantic-release cuts the version: a `feat` or `fix` commit publishes a release, stamps `<TOOL>_VERSION` in `lib/core.sh` through `.github/scripts/set-version.sh` and updates [`CHANGELOG.md`](CHANGELOG.md).
-- Before every push: [`family/bin/audit`](family/bin/audit), `make lint`, `make test-all` on macOS, `make test-linux` and `make coverage`. CI repeats them; it does not replace them.
+- Before every push: `make lint`, `make test-all` on macOS, `make test-linux` and `make coverage`. CI repeats them; it does not replace them.
 - Any push to `main` is safe at any moment. Push as soon as the local gates pass, never waiting for a CI or release run. The newest green push releases every commit since the last tag.
-- `ci.yml` runs on every push to `main` and every pull request that changes anything other than Markdown, and on demand, with the jobs `plan`, `lint`, `test-linux`, `test-macos`, `coverage gate`, `family`, which runs [`family/bin/audit`](family/bin/audit) and `family/bin/sync --check`, and `security`. GitHub's free plan runs at most five macOS jobs at a time, so the macOS jobs start only after lint and every Linux job passed, a failing macOS job cancels the others, and a pull request from a bot runs only the macOS coverage job, which the `plan` job decides. It has one top-level concurrency group per event and ref with `cancel-in-progress: true`. The release lives in `release.yml`, started by `workflow_run` when `ci` succeeds on `main`, in a job group that never cancels. Its `recover` job runs every hour, on demand, and whenever `ci` fails on `main`: `.github/scripts/ci-state.sh` reads the state of `main`'s newest commit, and `.github/scripts/recover.sh` starts a new `ci` run when every failed job of the newest run never got a runner, up to five per commit and then fails visibly, and releases a green commit that still holds unreleased `feat`, `fix`, `perf`, `revert` or breaking commits. `step-security/harden-runner` is the first step of every job.
+- `ci.yml` runs on every push to `main` and every pull request that changes anything other than Markdown, and on demand, with the jobs `plan`, `lint`, `test-linux`, `test-macos`, `coverage gate`, `security` and `scorecard`. GitHub's free plan runs at most five macOS jobs at a time, so the macOS jobs start only after lint and every Linux job passed, a failing macOS job cancels the others, and a pull request from a bot runs only the macOS coverage job, which the `plan` job decides. It has one top-level concurrency group per event and ref with `cancel-in-progress: true`. The release lives in `release.yml`, started by `workflow_run` when `ci` succeeds on `main`, in a job group that never cancels. Its `recover` job runs every hour, on demand, and whenever `ci` fails on `main`: `.github/scripts/ci-state.sh` reads the state of `main`'s newest commit, and `.github/scripts/recover.sh` starts a new `ci` run when every failed job of the newest run never got a runner, up to five per commit and then fails visibly, and releases a green commit that still holds unreleased `feat`, `fix`, `perf`, `revert` or breaking commits. `step-security/harden-runner` is the first step of every job.
 - CI runs on the newest Ubuntu LTS runner label and on a pinned macOS label, never a `-latest` label. macOS runners are an approved exception to the Ubuntu-only default: the macOS toolsets and every macOS reader can only be tested there.
-
-## Ownership
-
-Every file in a member belongs to exactly one class. [`family/OWNERSHIP`](family/OWNERSHIP) is the machine-readable assignment, and a path it does not name is `free`, so a file becomes shared only by a deliberate act.
-
-| Class | Rule | Enforced by |
-|:------|:-----|:------------|
-| `owned` | Byte-identical in every member. A local edit is a build failure | [`family/bin/audit`](family/bin/audit) against [`family/CHECKSUMS`](family/CHECKSUMS), and [`family/bin/sync`](family/bin/sync) against the other members |
-| `shaped` | Same structure in every member, content specific to the plugin | The structural checks in [`family/bin/audit`](family/bin/audit), such as the headings of the agent guide |
-| `free` | The plugin itself. No family constraint | Nothing |
-
-An owned file is added to the ownership list only once it is identical in every member, because an entry added early fails the audit everywhere on the first run.
-
-[`family/VERSION`](family/VERSION) holds a single integer, the contract version. It increases whenever an owned file changes, so a member whose version is behind another's is out of date by definition, which makes falling behind detectable without comparing every file first.
 
 ## Keeping members in step
 
-| When | Command | What it catches |
-|:-----|:--------|:----------------|
-| Every push, offline | [`family/bin/audit`](family/bin/audit) | A local edit to an owned file, or a shaped file that broke its structure |
-| Weekly, and on every push that touches the contract | `family/bin/sync --check` | A member whose owned files or contract version differ from the others |
-| When something shared improves | [`family/bin/propagate`](family/bin/propagate) | Nothing. This is how a change reaches all members at once |
+A change to this file or to an identical file is made in one member, copied into every other member, and committed in each, in the same task. Run the gates in every member, then push each `main` on its own. The `cmp` loop under How a repository joins, run over every identical file, is the check that the copies agree.
 
-The weekly check runs in every member rather than in one place, so a divergence is reported from both sides, and no single vantage point has to stay healthy for the family to notice.
-
-## How to change a shared file
-
-Never edit an owned file in more than one repository.
-
-1. Make the change in one member.
-2. With every member checked out side by side, run `family/bin/propagate --members-dir .. --branch main --no-push --message '<subject>'`. It copies the change into every other member, increments the contract version, regenerates [`family/CHECKSUMS`](family/CHECKSUMS) and commits in each one. The member the change started in keeps it uncommitted, for its own commit.
-3. Run the gates in every member, then push each `main` on its own.
-
-Running `propagate` twice against the same change does nothing the second time. A member's Family run that started before its siblings were pushed compares against their old copies and fails; once every member is pushed, rerun that member's newest run.
+A member's CI run that compares it with its siblings before they are pushed sees their old copies; once every member is pushed, rerun that member's newest run.
 
 ## When a member must differ
 
-Record it in [`family/EXCEPTIONS.md`](family/EXCEPTIONS.md), naming the repository, the file, the reason, and the condition that would retire the exception. That file is itself owned, so an exception taken by one member is readable from every member.
-
-An undeclared difference is a build failure. An exception with no retirement condition is a permanent change to the contract made by one member, so it is refused.
-
-**Record the exception before the file becomes owned, never after.** An exception stops `propagate` from overwriting a member's copy from that point on. It cannot bring back a copy already replaced, because propagate writes files rather than merging them, and the member's own version is then only in its history.
-
-**Prefer retiring the exception to keeping it.** Every exception is a member drifting on purpose, and a shared file that a member cannot use is usually a sign that the shared thing needs to be more general rather than that the member needs to be excused.
+A member that cannot carry an identical file as it is lists the file under Gaps against FAMILY.md in its agent guide, with the reason and the condition that ends the difference. A difference with no ending condition changes the contract for one member, so it is refused: the shared file becomes more general instead.
 
 ## Improving one member improves the family
 
-When work on one plugin produces something the others would benefit from, the work is not finished when that plugin is better. Decide whether the improvement is family-wide. If it is, move it into an owned file and propagate it in the same session. If it is not, say why in the commit body.
+When work on one plugin produces something the others would benefit from, the work is not finished when that plugin is better. Decide whether the improvement is family-wide. If it is, move it into an identical file or into this file and apply it to every member in the same task. If it is not, say why in the commit body.
 
 A member that gets better alone leaves the others behind, and the family is only worth having if that cannot happen quietly.
 
 ## Key bindings
 
-**No two members may ship colliding default keys.** Every default is allocated once, by hand, across the whole family in [`family/KEYS.md`](family/KEYS.md), so a person who installs every member gets no conflict without configuring anything. A person who wants a different layout sets the per-action option.
+**No two members ship colliding default keys.** Every default is allocated once, by hand, in the tables below, so a person who installs every member gets no conflict without configuring anything. A person who wants a different layout sets the per-action option. A member's default and these tables disagreeing is a defect.
 
-That rule decides defaults. It does not decide what happens when a person's own remap lands on a key another action already holds, and the two mechanisms must not be confused:
+- **Stock tmux keys are reserved**, except for the declared overriders below, whose purpose is to replace them.
+- **One unmodified key per member at most**, for its most-used action. Everything else goes to the `M-` tier; `C-` stays reserved for bindings that must work without releasing the modifier.
+- **Mnemonic beats adjacency.** Where the mnemonic key is free, take it. Where it is not, the table records the second choice and the reason.
+- **The root table is opt-in.** No member binds a root-table key unless installing it is the request, as for the declared root-table members below.
+- Everything a member binds beyond its one key defaults to unbound and is documented in its README as opt-in.
 
-| Question | Answered by |
-|:---------|:------------|
-| Do two shipped defaults collide? | The key allocation. They must not, and [`family/bin/live-keys`](family/bin/live-keys) loads every member into a private tmux server and exits non-zero when two of them bind the same key |
-| A person remapped one action onto another's key. Now what? | The binding registry: collect every binding, write them in one pass, let the key the person set outrank the one the plugin defaulted, leave the loser unbound, and report the clash |
-| A person already bound the key outside the family | The plugin leaves that binding alone, skips its own, and `doctor` reports the skip |
+| Member | Key | Action | Mnemonic |
+|:-------|:----|:-------|:---------|
+| tmux-launcher-revamped | `M-a` | app launcher menu | apps |
+| tmux-battery-revamped | `M-b` | detail popup | battery |
+| tmux-cpu-revamped | `M-c` | detail popup | cpu |
+| tmux-disk-revamped | `M-d` | detail popup | disk |
+| tmux-network-revamped | `M-e` | detail popup | network, `n` is a stock tmux key |
+| tmux-fzf-revamped | `M-f` | picker menu | fzf |
+| tmux-gpu-revamped | `M-g` | detail popup | gpu |
+| tmux-bluetooth-revamped | `M-h` | detail popup | bluetooth, its own initial is taken |
+| tmux-kube-revamped | `M-k` | context menu | kube |
+| tmux-logging-revamped | `M-l` | logging menu | logging |
+| tmux-music-revamped | `M-m` | music menu | music |
+| tmux-ram-revamped | `M-r` | detail popup | ram |
+| tmux-pomodoro-revamped | `M-s` | start or stop | the timer's verb, `p` is a stock tmux key |
+| tmux-time-revamped | `M-t` | world clock menu | time |
+| tmux-git-revamped | `M-v` | git menu | version control, `g` is taken |
+| tmux-weather-revamped | `M-w` | forecast popup | weather |
+| tmux-extract-revamped | `M-x` | extract from the screen | extract, `Tab` is a stock key on tmux 3.8 |
+| tmux-persist-revamped | `C-s`, `C-r` | save, restore | they must work without releasing the modifier |
+
+tmux-autoreload-revamped, tmux-plugin-template, tmux-scroll-revamped and tmux-sensible-revamped bind no prefix key.
+
+tmux-tiling-revamped owns every `M-` plus uppercase letter, a range stock tmux leaves empty, because a window manager with 22 actions needs one:
+
+| Key | Action | Key | Action |
+|:----|:-------|:----|:-------|
+| `M-A` | autotile | `M-N` | focus forward |
+| `M-B` | balance | `M-O` | cycle layouts |
+| `M-C` | circulate | `M-P` | focus back |
+| `M-D` | dwindle | `M-Q` | jump to any pane |
+| `M-E` | equalize | `M-R` | rotate |
+| `M-F` | flip | `M-S` | spiral |
+| `M-G` | grow the master pane | `M-T` | scratchpad |
+| `M-H` | main-horizontal | `M-U` | undo |
+| `M-I` | help overlay | `M-V` | main-vertical |
+| `M-J` | jump to a marked pane | `M-W` | swap with the biggest pane |
+| `M-K` | mark the pane | `M-X` | shrink the master pane |
+| `M-L` | layout picker | `M-Y` | synchronize panes |
+| `M-M` | promote to master | `M-Z` | redo |
+
+| Declared | Member | Keys and reason |
+|:---------|:-------|:----------------|
+| Overrider | tmux-pain-control-revamped | Its split, resize and pane-movement keys replace tmux's own by design |
+| Overrider | tmux-sensible-revamped | `C-n` and `C-p`, since it normalises defaults across tmux versions |
+| Root table | tmux-reorder-revamped | The status-line mouse keys, from `MouseDown1Status` to `MouseDragEnd1StatusDefault`, because dragging a window tab is its only action. It wraps the stock `MouseDown1Status` and keeps its command running |
+| Root table | tmux-scroll-revamped | The mouse wheel |
+
+The table is assigned by hand, with the mnemonic recorded, because a generated conflict-free allocation reads like `M-i` for a battery popup, and a key nobody can remember is a key nobody uses.
+
+A person's own remap is a different question from the defaults. When a remap lands on a key another action holds, the member collects every binding, writes them in one pass, lets the key the person set outrank the one the plugin defaulted, leaves the loser unbound, and reports the clash. A key the person bound outside the family is left alone: the member skips its own binding and `doctor` reports the skip.
 
 ## Notifications
 
@@ -333,7 +391,7 @@ Fixing a defect in one member and stopping there is an incomplete fix. Every def
 
 | Class | Test | Obligation |
 |:------|:-----|:-----------|
-| Shared | The defect is in an owned file | Fix once, propagate. Every member gets the fix by construction |
+| Shared | The defect is in an identical file | Fix once and copy the fix into every member in the same task |
 | Systemic | The defect is in a pattern, an idiom, a platform assumption, or a convention that other members could repeat | Sweep every member, fix every affected one, in the same session |
 | Local | The defect is in this plugin's own feature code and no other member could express it | Fix here. Say why in the commit body |
 
@@ -341,21 +399,23 @@ Only the third class stops at one repository, and claiming it requires saying wh
 
 ### Discharging the obligation
 
+With the members checked out side by side, a pattern sweep reads every member's code for the defect, and a probe sweep runs a script that reproduces it against every member:
+
 ```sh
-family/bin/sweep --pattern '<regex>' --label '<what the defect is>'
-family/bin/sweep --script <probe> --label '<what the defect is>'
+for member in ../tmux-*; do grep -rnE '<regex>' "${member}/src" "${member}"/*.tmux; done
+for member in ../tmux-*; do sh <probe> "${member}"; done
 ```
 
 A pattern sweep suits a defect recognizable by reading. A probe sweep suits one that only shows up when the code runs, which is the stronger evidence and the right choice whenever the defect was found by running something.
 
-The sweep distinguishes three outcomes per member, and the third matters as much as the first: a member the sweep could not check is reported as not checked and fails the run. A member that was not examined is never a member that is clean.
+Every member ends in one of three outcomes, and the third matters as much as the first: affected, clean, or not checked. A member the sweep could not check is reported as not checked, never as clean.
 
 ### What the commit must carry
 
 - The class, named.
 - For a systemic defect, the sweep command and its result.
 - For a local defect, the reason no other member can express it.
-- A regression test that fails without the fix. Where the defect is systemic, the test is itself systemic, so it belongs in an owned test file rather than in one member's.
+- A regression test that fails without the fix. Where the defect is systemic, the test is itself systemic, so it belongs in an identical test file rather than in one member's.
 
 ### A green pipeline is not a clean sweep
 
@@ -367,23 +427,7 @@ Some defects cannot reach CI at all, so a sweep that only consults the pipeline 
 | bash 3.2 | Ubuntu runners carry bash 5, and a macOS job resolves whatever is first on `PATH` | `/bin/bash` on macOS, run directly |
 | A blocking entry point | Nothing in CI reads the entry point's stdout and waits on it | Run the entry point under a command substitution and time it |
 | A leaked test fixture | The run ends and the runner is destroyed | A long-lived developer machine, hours later |
-| A substitution replacement holding `&` or a backslash | Runner checkout paths and test fixtures rarely contain either | [`family/bin/audit`](family/bin/audit) rejects an unquoted expansion as a replacement |
-| An entry point without the executable bit | The suite and [`family/bin/live-keys`](family/bin/live-keys) load the entry point through a shell, which needs no executable bit, while TPM executes the file and discards the permission error | The mode git records, which [`family/bin/audit`](family/bin/audit) reads |
+| A substitution replacement holding `&` or a backslash | Runner checkout paths and test fixtures rarely contain either | Read every pattern substitution the change adds or touches |
+| An entry point without the executable bit | The suite loads the entry point through a shell, which needs no executable bit, while TPM executes the file and discards the permission error | The mode git records, from `git ls-files --stage` |
 
 When a defect belongs to one of these, run the probe locally and say so in the commit body. Reporting a member as clean on the strength of a green pipeline it could never have failed is the same error as not checking it.
-
-## Tooling
-
-| Command | Purpose |
-|:--------|:--------|
-| [`family/bin/audit`](family/bin/audit) | Verify this member against [`family/CHECKSUMS`](family/CHECKSUMS) and the structural rules. Offline |
-| [`family/bin/checksums`](family/bin/checksums) | Regenerate [`family/CHECKSUMS`](family/CHECKSUMS) from the ownership list |
-| [`family/bin/sync`](family/bin/sync) | Compare this member against every other. `--check` exits non-zero on divergence |
-| [`family/bin/propagate`](family/bin/propagate) | Apply a shared change to every member and commit it in each |
-| [`family/bin/inventory`](family/bin/inventory) | Emit this member's options, keys, placeholders, commands and versions |
-| [`family/bin/doctor`](family/bin/doctor) | Report collisions and exceptions across every installed member, against a live tmux server |
-| [`family/bin/live-keys`](family/bin/live-keys) | Load every member into a private tmux server and fail when two bind the same key |
-| [`family/bin/sweep`](family/bin/sweep) | Hunt a defect found in one member across every other member |
-| [`family/bin/gen-readme`](family/bin/gen-readme) | Generate the README's family section, and check it with `--check` |
-
-Every one of them exits non-zero on failure. Gate on the exit code, never on the output text.

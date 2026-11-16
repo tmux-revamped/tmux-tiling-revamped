@@ -14,9 +14,8 @@ Guidance for anyone, human or agent, changing tmux-tiling-revamped. What it is a
 | [`src/lib/layouts/`](src/lib/layouts) | This member's modules |
 | [`src/lib/operations/`](src/lib/operations) | This member's modules |
 | [`src/lib/utils/constants.sh`](src/lib/utils/constants.sh) | This member's constants, including its version |
-| [`src/lib/utils/`](src/lib/utils), [`src/lib/tmux/`](src/lib/tmux) | The shared library. Every file there except `constants.sh` is owned by the family |
-| [`test/`](test) | The bats suite. `helpers.bash` and `tmux_helpers.bash` are owned; this member's own mocks go in the `_local` files |
-| [`family/`](family) | The family tooling, owned |
+| [`src/lib/utils/`](src/lib/utils), [`src/lib/tmux/`](src/lib/tmux) | The shared library. Every file there except `constants.sh` is identical in every member |
+| [`test/`](test) | The bats suite. `helpers.bash` and `tmux_helpers.bash` are identical in every member; this member's own mocks go in the `_local` files |
 
 ## Names
 
@@ -52,12 +51,12 @@ As of 2026-11-15:
 - The code lives in [`src/`](src) and [`src/lib/`](src/lib); there is no `bin/tmux-tiling-revamped`, `lib/state.sh` or `lib/core.sh`.
 - No `tmux-tiling-revamped` command with `help`, `version` and `doctor` in the family's form, no man page, no completions and no `manifest.json`.
 - No gum interface: no `lib/ui.sh`, `lib/table.awk`, themes or `test/bin/gum`.
-- No `screens/` and no recordings in the README.
+- No `screens/`: no VHS recording of each feature, no on-screen caption of the keys each recording presses, and no recordings in the README.
 - The README sections are not the family's order of Quick start, Usage, topic sections, Portability, Development and License.
 - Coverage is kcov with a 95 percent floor on Linux, not bashcov at 100 percent merged from macOS and Linux.
 - CI tests GNU, BSD and uutils tools in `tests.yml`, but not the six toolsets through `.github/scripts/toolset.sh`, and no shell matrix under `sh`, `dash`, `bash` and `zsh`.
 - No golden transcripts, `call.sh`, `run-matrix.sh` or `linux-container.sh`.
 - The version is written by hand and released by `tests.yml`; there is no semantic-release, `package.json`, `release.yml` with `recover`, `bot-merge.yml` or Renovate.
-- CI is `tests.yml`, `family.yml` and `security.yml`, not `ci.yml`, and no job starts with `step-security/harden-runner`.
-- No `.yamllint.yml`, `scripts/check-names.sh` or shfmt; the Makefile has `help`, `test`, `test-unit`, `coverage`, `lint` and `clean`, not the family's targets.
+- CI is `tests.yml` and `security.yml`, not `ci.yml`, and no job starts with `step-security/harden-runner`.
+- No `.yamllint.yml` or shfmt; the Makefile has `help`, `test`, `test-unit`, `coverage`, `lint` and `clean`, not the family's targets.
 - It needs bash 4 for associative arrays, so on the macOS `/bin/bash` 3.2 it shows a message and binds nothing.
