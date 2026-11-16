@@ -145,10 +145,11 @@ teardown() {
 
   # Assert
   local i
-  for ((i = 0; i < 50; i++)); do
-    [[ -f "${marker}" ]] && break
+  for ((i = 0; i < 100; i++)); do
+    [[ "$(cache_get percent_lock)" == "0" ]] && break
     sleep 0.05
   done
+  [[ "$(cache_get percent_lock)" == "0" ]]
   [[ -f "${marker}" ]]
 }
 
@@ -165,10 +166,11 @@ teardown() {
 
   # Assert
   local i
-  for ((i = 0; i < 50; i++)); do
-    [[ -f "${marker}" ]] && break
+  for ((i = 0; i < 100; i++)); do
+    [[ "$(cache_get percent_lock)" == "0" ]] && break
     sleep 0.05
   done
+  [[ "$(cache_get percent_lock)" == "0" ]]
   [[ -f "${marker}" ]]
 }
 
