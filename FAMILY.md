@@ -121,6 +121,7 @@ The plain page has no colour, no emoji and no bracketed level tags. On a termina
 - A status placeholder, `#{<prefix>_<name>}`, prints its value and nothing else. A value the host has no source for renders empty, and `doctor` says which source is missing.
 - Text that comes from outside the plugin, such as a process, window or song name, has every `#` doubled before tmux reads it as a format.
 - Numbers are computed and printed under the C locale, so a locale with a decimal comma still prints `1.5G`.
+- A tick of the shared ticker writes options from its own shell, never from inside a `$(...)`: once the publisher is loaded, every write joins the one batch the tick commits, and a write made in a subshell is lost.
 - Before a long or destructive run, a summary block states what is about to happen. Each label carries a colon and is padded to 8 columns; continuation lines are indented 8 spaces, and the block has a blank line above and below.
 - A long step shows one progress line: `<Verb> NNN%  <rate>  XmYYs left`. On a terminal it redraws in place; otherwise it prints once per 10 percent.
 - The last line states the result in a full sentence, such as `Saved. 4 sessions are in work.json.`
@@ -380,7 +381,7 @@ A person's own remap is a different question from the defaults. When a remap lan
 
 A member whose state can need attention, such as a battery at critical charge or a disk crossing its high threshold, may send a desktop notification. Every one follows the same rules:
 
-- It goes through [`src/lib/utils/notify.sh`](src/lib/utils/notify.sh), which picks `osascript` on macOS and `notify-send` on Linux and passes the title and message as arguments, never inside AppleScript source.
+- It goes through `lib/notify.sh`, which picks `osascript` on macOS and `notify-send` on Linux and passes the title and message as arguments, never inside AppleScript source.
 - It sits behind `@<prefix>_revamped_notify`, and the default is `0`. A fresh install never shows a notification.
 - The same state always shows in the status line or the member's popup, so turning notifications off loses nothing.
 - A missing notifier is not an error. `doctor` reports which one would be used.
