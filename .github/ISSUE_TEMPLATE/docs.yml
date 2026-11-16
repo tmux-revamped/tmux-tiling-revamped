@@ -6,8 +6,8 @@ body:
     id: section
     attributes:
       label: Section affected
-      description: Which part of the README, CHANGELOG, or CONTRIBUTING is wrong?
-      placeholder: "README > Configuration"
+      description: Which part of the README, the help page or the man page is wrong?
+      placeholder: "README > Usage"
     validations:
       required: true
 

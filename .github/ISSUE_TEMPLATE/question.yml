@@ -20,7 +20,10 @@ body:
       label: What have you tried?
 
   - type: textarea
-    id: environment
+    id: doctor
     attributes:
-      label: Environment
-      description: tmux version, OS, terminal emulator
+      label: doctor output
+      description: >-
+        The whole output of the plugin's doctor command, such as `cpu-revamped doctor`.
+        On a release without the command, paste the output of `tmux -V` and `uname -sm` instead.
+      render: text

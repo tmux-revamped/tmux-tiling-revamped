@@ -23,12 +23,3 @@ body:
     attributes:
       label: Alternatives considered
       description: Other approaches you thought about and why they are less ideal.
-
-  - type: dropdown
-    id: contribute
-    attributes:
-      label: Willing to submit a PR?
-      options:
-        - "Yes"
-        - "Yes, with guidance"
-        - "No"

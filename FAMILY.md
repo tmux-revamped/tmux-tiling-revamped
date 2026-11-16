@@ -21,7 +21,10 @@ Every member holds these without exception. This file is what enforces them: a r
 - **No aliases.** A renamed option, command, key or file keeps no alias, and no compatibility shim exists: the old name stops working in the release that renames it.
 - **Nothing beyond the plugin.** A repository holds the plugin, its tests, CI, its docs, [`AGENTS.md`](AGENTS.md), this file, and the coding agent's instruction file, which only imports those two. No family folder, no family tooling, no AI tooling such as agent definitions, prompts or editor assistant settings.
 - **Both platforms.** Every feature works in full on Linux and on macOS, as Platforms describes.
-- **Recorded features.** Every feature has a VHS recording, and every key a recording presses is captioned on screen while it acts, as Screens describes.
+- **doctor in every member.** Every member has `bin/<tool>`, which answers `help`, `version` and `doctor` as Commands describes, and `doctor` names every dependency with its path and version.
+- **gum interface.** Every member draws its terminal interface with gum, and where gum cannot draw it falls back byte for byte to the plain interface, as Terminal interface describes.
+- **Recorded features, shown in the README.** Every feature has a VHS recording, every key a recording presses is captioned on screen while it acts, and every README shows the recordings: the hero GIF under the introduction and a gallery with a still of every screen, as Screens describes.
+- **Bug reports carry doctor.** The bug report form requires the output of `<tool> doctor` and `<tool> version`, so every report says which tools ran, as Issues describes.
 - **Quiet by default.** Desktop notifications are off until the person turns them on.
 - **One key, one owner.** No two members ship the same default key; the allocation is under Key bindings.
 - **Straight to `main`.** People open no pull requests; every change is a conventional commit pushed to `main`, and only bots open pull requests.
@@ -139,6 +142,7 @@ Every member draws its terminal interface with [gum](https://github.com/charmbra
 - gum's own `gum file` redraws from the top of the screen and hides its header, `gum table --print` styles the first data row as the header and cannot colour a cell, and `gum log` joins lines and breaks words at the screen's edge. No member uses them: files are picked with `gum filter`, tables come from `lib/table.awk` inside a `gum style` box, and log lines are drawn by `revamped_ui_log`, one line per message.
 - `gum style` drops colour it reads from stdin, so coloured text is passed to it as arguments. `gum spin` draws on stdout, so a member sends it to stderr and lets it wait on the step's process, which runs in the background with its diagnostics held in a file until the spinner stops.
 - The palette comes from a theme: `--theme NAME`, else `<TOOL>_THEME`, else `KODOUGU_THEME`, else the tmux option `@revamped_theme`, else `kodougu`. The themes are `kodougu`, `catppuccin-mocha`, `catppuccin-latte`, `dracula`, `nord`, `gruvbox`, `tokyo-night` and `mono`, each with an accent, ok, warning, error, muted, text and surface colour and a `gum format` style. `<TOOL>_ACCENT`, else `KODOUGU_ACCENT`, replaces only the accent with a colour such as `#CBA6F7`. An unknown theme or a malformed colour stops the tool with the bad value error. `NO_COLOR` switches every theme to `mono`.
+- A popup's command carries no `#`: tmux 3.6 and 3.8 expand no format there, not even in `-e` values, and an older tmux may, so only a command with no `#` reads the same on every version. A command running in a popup reads the pane under it with `tmux display-message -p '#{pane_id}'`, and prints a literal `#` as `\0043` through `printf '%b'`. A popup asks for input on its own terminal and runs the tmux command itself, because a `command-prompt` started inside a popup never receives the keys typed. A format a binding needs goes through `run-shell`, which expands it.
 - `lib/ui.sh` holds the themes and every drawing helper, and `lib/table.awk` the table. A member calls them and never calls gum directly from its own modules.
 - `test/ui-kit.bats` calls every helper in `lib/ui.sh` directly, so each member covers the whole module whatever it draws. Tests drive the gum path with `REVAMPED_TEST_GUM=1` and `test/bin/gum`, a shim first on `PATH` in every test that records each call in `REVAMPED_TEST_GUM_LOG` and answers from `REVAMPED_TEST_GUM_ANSWERS`, one line per prompt, `<cancel>` for Escape. gum needs a terminal, so CI cannot run the real one; the screens run the real one.
 
@@ -232,6 +236,14 @@ Every tool that can be installed in more than one version on a supported system 
 - Completions for bash, zsh and fish under `completions/`.
 - A new option goes into the help page, the man page, all three completions and the README, in the same commit.
 
+## Issues
+
+The issue forms under `.github/ISSUE_TEMPLATE/` are identical in every member: a bug report, a feature request, a documentation issue and a question, with blank issues off.
+
+- The bug report requires the whole output of `<tool> doctor` and `<tool> version`, run in the shell where the bug happens, then the system, the terminal, the steps, the expected and the actual behaviour, and the plugin's lines from `.tmux.conf`. It asks for nothing `doctor` or `version` already prints, such as the tmux version.
+- A question asks for the same `doctor` output.
+- No form invites a pull request, because people open none.
+
 ## Install
 
 - TPM installs the plugin from `set -g @plugin 'tmux-revamped/<repository>'`, and every member also works when its entry point is run by hand with `run-shell`.
@@ -242,6 +254,7 @@ Every tool that can be installed in more than one version on a supported system 
 
 - `<name>.tmux` at the repository root is the entry point TPM runs. It is executable, and git tracks it as mode `100755`: TPM executes the file directly and discards everything it prints, so without the bit the plugin never loads and nothing reports it. TPM runs it through `run-shell`, so `return` at file scope is an error that stops nothing.
 - `bin/<tool>` is the command-line entry point and sources `lib/*.sh`. There is no build step; `share/` holds data files only. `lib/state.sh` declares every global, and `lib/core.sh` holds `<TOOL>_VERSION`.
+- `bin/<tool>` defines no function its library defines: the command is sourced after the library, so a function of the same name silently replaces the library's.
 - POSIX `sh` without `local`: every global carries the member's internal prefix, and every function-scoped variable carries its function's prefix. Variables are written `${name}`.
 - `shfmt -i 2` formats every script, and `make lint` fails on unformatted code.
 - Release tooling is pnpm, pinned through `packageManager` in `package.json`, running semantic-release. The release job installs it with `pnpm install --frozen-lockfile` and stops on `pnpm audit --audit-level high`.
@@ -257,6 +270,7 @@ Every tool that can be installed in more than one version on a supported system 
 - Tests live in [`test/`](test): `helpers.bash` for the shared helpers, `tmux_helpers.bash` for the private tmux server, `call.sh` to call one function, `run-matrix.sh`, which runs the suites under each shell named in `REVAMPED_TEST_SHELLS`, and `linux-container.sh`, which runs a command in an Ubuntu container. A member's own mocks and guard resets go in `test/helpers_local.bash` and `test/tmux_helpers_local.bash`, which the shared files source when present, with guard resets inside a `setup_test_environment_local` function. `REVAMPED_TEST_JOBS` runs the files of a suite in parallel through GNU parallel, while the tests inside one file run in order; `REVAMPED_TEST_IMAGE` picks the container image.
 - A test that needs tmux starts its own server on its own socket, with its own config and `HOME` in a temporary directory, and kills it on teardown. A second tmux server started any other way reads the person's config and writes the person's state.
 - The entry point is loaded in tests as TPM loads it, through `/bin/sh` and `run-shell`, never sourced into the test's shell.
+- Every key binding has a test that presses it through a real client, a second tmux attached to the test server, and checks its effect. A test that calls the command directly never sees what tmux does to the binding's own command, such as a format left unexpanded in a popup.
 - A file that a test file writes when it loads into a folder the whole run shares is written to a temporary file beside it and renamed into place. Test files run in parallel, and a file rewritten in place can be read empty by a test in another file.
 - A test that hides a tool runs the program through `harness_hide`, a folder of links to every program on PATH except the hidden ones. It links one PATH folder per `ln -s` call: one call per program forks thousands of times on a Homebrew Mac.
 - `bats` tests drive the real tools and the real tmux, and inject faults only through small wrappers on `PATH`. A member's test harness never defines a shell function with the name of a command another test stubs on `PATH`, or a test that stubs it unsets the function first.
@@ -375,6 +389,8 @@ tmux-tiling-revamped owns every `M-` plus uppercase letter, a range stock tmux l
 | Root table | tmux-scroll-revamped | The mouse wheel |
 
 The table is assigned by hand, with the mnemonic recorded, because a generated conflict-free allocation reads like `M-i` for a battery popup, and a key nobody can remember is a key nobody uses.
+
+A member that sends its bindings to tmux in one call sends each binding alone when that call fails, so one invalid key name leaves every other key bound, and exits 1 with tmux's error.
 
 A person's own remap is a different question from the defaults. When a remap lands on a key another action holds, the member collects every binding, writes them in one pass, lets the key the person set outrank the one the plugin defaulted, leaves the loser unbound, and reports the clash. A key the person bound outside the family is left alone: the member skips its own binding and `doctor` reports the skip.
 

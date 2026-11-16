@@ -5,37 +5,41 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thank you for reporting a bug. Please fill in the details below.
+        Run the plugin's `doctor` and `version` commands in the shell where the bug happens
+        and paste their whole output below. `doctor` lists tmux, gum and every tool the plugin
+        uses, each with its path and version, so the report says which tools ran.
 
-  - type: input
-    id: tmux-version
+  - type: textarea
+    id: doctor
     attributes:
-      label: tmux version
-      description: Output of `tmux -V`
-      placeholder: "tmux 3.4"
+      label: doctor output
+      description: >-
+        The whole output of the plugin's doctor command, such as `cpu-revamped doctor`.
+        On a release without the command, paste the output of `tmux -V` and `uname -sm` instead.
+      render: text
     validations:
       required: true
 
-  - type: input
-    id: bash-version
+  - type: textarea
+    id: version
     attributes:
-      label: bash version
-      description: Output of `bash --version | head -1`
-      placeholder: "GNU bash, version 5.2.26"
+      label: version output
+      description: >-
+        The whole output of the plugin's version command, such as `cpu-revamped version`.
+        On a release without the command, paste the plugin's tag or commit instead.
+      render: text
     validations:
       required: true
 
   - type: dropdown
-    id: os
+    id: system
     attributes:
-      label: Operating system
+      label: System
       options:
-        - macOS
-        - Ubuntu/Debian
-        - Fedora/RHEL
-        - Arch Linux
-        - Other Linux
-        - WSL
+        - macOS, Apple Silicon
+        - macOS, Intel
+        - Linux, x86-64
+        - Linux, arm64
     validations:
       required: true
 
@@ -70,15 +74,8 @@ body:
       required: true
 
   - type: textarea
-    id: doctor
-    attributes:
-      label: Diagnostics
-      description: Output of the plugin's doctor command, if it has one
-      render: shell
-
-  - type: textarea
     id: config
     attributes:
       label: Relevant tmux.conf
-      description: The section of your tmux.conf that configures this plugin
+      description: The lines of your tmux.conf that configure this plugin
       render: tmux
