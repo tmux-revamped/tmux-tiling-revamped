@@ -18,6 +18,7 @@ This file states the standard every member is held to. Where a member does not m
 Every member holds these without exception. This file is what enforces them: a rule is written here, never handed to a script that checks it.
 
 - **Lean.** A file, a section or a step stays only while something needs it. Nothing restates this file, and nothing exists only to police it.
+- **No aliases.** A renamed option, command, key or file keeps no alias, and no compatibility shim exists: the old name stops working in the release that renames it.
 - **Nothing beyond the plugin.** A repository holds the plugin, its tests, CI, its docs, [`AGENTS.md`](AGENTS.md), this file, and the coding agent's instruction file, which only imports those two. No family folder, no family tooling, no AI tooling such as agent definitions, prompts or editor assistant settings.
 - **Both platforms.** Every feature works in full on Linux and on macOS, as Platforms describes.
 - **Recorded features.** Every feature has a VHS recording, and every key a recording presses is captioned on screen while it acts, as Screens describes.
@@ -104,7 +105,7 @@ The plain page has no colour, no emoji and no bracketed level tags. On a termina
 
 ## Settings
 
-- Every setting is a tmux option named `@<prefix>_revamped_<setting>`, where `<prefix>` is the member's own, such as `cpu` or `net`, because tmux users configure plugins in `.tmux.conf`. A member reads no option outside that pattern. A renamed option keeps its old name as an alias that applies only while the new one is unset, and the changelog names both.
+- Every setting is a tmux option named `@<prefix>_revamped_<setting>`, where `<prefix>` is the member's own, such as `cpu` or `net`, because tmux users configure plugins in `.tmux.conf`. A member reads no option outside that pattern. A renamed setting, option, command or file keeps no alias: the old name stops working in the same release, which is a breaking change whose notes name the old and the new.
 - The tool takes the same setting as a long option, `--<setting>`, and from the environment as `<TOOL>_<SETTING>` in capitals, with the tool's dashes written as underscores, such as `CPU_REVAMPED_INTERVAL`. The command line wins over the environment, the environment over the tmux option, and the tmux option over the default.
 - `--name value` and `--name=value` both work, and `--` ends the options.
 - A yes or no setting that is asked about interactively has both forms, such as `--verify` and `--no-verify`. As a tmux option it reads `1` for yes and `0` for no.
