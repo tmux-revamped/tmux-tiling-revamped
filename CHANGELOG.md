@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.3] - 2026-11-17
+
+### Fixed
+
+- The project launcher opened the wrong folder when the project's path held
+  a `#` that tmux reads as a format, such as `#S`. The folder is now handed
+  to tmux with each `#` doubled.
+- The vim navigator and the alternate layout picker key did not recognise
+  vim by its process name where `ps` is BusyBox's, which cannot list a TTY.
+  They now fall back to the pane's foreground command.
+
 ## [3.0.2] - 2026-11-17
 
 ### Fixed
