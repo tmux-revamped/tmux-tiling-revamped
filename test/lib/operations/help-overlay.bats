@@ -250,3 +250,32 @@ teardown() {
   run sh -c "$(cat "${capture}")" </dev/null
   [[ "${output}" == *"Key conflicts: it${q}s taken"* ]]
 }
+
+@test "help-overlay.sh - the popup prints a conflict holding a hash verbatim, and its command holds no hash" {
+  # Arrange
+  local capture="${TEST_TMPDIR}/popup-cmd"
+  tmux() {
+    case "${1}" in
+      -V) printf 'tmux 3.4\n' ;;
+      display-popup) printf '%s' "${!#}" >"${capture}" ;;
+    esac
+    return 0
+  }
+  get_tmux_option() {
+    if [[ "${1}" == "@tiling_revamped_conflicts" ]]; then
+      printf '%s\n' "M-# taken by #S"
+      return 0
+    fi
+    printf '%s\n' "${2:-}"
+  }
+  export -f tmux get_tmux_option
+
+  # Act
+  show_help
+
+  # Assert
+  run grep -c '#' "${capture}"
+  [[ "${output}" == "0" ]] || false
+  run sh -c "$(cat "${capture}")" </dev/null
+  [[ "${output}" == *"Key conflicts: M-# taken by #S"* ]]
+}

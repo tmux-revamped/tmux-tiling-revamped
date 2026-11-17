@@ -10,10 +10,29 @@ source "${LIB_DIR}/tmux/tmux-ops.sh"
 _TILING_REVAMPED_DISPATCHER="${LIB_DIR}/../tiling.sh"
 TILING_APPLYING_TTL=10
 
+_shell_quote() {
+  local rest="${1}" out="" char
+  while [[ -n "${rest}" ]]; do
+    char="${rest:0:1}"
+    rest="${rest:1}"
+    case "${char}" in
+      "'") out+="'\\''" ;;
+      "#") out+="'\"\$(printf '%b' '\\0043')\"'" ;;
+      *) out+="${char}" ;;
+    esac
+  done
+  printf "'%s'" "${out}"
+}
+
 tiling_popup_command() {
-  local dispatcher
-  printf -v dispatcher '%q' "${_TILING_REVAMPED_DISPATCHER}"
-  printf '%s %s' "${dispatcher}" "${1}"
+  local rest="${_TILING_REVAMPED_DISPATCHER}" dispatcher="" piece hash="#"
+  while [[ "${rest}" == *"${hash}"* ]]; do
+    printf -v piece '%q' "${rest%%"${hash}"*}"
+    dispatcher+="${piece}\"\$(printf '%b' '\\0043')\""
+    rest="${rest#*"${hash}"}"
+  done
+  printf -v piece '%q' "${rest}"
+  printf '%s%s %s' "${dispatcher}" "${piece}" "${1}"
 }
 
 is_option_enabled() {
@@ -110,6 +129,7 @@ _reapply_current_layout() {
   esac
 }
 
+export -f _shell_quote
 export -f tiling_popup_command
 export -f _reapply_current_layout
 export -f is_option_enabled

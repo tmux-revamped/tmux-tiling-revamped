@@ -81,15 +81,6 @@ _popup_supported() {
   return 1
 }
 
-_shell_quote() {
-  local rest="${1}" out=""
-  while [[ "${rest}" == *\'* ]]; do
-    out="${out}${rest%%\'*}'\\''"
-    rest="${rest#*\'}"
-  done
-  printf "'%s%s'" "${out}" "${rest}"
-}
-
 show_help() {
   if ! _popup_supported; then
     tmux display-message "tmux-tiling-revamped: help overlay needs tmux 3.2+" 2>/dev/null
@@ -115,6 +106,5 @@ show_help() {
 
 export -f _resolved_key
 export -f _help_lines
-export -f _shell_quote
 export -f _popup_supported
 export -f show_help

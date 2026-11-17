@@ -196,3 +196,34 @@ teardown() {
   # Assert
   [[ "${LIB_DIR}" == "${TILING_REVAMPED_LIB_DIR}" ]]
 }
+
+@test "tmux-config.sh - a popup command runs the dispatcher from a path with a space, a quote and a hash, and holds no hash" {
+  # Arrange
+  local dir="${TEST_TMPDIR}/it's #1 dir" command
+  mkdir -p "${dir}"
+  printf '#!/bin/sh\nfor a in "$@"; do printf "[%%s]\\n" "$a"; done\n' >"${dir}/tiling.sh"
+  chmod +x "${dir}/tiling.sh"
+  _TILING_REVAMPED_DISPATCHER="${dir}/tiling.sh"
+
+  # Act
+  command=$(tiling_popup_command "jump-pick")
+
+  # Assert
+  [[ "${command}" != *"#"* ]] || false
+  run sh -c "${command}"
+  [[ "${output}" == "[jump-pick]" ]]
+}
+
+@test "tmux-config.sh - _shell_quote writes a hash through printf and the shell reads it back" {
+  # Arrange
+  local text="it's #1
+two # lines" quoted
+
+  # Act
+  quoted=$(_shell_quote "${text}")
+
+  # Assert
+  [[ "${quoted}" != *"#"* ]] || false
+  run sh -c "printf '%s\n' ${quoted}"
+  [[ "${output}" == "${text}" ]]
+}
