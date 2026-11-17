@@ -351,7 +351,7 @@ settled() {
   command tmux -S "${TILING_SOCKET}" set-option -g default-shell /bin/sh
   command tmux -S "${TILING_SOCKET}" set-option -g @tiling_revamped_navigator 1
   "${BASH}" "${PLUGIN}"
-  command tmux -S "${TILING_SOCKET}" split-window -h -t test "'${stubs}/vim' -c \"${reader}\""
+  command tmux -S "${TILING_SOCKET}" split-window -h -t test "exec '${stubs}/vim' -c \"${reader}\""
   settled pane_shows test:0.1 ready
   command tmux -S "${TILING_SOCKET}" select-pane -t test:0.1
   command tmux -S "${TILING_SOCKET}-host" -f /dev/null new-session -d -s host -x 120 -y 30 \
