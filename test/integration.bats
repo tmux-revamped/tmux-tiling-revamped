@@ -791,3 +791,73 @@ main_center_side_counts() {
   run_tiling help-overlay || true
   true
 }
+
+said() {
+  local messages
+  messages=$(command tmux -S "${TMUX_SOCKET}" show-messages 2>/dev/null)
+  [[ "${messages}" == *"$1"* ]]
+}
+
+@test "integration: flip and rotate say what they act on when no dwindle or spiral is applied" {
+  # Arrange
+  command tmux -S "${TMUX_SOCKET}" split-window -t test
+  run_tiling flip
+
+  # Act
+  run_tiling rotate
+
+  # Assert
+  said "tmux-tiling-revamped: flip acts on the dwindle and spiral layouts; apply one first"
+  said "tmux-tiling-revamped: rotate acts on the dwindle and spiral layouts; apply one first"
+}
+
+@test "integration: flip on a dwindle layout says nothing" {
+  # Arrange
+  command tmux -S "${TMUX_SOCKET}" split-window -t test
+  run_tiling layout dwindle
+
+  # Act
+  run_tiling flip
+
+  # Assert
+  ! said "flip acts on"
+}
+
+@test "integration: undo and redo say so when there is nothing to undo or redo" {
+  # Arrange
+  run_tiling undo
+
+  # Act
+  run_tiling redo
+
+  # Assert
+  said "tmux-tiling-revamped: nothing to undo in this window"
+  said "tmux-tiling-revamped: nothing to redo in this window"
+}
+
+@test "integration: focus-back and focus-forward say the focus history is off unless it is on" {
+  # Arrange
+  run_tiling focus-back
+  said "tmux-tiling-revamped: focus history is off; set @tiling_revamped_focus_history to 1"
+  command tmux -S "${TMUX_SOCKET}" clear-history
+  command tmux -S "${TMUX_SOCKET}" kill-server
+  setup_tmux_server
+  command tmux -S "${TMUX_SOCKET}" set-option -g @tiling_revamped_focus_history 1
+
+  # Act
+  run_tiling focus-forward
+
+  # Assert
+  ! said "focus history is off"
+}
+
+@test "integration: jump with no name and no mark says no pane is marked" {
+  # Arrange
+  command -v fzf >/dev/null || skip "fzf is not installed"
+
+  # Act
+  run_tiling jump
+
+  # Assert
+  said "tmux-tiling-revamped: no pane is marked yet"
+}

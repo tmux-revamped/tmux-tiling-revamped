@@ -73,12 +73,16 @@ unmark_pane() {
 _open_mark_picker() {
   if ! has_command fzf; then
     log_error "marks" "No mark name given and fzf is not installed"
+    tmux display-message "tmux-tiling-revamped: fzf is not installed, and picking a mark needs it" 2>/dev/null || true
     return 1
   fi
 
   local marks
   marks=$(get_tmux_option "@tiling_revamped_marks" "")
-  [[ -z "${marks}" ]] && return 0
+  if [[ -z "${marks}" ]]; then
+    tmux display-message "tmux-tiling-revamped: no pane is marked yet" 2>/dev/null || true
+    return 0
+  fi
 
   tmux display-popup -E "$(tiling_popup_command "jump-pick")" 2>/dev/null || true
 }

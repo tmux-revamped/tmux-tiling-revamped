@@ -106,6 +106,25 @@ _handle_hook() {
   esac
 }
 
+_tiling_say() {
+  tmux display-message "tmux-tiling-revamped: ${1}" 2>/dev/null || true
+}
+
+_tiling_bsp_note() {
+  case "$(get_current_layout)" in
+    dwindle | spiral) return 0 ;;
+    *) _tiling_say "${1} acts on the dwindle and spiral layouts; apply one first" ;;
+  esac
+}
+
+_tiling_history_note() {
+  [[ -n "$(get_window_option "${1}" "")" ]] || _tiling_say "${2}"
+}
+
+_tiling_focus_note() {
+  is_option_enabled "@tiling_revamped_focus_history" || _tiling_say "focus history is off; set @tiling_revamped_focus_history to 1"
+}
+
 main() {
   local cmd="${1:-}"
   shift || true
@@ -131,8 +150,14 @@ main() {
       ;;
     balance)    balance_panes ;;
     equalize)   equalize_panes ;;
-    rotate)     rotate_layout "${1:-90}" ;;
-    flip)       flip_layout "${1:-h}" ;;
+    rotate)
+      _tiling_bsp_note rotate
+      rotate_layout "${1:-90}"
+      ;;
+    flip)
+      _tiling_bsp_note flip
+      flip_layout "${1:-h}"
+      ;;
     promote)    promote_pane ;;
     circulate)  circulate_panes "${1:-next}" ;;
     autosplit)  autosplit_pane ;;
@@ -142,8 +167,14 @@ main() {
     swap)       swap_pane_direction "${1:-R}" ;;
     cycle)      cycle_layout "${1:-next}" ;;
     pick)       pick_layout ;;
-    undo)       undo_layout ;;
-    redo)       redo_layout ;;
+    undo)
+      _tiling_history_note "@tiling_revamped_layout_history" "nothing to undo in this window"
+      undo_layout
+      ;;
+    redo)
+      _tiling_history_note "@tiling_revamped_layout_redo" "nothing to redo in this window"
+      redo_layout
+      ;;
     workspace)  switch_workspace "${1:-1}" ;;
     move-to-workspace) move_to_workspace "${1:-1}" ;;
     back-and-forth) workspace_back_and_forth ;;
@@ -153,8 +184,14 @@ main() {
     dynamic-layout) apply_dynamic_layout ;;
     app-rules)      apply_app_rules ;;
     focus-record)   focus_history_record ;;
-    focus-back)     focus_history_back ;;
-    focus-forward)  focus_history_forward ;;
+    focus-back)
+      _tiling_focus_note
+      focus_history_back
+      ;;
+    focus-forward)
+      _tiling_focus_note
+      focus_history_forward
+      ;;
     pane-jump)      pane_jumper ;;
     smart-borders) smart_borders ;;
     status)     layout_status ;;

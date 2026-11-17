@@ -99,7 +99,7 @@ show_help() {
   local escaped
   escaped="$(_shell_quote "${body}")"
   local popup_cmd
-  popup_cmd="printf '%s\n' 'tmux-tiling-revamped keybindings'; printf '%s\n' ${escaped}; printf '\nPress any key to close\n'; read -r _"
+  popup_cmd="printf '%s\n' 'tmux-tiling-revamped keybindings'; printf '%s\n' ${escaped}; printf '\nPress Enter to close\n'; read -r _"
 
   tmux display-popup -E -w "${width}" -h "${height}" "${popup_cmd}" 2>/dev/null || true
 }
