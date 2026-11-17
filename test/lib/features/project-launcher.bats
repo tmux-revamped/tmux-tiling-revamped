@@ -12,6 +12,8 @@ setup() {
 }
 
 teardown() {
+  [[ -z "${TILING_DIR_SOCKET:-}" ]] || command tmux -S "${TILING_DIR_SOCKET}" kill-server 2>/dev/null || true
+  [[ -z "${TILING_DIR_SOCKET:-}" ]] || rm -f "${TILING_DIR_SOCKET}"
   cleanup_test_environment
 }
 
@@ -137,4 +139,26 @@ use_find_and_capture_fzf_input() {
 
   # Assert
   grep -qxF "new-window -n alpha -c ${TEST_TMPDIR}/R&D/work/alpha" "${MOCK_TMUX_LOG}"
+}
+
+@test "project-launcher.sh - a project under a path holding a hash tmux reads as a format opens in its own folder" {
+  # Arrange
+  local folder="${TEST_TMPDIR}/it's #S dir/app" real now delay
+  TILING_DIR_SOCKET="/tmp/tiling-dir-${BASHPID}-${RANDOM}"
+  mkdir -p "${folder}" "${TEST_TMPDIR}/home"
+  real="$(cd "${folder}" && pwd -P)"
+  HOME="${TEST_TMPDIR}/home" command tmux -S "${TILING_DIR_SOCKET}" -f /dev/null new-session -d -s base /bin/sh
+  command tmux -S "${TILING_DIR_SOCKET}" set-option -g default-shell /bin/sh
+  tmux() { command tmux -S "${TILING_DIR_SOCKET}" "$@"; }
+
+  # Act
+  _open_project_window app "${folder}"
+
+  # Assert
+  for delay in 0.01 0.05 0.1 0.2 0.5 1 2; do
+    now="$(command tmux -S "${TILING_DIR_SOCKET}" display-message -p -t app '#{pane_current_path}')"
+    [[ "${now}" == "${real}" ]] && break
+    sleep "${delay}"
+  done
+  [[ "${now}" == "${real}" ]]
 }

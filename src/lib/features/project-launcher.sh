@@ -17,6 +17,15 @@ _strip_prefix() {
   done
 }
 
+_open_project_window() {
+  local rest="${2}" out="" hash="#"
+  while [[ "${rest}" == *"${hash}"* ]]; do
+    out+="${rest%%"${hash}"*}${hash}${hash}"
+    rest="${rest#*"${hash}"}"
+  done
+  tmux new-window -n "${1}" -c "${out}${rest}" 2>/dev/null
+}
+
 launch_project() {
   if ! has_command fzf; then
     log_error "project-launcher" "fzf is not installed"
@@ -61,8 +70,9 @@ launch_project() {
   local window_name
   window_name=$(basename "${selected}")
 
-  tmux new-window -n "${window_name}" -c "${full_path}" 2>/dev/null || return 1
+  _open_project_window "${window_name}" "${full_path}" || return 1
 }
 
 export -f _strip_prefix
+export -f _open_project_window
 export -f launch_project
