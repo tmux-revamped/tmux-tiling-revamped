@@ -61,3 +61,4 @@ As of 2026-11-16:
 - No `.yamllint.yml` or shfmt; the Makefile has `help`, `test`, `test-unit`, `coverage`, `lint` and `clean`, not the family's targets.
 - It needs bash 4 for associative arrays, so on the macOS `/bin/bash` 3.2 it shows a message and binds nothing.
 - No test presses its keys through a real client attached from a second tmux.
+- Its popup commands quote the dispatcher path with `printf '%q'`, which leaves a `#` in a popup's command when the checkout path holds one; that runs on tmux 3.6 and 3.8, which expand no format there, and is not the hash-free form.
