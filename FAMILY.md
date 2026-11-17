@@ -27,6 +27,8 @@ Every member holds these without exception. This file is what enforces them: a r
 - **Bug reports carry doctor.** The bug report form requires the output of `<tool> doctor` and `<tool> version`, so every report says which tools ran, as Issues describes.
 - **Quiet by default.** Desktop notifications are off until the person turns them on.
 - **One key, one owner.** No two members ship the same default key; the allocation is under Key bindings.
+- **Real addresses only.** No example, test, fixture, recording or document holds a made-up URL or host, on a reserved example domain or any other. Where a URL is needed it is the repository's own, `https://github.com/tmux-revamped/<repository>`, or the real service the feature talks to.
+- **No contact channel.** No file holds a mail address, a chat or social handle, or any other way to reach a person: a question, a bug and a change go through the repository's issues and pull requests. A git identity in a test has a name and an empty mail address. Mail-shaped text appears only where a feature reads that shape, and then it is the hosting service's own, never a person's.
 - **Straight to `main`.** People open no pull requests; every change is a conventional commit pushed to `main`, and only bots open pull requests.
 - **In step.** A change to this file or to an identical file lands in every member in the same task.
 
