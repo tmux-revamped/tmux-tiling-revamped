@@ -48,6 +48,7 @@ Guidance for anyone, human or agent, changing tmux-tiling-revamped. What it is a
 
 As of 2026-11-17:
 
+- The Linux jobs of CI install no `fzf`, and five tests in [`test/integration/keys.bats`](test/integration/keys.bats) and [`test/integration.bats`](test/integration.bats) skip without it, so on Linux the mark picker is tested only on a machine that has fzf.
 - Every script is bash, under `#!/usr/bin/env bash`, not POSIX `sh`, so it is untested under `dash`, `zsh` and BusyBox `sh`.
 - The code lives in [`src/`](src) and [`src/lib/`](src/lib); there is no `bin/tmux-tiling-revamped`, `lib/state.sh` or `lib/core.sh`.
 - No `tmux-tiling-revamped` command with `help`, `version` and `doctor` in the family's form, no man page, no completions and no `manifest.json`.

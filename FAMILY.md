@@ -117,6 +117,7 @@ The plain page has no colour, no emoji and no bracketed level tags. On a termina
 - A yes or no setting that is asked about interactively has both forms, such as `--verify` and `--no-verify`. As a tmux option it reads `1` for yes and `0` for no.
 - The family's one shared setting is its look, under Terminal interface.
 - No member reads a bare name such as `INTERVAL`, and none takes its internal variables from the environment: a member either assigns each one outright, or its entry point clears every inherited `REVAMPED_` variable before anything runs. Only the test switches, which all start with `REVAMPED_TEST_`, such as `REVAMPED_TEST_GUM`, survive the clearing.
+- No internal variable has the name of a setting's environment variable: `<TOOL>_<SETTING>` belongs to the setting alone. A global of that name, assigned when the library loads, replaces what the person exported before the settings are read, so the setting is ignored with no error.
 - Anything required and not given is asked for when stdin is a terminal: `Label [default]: ` on stderr, up to three tries for a required value.
 - Without a terminal the tool never waits on a prompt. It stops with the usage hint under Diagnostics.
 - A destructive step, such as deleting a saved session, asks the person to type its name: `Type work to delete, or anything else to stop: `.
@@ -160,7 +161,7 @@ Every README shows the plugin running for real: an animated `screens/hero.gif` u
 - The screens are recorded on macOS; `record.sh` names the missing tool when `vhs`, `tmux` or `magick` is absent.
 - A change that alters what a screen shows records the screens again in the same commit.
 - Every feature has a recording: every placeholder, every option that changes what is shown, every key binding, popup, menu and command appears in at least one tape. The README gallery names the tape that shows each feature. A feature without a recording is a gap, never finished.
-- Every key a tape presses is captioned on screen while it acts, in the form a person types it, such as `prefix C-s`, `Enter` or `q`, so a viewer sees which keys produce each action. The recording's tmux config draws the caption on a second status line, and the tape sets it before each keystroke; a sentence in the README never replaces it.
+- Every key a tape presses is captioned on screen while it acts, in the form a person types it, such as `prefix C-s`, `Enter` or `q`, so a viewer sees which keys produce each action. The recording's tmux config draws the caption on a second status line, and the tape sets it before each keystroke; a sentence in the README never replaces it. While a menu, a prompt or a popup is open, the keys that would set a caption go to it instead, so the caption for the whole sequence is set before the chord that opens it, such as `prefix M-p, Down, Enter`.
 
 ## Diagnostics
 
@@ -216,7 +217,7 @@ Every tool that can be installed in more than one version on a supported system 
 
 - tmux itself is tested at the version the current Ubuntu LTS packages and at the one Homebrew ships. The macOS Intel runner's Homebrew can hold an older tmux than the Apple Silicon runner's, so CI runs three tmux versions, and a test relies on nothing only the newest has: it reads a binding out of the whole `list-keys` table, never by asking `list-keys` for one key. A member's own dependencies are tested in every build those routes offer. A dependency that gains a new route or build gets its leg in the same change.
 - A script uses only options all six accept. Where they differ, the code handles each one and a test covers it. A change that passes on one toolset only is not done.
-- Any tool macOS ships that Homebrew also builds in a newer version is tested in both: the macOS native toolset runs the system's copy, and the macOS Homebrew toolset runs Homebrew's. A member that starts calling such a tool adds its formula to the Homebrew leg in CI.
+- Any tool macOS ships that Homebrew also builds in a newer version is tested in both: the macOS native toolset runs the system's copy, and the macOS Homebrew toolset runs Homebrew's. A member that starts calling such a tool adds its formula to the Homebrew group of its [`Brewfile`](Brewfile).
 - `.github/scripts/toolset.sh native`, `homebrew`, `gnu`, `uutils` or `busybox` prints the directories that put a toolset first on `PATH`; on Linux, `busybox` links BusyBox's applets other than its shells. CI uses it, and a report is reproduced by putting the reporter's toolset first: `export PATH="$(sh .github/scripts/toolset.sh gnu | paste -sd: -):$PATH"`.
 
 ## Safety
@@ -262,6 +263,7 @@ The issue forms under `.github/ISSUE_TEMPLATE/` are identical in every member: a
 - `bin/<tool>` defines no function its library defines: the command is sourced after the library, so a function of the same name silently replaces the library's.
 - POSIX `sh` without `local`: every global carries the member's internal prefix, and every function-scoped variable carries its function's prefix. Variables are written `${name}`.
 - `shfmt -i 2` formats every script, and `make lint` fails on unformatted code.
+- [`Brewfile`](Brewfile) lists every Homebrew formula the member's macOS gate calls: bats, tmux, the shells, both extra toolsets, the lint and recording tools, and the member's own, such as `fswatch`. `brew bundle` installs them on a Mac, and the macOS jobs of `ci.yml` install from the same file, where `HOMEBREW_REVAMPED_TOOLSET` picks one toolset and `CI` leaves out the lint and recording tools; Homebrew hands a Brewfile only the variables that start with `HOMEBREW_`, and `CI`. A tool a test calls is added there in the same change.
 - Release tooling is pnpm, pinned through `packageManager` in `package.json`, running semantic-release. The release job installs it with `pnpm install --frozen-lockfile` and stops on `pnpm audit --audit-level high`.
 - Dependabot updates the GitHub Actions and the release tooling, and Renovate updates the runner labels, `.ruby-version` and the Gemfile, so each update arrives once. Both look for updates three times a day, at 05:00, 13:00 and 21:00 UTC. Every bot pull request merges itself once CI passes: when `ci` finishes on a pull request from a bot, `bot-merge.yml` checks that every check on that commit passed, squash-merges it at that commit with a fixed commit body, then starts `ci` on `main` with `gh workflow run`, since a merge made with `GITHUB_TOKEN` starts no workflow by itself. The bot opens the same pull request in every member, so an identical file stays identical everywhere. None is merged by hand.
 - Every action, `actions/*` and `github/*` included, is pinned to a full commit SHA with its version in a trailing comment, and every container image to a digest, because zizmor's default policy requires it and a tag can move.
@@ -284,8 +286,10 @@ The issue forms under `.github/ISSUE_TEMPLATE/` are identical in every member: a
 - 100 percent bashcov line coverage, gated locally and in CI, with no exclusion. `make coverage` merges the Mac and Ubuntu container runs before the gate, and each platform also reaches 100 percent of the lines it runs on its own. Code is written so bashcov can count it: every `case` branch runs a command, the condition of an `if`, `elif`, `while` or `until` stays on one line, a long `$(...)` assignment moves into its own function, a `} | {` join becomes `} | <function>`, no brace group closes on a redirect, and no loop redirects a fixed descriptor number. `.github/scripts/bashcov-run.rb`, `.github/scripts/bashcov-lexer.rb` and `.github/scripts/coverage.sh` correct bashcov's spliced trace records and its multiline string patterns.
 - Tests never write the member's version as a literal; they read it from `lib/core.sh`, so a release does not break them.
 - A wait loop polls from milliseconds upward, never with a fixed `sleep 1`.
+- A test never skips because a tool is missing on a system where CI installs it: it fails and names the tool, so a local gate cannot pass with that path untested. A skip is only for a tool that does not exist on that system, such as `inotifywait` on macOS. CI installs every tool a member's tests call.
 - Every test is three blocks, opened by the bare markers `# Arrange`, `# Act` and `# Assert`.
 - A test that starts background work waits on the process IDs it collected from `$!`, never with a bare `wait`: CI sets `BATS_TEST_TIMEOUT`, and bats runs that timeout as a background watchdog in the test's own shell, so a bare `wait` blocks until the timeout ends the test.
+- A test that starts a daemon arranges for it to end by itself, as by handing its claim to another owner on its first sleep, and never stops it only after the command under test returns: under bashcov a process left running keeps the trace pipe open, so that command never returns and the coverage run hangs.
 
 ## Quality
 
@@ -297,6 +301,7 @@ The issue forms under `.github/ISSUE_TEMPLATE/` are identical in every member: a
 - An awk program defines no function named like a gawk built-in, such as `xor`, `and`, `or`, `compl`, `lshift`, `rshift`, `strftime` or `systime`: gawk then refuses the whole program.
 - A pattern substitution never takes an unquoted expansion as its replacement: bash 5.2 rewrites it at every `&` and bash 3.2 at every backslash. It never takes a quoted one inside a double-quoted string either: bash 3.2 keeps those quotes, so `"${x//"#"/"##"}"` turns `a#b` into `a"##"b` there. A character is doubled with `sed` or a loop.
 - A file's size comes from `stat -c %s -- FILE`, or `stat -f %z -- FILE` where `stat` is BSD's, never `wc -c <file`: Ubuntu's BusyBox `wc` counts in 32 bits.
+- A byte above 0x7F is never matched with a bracket expression of raw bytes: zsh on Linux misses 0x80 to 0x9F there, so `ß` and most CJK characters count twice. It is searched for in a string of those bytes, as `case "${bytes}" in *"${byte}"*`.
 - No comments in source, apart from tool directives and the test markers.
 - Make targets, with the same meaning in every member:
 
