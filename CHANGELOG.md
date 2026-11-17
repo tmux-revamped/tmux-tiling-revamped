@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.2] - 2026-11-17
+
+### Fixed
+
+- A popup wrote a `#` of the checkout path, of the scratchpad command or of
+  a key in the help overlay into its command as it was, which a tmux that
+  expands formats there reads as a format. Each `#` is now written through
+  `printf '%b'`, so the popups read the same on every tmux version.
+- A scratchpad command holding a single quote no longer breaks the popup.
+
 ## [3.0.1] - 2026-10-27
 
 ### Fixed
