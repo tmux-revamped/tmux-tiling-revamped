@@ -285,6 +285,8 @@ Hooks pass the window they fired for, and a hook for a background window does no
 | `make lint` | shellcheck at warning level on every shell file |
 | `make coverage` | kcov line coverage with a 95 percent floor, Linux only |
 
+On macOS, `brew bundle` installs every tool these targets call, from the [`Brewfile`](Brewfile).
+
 [`test/docs.bats`](test/docs.bats) fails when this README names an option the code does not read. Contribution notes are in [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## License

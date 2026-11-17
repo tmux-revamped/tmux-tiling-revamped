@@ -285,6 +285,8 @@ BSP 版面分三步套用：
 | `make lint` | 對所有 shell 檔案執行 warning 級別的 shellcheck |
 | `make coverage` | kcov 行覆蓋率，下限 95%，只限 Linux |
 
+在 macOS 上，執行 `brew bundle` 會根據 [`Brewfile`](Brewfile) 安裝這些目標用到的所有工具。
+
 當本 README 提到程式碼不讀取的選項時，[`test/docs.bats`](test/docs.bats) 會失敗。貢獻說明見 [`CONTRIBUTING.md`](CONTRIBUTING.md)。
 
 ## 授權

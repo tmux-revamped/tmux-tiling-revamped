@@ -285,6 +285,8 @@ BSPのレイアウトは3つの手順で適用します。
 | `make lint` | すべてのシェルファイルに対するwarningレベルのshellcheck |
 | `make coverage` | 下限95パーセントのkcovによる行カバレッジ、Linuxのみ |
 
+macOS では、`brew bundle` を実行すると、これらのターゲットが使うツールがすべて [`Brewfile`](Brewfile) からインストールされます。
+
 [`test/docs.bats`](test/docs.bats)は、コードが読まないオプションがこのREADMEに書かれていると失敗します。貢献の手引きは[`CONTRIBUTING.md`](CONTRIBUTING.md)にあります。
 
 ## ライセンス

@@ -285,6 +285,8 @@ BSP 布局分三步应用：
 | `make lint` | 对所有 shell 文件运行 warning 级别的 shellcheck |
 | `make coverage` | kcov 行覆盖率，下限 95%，仅 Linux |
 
+在 macOS 上，运行 `brew bundle` 会根据 [`Brewfile`](Brewfile) 安装这些目标用到的所有工具。
+
 当本 README 提到代码不读取的选项时，[`test/docs.bats`](test/docs.bats) 会失败。贡献说明见 [`CONTRIBUTING.md`](CONTRIBUTING.md)。
 
 ## 许可证

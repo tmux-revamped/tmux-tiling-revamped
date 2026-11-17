@@ -94,14 +94,10 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install dependencies
-        run: |
-          packages=(bats-core tmux)
-          case "${PROFILE}" in
-            gnu) packages+=(bash zsh coreutils findutils diffutils gnu-sed grep gawk) ;;
-            uutils) packages+=(bash zsh uutils-coreutils uutils-findutils uutils-diffutils gnu-sed grep gawk) ;;
-          esac
-          brew install "${packages[@]}"
+      - name: Install the tools in the Brewfile
+        env:
+          HOMEBREW_REVAMPED_TOOLSET: ${{ matrix.profile }}
+        run: brew bundle --file Brewfile
 
       - name: Select the shells and core tools
         run: |
