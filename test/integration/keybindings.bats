@@ -23,8 +23,9 @@ setup() {
 }
 
 teardown() {
+  command tmux -S "${TILING_SOCKET}-host" kill-server 2>/dev/null || true
   command tmux -S "${TILING_SOCKET}" kill-server 2>/dev/null || true
-  rm -f "${TILING_SOCKET}" 2>/dev/null || true
+  rm -f "${TILING_SOCKET}" "${TILING_SOCKET}-host" 2>/dev/null || true
 }
 
 key_for() {
@@ -314,4 +315,54 @@ wait_for_file() {
 
   # Assert
   [[ "$(cat "${marker}" 2>/dev/null)" =~ ^hook\ exit\ @[0-9]+$ ]]
+}
+
+pane_shows() {
+  local screen
+  screen="$(command tmux -S "${TILING_SOCKET}" capture-pane -p -t "${1}" 2>/dev/null)"
+  [[ "${screen}" == *"${2}"* ]]
+}
+
+client_attached() {
+  local clients
+  clients="$(command tmux -S "${TILING_SOCKET}" list-clients -F x 2>/dev/null)"
+  [[ -n "${clients}" ]]
+}
+
+settled() {
+  local delay
+  for delay in 0.01 0.02 0.05 0.1 0.1 0.2 0.2 0.5 0.5 1 1 1 2 2; do
+    "$@" && return 0
+    sleep "${delay}"
+  done
+  "$@"
+}
+
+@test "navigator - M-h reaches a pane whose process is named vim where ps cannot list a TTY" {
+  # Arrange
+  local stubs="${BATS_TEST_TMPDIR}/stubs" reader
+  mkdir -p "${stubs}" "${BATS_TEST_TMPDIR}/home"
+  cp -f "${BASH}" "${stubs}/vim"
+  printf '#!/bin/sh\nexit 1\n' >"${stubs}/ps"
+  chmod +x "${stubs}/ps"
+  reader="stty -icanon -isig -echo; echo re''ady; while :; do dd bs=1 count=1 2>/dev/null | od -An -tx1; done"
+  command tmux -S "${TILING_SOCKET}" set-environment -g PATH "${stubs}:${PATH}"
+  command tmux -S "${TILING_SOCKET}" set-environment -g HOME "${BATS_TEST_TMPDIR}/home"
+  command tmux -S "${TILING_SOCKET}" set-option -g default-shell /bin/sh
+  command tmux -S "${TILING_SOCKET}" set-option -g @tiling_revamped_navigator 1
+  "${BASH}" "${PLUGIN}"
+  command tmux -S "${TILING_SOCKET}" split-window -h -t test "'${stubs}/vim' -c \"${reader}\""
+  settled pane_shows test:0.1 ready
+  command tmux -S "${TILING_SOCKET}" select-pane -t test:0.1
+  command tmux -S "${TILING_SOCKET}-host" -f /dev/null new-session -d -s host -x 120 -y 30 \
+    "env -u TMUX TERM=xterm-256color tmux -S '${TILING_SOCKET}' attach-session -t test"
+  settled client_attached
+
+  # Act
+  command tmux -S "${TILING_SOCKET}-host" send-keys -t host M-h
+
+  # Assert
+  settled pane_shows test:0.1 ' 68'
+  run command tmux -S "${TILING_SOCKET}" display-message -p -t test: '#{pane_index}'
+  [[ "${output}" == "1" ]]
 }

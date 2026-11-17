@@ -26,6 +26,8 @@ _tiling_run_shell() {
 }
 
 TILING_RUN="$(_tiling_shell_word "${TILING_CMD}")"
+TILING_VIM_NAMES='(\S+\/)?g?(view|l?n?vim?x?|fzf)(diff)?'
+TILING_IS_VIM="ps -o state= -o comm= -t '#{pane_tty}' 2>/dev/null | grep -iqE '^[^TXZ ]+ +${TILING_VIM_NAMES}\$' || printf '%s\\n' #{q:pane_current_command} | grep -iqE '^${TILING_VIM_NAMES}\$'"
 TILING_HOOK_WINDOW='#{?hook_window,#{hook_window},#{window_id}}'
 
 _check_bash_version() {
@@ -326,7 +328,7 @@ _setup_navigation() {
 
   [[ "${navigator}" != "1" ]] && return 0
 
-  local is_vim="ps -o state= -o comm= -t '#{pane_tty}' | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?g?(view|l?n?vim?x?|fzf)(diff)?$'"
+  local is_vim="${TILING_IS_VIM}"
 
   local dir key
   for dir in "h L" "j D" "k U" "l R"; do
@@ -401,7 +403,7 @@ _setup_pick_layout_binding() {
 
   [[ -z "${key_pick_layout_alt}" ]] && return 0
 
-  local is_vim="ps -o state= -o comm= -t '#{pane_tty}' | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?g?(view|l?n?vim?x?|fzf)(diff)?$'"
+  local is_vim="${TILING_IS_VIM}"
 
   _register_binding "pick_layout_alt" 1 root "M-${key_pick_layout_alt}" \
     -n "M-${key_pick_layout_alt}" \
