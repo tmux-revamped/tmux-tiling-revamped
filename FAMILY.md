@@ -389,8 +389,8 @@ tmux-tiling-revamped owns every `M-` plus uppercase letter, a range stock tmux l
 |:---------|:-------|:----------------|
 | Overrider | tmux-pain-control-revamped | Its split, resize and pane-movement keys replace tmux's own by design |
 | Overrider | tmux-sensible-revamped | `C-n` and `C-p`, since it normalises defaults across tmux versions |
-| Root table | tmux-reorder-revamped | The status-line mouse keys, from `MouseDown1Status` to `MouseDragEnd1StatusDefault`, because dragging a window tab is its only action. It wraps the stock `MouseDown1Status` and keeps its command running |
-| Root table | tmux-scroll-revamped | The mouse wheel |
+| Root table | tmux-reorder-revamped | The status-line mouse keys, from `MouseDown1Status` to `MouseDragEnd1StatusDefault`, because dragging a window tab is its main action, and, only with its swipe option on, the right-button pane keys `MouseDown3Pane`, `MouseUp3Pane`, `MouseDrag3Pane` and `MouseDragEnd3Pane`. It wraps the stock `MouseDown1Status` and `MouseDown3Pane` and keeps their commands running |
+| Root table | tmux-scroll-revamped | The mouse wheel, and, only with its click copy option on, `DoubleClick1Pane` and `TripleClick1Pane` |
 
 The table is assigned by hand, with the mnemonic recorded, because a generated conflict-free allocation reads like `M-i` for a battery popup, and a key nobody can remember is a key nobody uses.
 
