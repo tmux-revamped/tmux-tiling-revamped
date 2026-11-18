@@ -23,10 +23,14 @@ jobs:
       - name: Query the current Ubuntu LTS
         id: lts
         run: |
-          version=$(curl -fsSL https://changelogs.ubuntu.com/meta-release \
+          version=$(curl -fsSL --retry 5 --retry-all-errors https://changelogs.ubuntu.com/meta-release \
             | grep -B1 'LTS' | grep -oP '^Version: \K[\d.]+' | tail -1 | cut -d. -f1,2)
           echo "Latest Ubuntu LTS: ${version:-unresolved}"
-          echo "version=${version:-24.04}" >> "$GITHUB_OUTPUT"
+          if [ -z "${version}" ]; then
+            echo "::error::the current Ubuntu LTS could not be read from changelogs.ubuntu.com"
+            exit 1
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
 
   test-linux:
     needs: [resolve-ubuntu-lts]
