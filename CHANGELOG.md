@@ -1,21 +1,5 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
-
-### Fixed
-
-- `prefix + M-P` and `prefix + M-N`, bound by default, did nothing in silence
-  while `@tiling_revamped_focus_history` is off, its default. They now say so.
-- Flip and rotate outside dwindle and spiral, undo and redo with no history, and
-  the mark jump with no mark ended in silence. Each now says why in a message.
-- The help overlay said `Press any key to close` and closed only on Enter. It
-  now says `Press Enter to close`.
-
 ## [3.0.3] - 2026-11-17
 
 ### Fixed
