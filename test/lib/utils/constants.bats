@@ -18,7 +18,7 @@ teardown() {
 
 @test "constants.sh - TILING_REVAMPED_VERSION matches the changelog" {
   local changelog
-  changelog="$(grep -m1 -E '^## \[[0-9]' "${BATS_TEST_DIRNAME}/../../../CHANGELOG.md" \
+  changelog="$(grep -m1 -E '^##? \[[0-9]' "${BATS_TEST_DIRNAME}/../../../CHANGELOG.md" \
     | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')"
 
   [[ "${TILING_REVAMPED_VERSION}" == "${changelog}" ]]

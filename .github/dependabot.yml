@@ -1,18 +1,31 @@
+---
 version: 2
+
 updates:
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: github-actions
+    directory: /
     schedule:
-      interval: "weekly"
+      interval: cron
+      cronjob: "0 5,13,21 * * *"
+    commit-message:
+      prefix: ci
     labels:
-      - "ci"
+      - dependencies
     groups:
       actions:
         patterns:
           - "*"
-  - package-ecosystem: "docker"
-    directory: "/"
+
+  - package-ecosystem: npm
+    directory: /
     schedule:
-      interval: "weekly"
+      interval: cron
+      cronjob: "0 5,13,21 * * *"
+    commit-message:
+      prefix: build
     labels:
-      - "ci"
+      - dependencies
+    groups:
+      release-tooling:
+        patterns:
+          - "*"
