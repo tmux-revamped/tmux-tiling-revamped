@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.4](https://github.com/tmux-revamped/tmux-tiling-revamped/compare/v3.0.3...v3.0.4) (2026-11-19)
+
+
+### Bug Fixes
+
+* say why a key cannot act ([bcdf6c7](https://github.com/tmux-revamped/tmux-tiling-revamped/commit/bcdf6c7bc7a5d3887e7fd9ff72cb1a63c33b5838))
+
 ## [3.0.3] - 2026-11-17
 
 ### Fixed
