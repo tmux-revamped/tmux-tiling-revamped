@@ -131,6 +131,7 @@ The plain page has no colour, no emoji and no bracketed level tags. On a termina
 - Results and progress lines go to stdout. Prompts, diagnostics, and a progress line redrawn in place on a terminal go to stderr.
 - A status placeholder, `#{<prefix>_<name>}`, prints its value and nothing else. A value the host has no source for renders empty, and `doctor` says which source is missing.
 - Text that comes from outside the plugin, such as a process, window or song name, has every `#` doubled before tmux reads it as a format.
+- Whatever a member places in a status line's `#()` job, such as its own path or a setting's value, has every `%` doubled as well as every `#`: tmux runs the status line through strftime before it starts the job, so a `%s` in a format given to `apply` reached the job as the seconds since 1970.
 - A folder handed to tmux as a start directory, the `-c` of `new-window`, `split-window` and `new-session` and the `-d` of `display-popup`, has every `#` doubled first: tmux expands formats there, so a folder whose path holds `#S` would open somewhere else.
 - A format inside a command that tmux parses when a key runs, such as a branch of `if-shell`, is written in double quotes: tmux reads an unquoted `#{` at the start of a word there as a comment and drops the rest of the command.
 - Numbers are computed and printed under the C locale, so a locale with a decimal comma still prints `1.5G`.
